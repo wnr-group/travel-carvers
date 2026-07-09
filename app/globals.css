@@ -1,20 +1,56 @@
 @import "tailwindcss";
 
+/* ========================================
+   Travel Carvers - Color Palette
+   ======================================== */
+
 :root {
-  --background: #ffffff;
+  /* Brand Colors */
+  --color-sage-dark: #5F6F52;      /* Primary dark green - headers, important text */
+  --color-sage-medium: #A9B388;    /* Primary medium green - buttons, accents */
+  --color-cream: #FEFAE0;          /* Light cream - backgrounds */
+  --color-tan: #B99470;            /* Warm tan/brown - accents, highlights */
+
+  /* Semantic Colors */
+  --background: #FEFAE0;
   --foreground: #171717;
+  --primary: #5F6F52;
+  --secondary: #A9B388;
+  --accent: #B99470;
+
+  /* Opacity Variations - Sage Dark */
+  --sage-dark-10: rgba(95, 111, 82, 0.1);
+  --sage-dark-20: rgba(95, 111, 82, 0.2);
+  --sage-dark-30: rgba(95, 111, 82, 0.3);
+  --sage-dark-50: rgba(95, 111, 82, 0.5);
+  --sage-dark-70: rgba(95, 111, 82, 0.7);
+  --sage-dark-90: rgba(95, 111, 82, 0.9);
+
+  /* Opacity Variations - Sage Medium */
+  --sage-medium-10: rgba(169, 179, 136, 0.1);
+  --sage-medium-20: rgba(169, 179, 136, 0.2);
+  --sage-medium-30: rgba(169, 179, 136, 0.3);
+  --sage-medium-50: rgba(169, 179, 136, 0.5);
+  --sage-medium-70: rgba(169, 179, 136, 0.7);
+
+  /* Opacity Variations - Tan */
+  --tan-10: rgba(185, 148, 112, 0.1);
+  --tan-20: rgba(185, 148, 112, 0.2);
+  --tan-30: rgba(185, 148, 112, 0.3);
+  --tan-50: rgba(185, 148, 112, 0.5);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #1a1a1a;
     --foreground: #ededed;
   }
 }
@@ -23,4 +59,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  width: 100%;
 }
