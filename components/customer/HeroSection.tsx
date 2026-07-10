@@ -98,7 +98,7 @@ export default function HeroSection() {
                   priority={index === 0}
                 />
                 {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[#5F6F52]/60 via-[#5F6F52]/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-[var(--logo-forest-dark)]/60 via-[var(--logo-sage)]/40 to-transparent"></div>
               </div>
             ))}
           </div>
@@ -135,7 +135,7 @@ export default function HeroSection() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4">
-                  <button className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white rounded-full font-bold text-base md:text-lg hover:shadow-2xl hover:scale-105 transition-all">
+                  <button className="px-6 md:px-8 py-3 md:py-4 bg-gradient-brand-dark text-white rounded-full font-bold text-base md:text-lg hover:shadow-2xl hover:scale-105 transition-all">
                     Explore Packages
                   </button>
                   <button className="px-6 md:px-8 py-3 md:py-4 bg-white/20 backdrop-blur-md text-white rounded-full font-bold text-base md:text-lg border-2 border-white/50 hover:bg-white/30 hover:scale-105 transition-all">
@@ -192,22 +192,22 @@ export default function HeroSection() {
             </div>
 
             {/*Top-Right "Live Atlas" Badge */}
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-[#1A3C34]/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/10">
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-brand-darkest/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/10">
               <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
               <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Atlas</span>
             </div>
 
             {/* 2. Bottom Branded Console */}
-            <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-[#1A3C34] via-[#1A3C34]/80 to-transparent p-6 pt-16">
+            <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-[var(--logo-forest-dark)] via-[var(--logo-forest-dark)]/80 to-transparent p-6 pt-16">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
                   <h3 className="text-white font-bold text-xl tracking-wide">Interactive World Map</h3>
-                  <p className="text-[#A9B388] text-xs mt-1 uppercase tracking-widest font-semibold">50+ Countries • 200+ Destinations</p>
+                  <p className="text-[var(--logo-mint)] text-xs mt-1 uppercase tracking-widest font-semibold">50+ Countries • 200+ Destinations</p>
                 </div>
                 
                 <button 
                   onClick={() => setIsMapExpanded(true)}
-                  className="px-6 py-3 bg-white hover:bg-[#A9B388] text-[#1A3C34] font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  className="px-6 py-3 bg-white hover:bg-brand-light text-brand-darkest font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                 >
                   Open Map
                 </button>
@@ -230,7 +230,7 @@ export default function HeroSection() {
             {/* Close Button */}
             <button
               onClick={() => setIsMapExpanded(false)}
-              className="absolute top-6 right-6 z-[2000] w-14 h-14 bg-gradient-to-br from-[#5F6F52] to-[#A9B388] text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all border-3 border-white/50"
+              className="absolute top-6 right-6 z-[2000] w-14 h-14 bg-gradient-brand-dark text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all border-3 border-white/50"
             >
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
@@ -238,8 +238,8 @@ export default function HeroSection() {
             </button>
 
             {/* Instruction Overlay - Bottom Left */}
-            <div className="absolute bottom-8 left-8 z-[2000] bg-white/95 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border-2 border-[#A9B388]/30">
-              <p className="text-sm font-semibold text-[#5F6F52]">
+            <div className="absolute bottom-8 left-8 z-[2000] bg-white/95 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border-2 border-brand-medium/30">
+              <p className="text-sm font-semibold text-brand-darkest">
                 🖱️ Click markers to explore destinations • ESC to close
               </p>
             </div>
