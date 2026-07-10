@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 
 const RealWorldMap = dynamic(() => import('@/components/RealWorldMap'), {
@@ -88,10 +89,13 @@ export default function HeroSection() {
                   index === currentSlide ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                <img
+                <Image
                   src={image.url}
                   alt={image.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                  priority={index === 0}
                 />
                 {/* Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#5F6F52]/60 via-[#5F6F52]/40 to-transparent"></div>
@@ -104,10 +108,13 @@ export default function HeroSection() {
             <div className="transform transition-all duration-500 translate-y-0 opacity-100">
               {/* Logo/Brand */}
               <div className="mb-6 md:mb-8">
-                <img
+                <Image
                   src="/logo.png"
                   alt="Travel Carvers"
+                  width={96}
+                  height={96}
                   className="h-16 w-16 md:h-24 md:w-24 mx-auto rounded-full object-cover border-4 border-white/50 shadow-2xl mb-3 md:mb-4"
+                  priority
                 />
                 <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-2 drop-shadow-2xl">
                   Travel Carvers
@@ -128,7 +135,7 @@ export default function HeroSection() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4">
-                  <button className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#B99470] to-[#A9B388] text-white rounded-full font-bold text-base md:text-lg hover:shadow-2xl hover:scale-105 transition-all">
+                  <button className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white rounded-full font-bold text-base md:text-lg hover:shadow-2xl hover:scale-105 transition-all">
                     Explore Packages
                   </button>
                   <button className="px-6 md:px-8 py-3 md:py-4 bg-white/20 backdrop-blur-md text-white rounded-full font-bold text-base md:text-lg border-2 border-white/50 hover:bg-white/30 hover:scale-105 transition-all">
@@ -174,83 +181,36 @@ export default function HeroSection() {
         </div>
 
         {/* Right Half - Map Preview with Thin Frame */}
-        <div className="w-full md:w-1/2 h-1/2 md:h-full relative bg-[#FEFAE0] flex items-center justify-center p-4 md:p-6">
-          {/* Bigger Map with Thin Frame and Banner */}
-          <div className="relative w-full max-w-3xl h-[85%] md:h-[90%]">
-            {/* Map Container with Border */}
-            <div
-              className="relative w-full h-full cursor-pointer group/map"
-              onClick={() => setIsMapExpanded(true)}
-            >
-              {/* Thin Decorative Border */}
-              <div className="absolute inset-0 border-3 border-[#A9B388]/50 rounded-xl group-hover/map:border-[#A9B388] shadow-2xl group-hover/map:shadow-3xl transition-all pointer-events-none z-10"></div>
-
-              {/* Map Filling the Frame */}
-              <div className="absolute inset-0 rounded-xl overflow-hidden z-0">
-                <div className="absolute inset-0 pointer-events-none z-0">
-                  <RealWorldMap isPreview={true} />
-                </div>
-
-                {/* Very subtle overlay for depth */}
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#5F6F52]/5 pointer-events-none"></div>
-
-                {/* Hover effect */}
-                <div className="absolute inset-0 bg-[#A9B388]/5 opacity-0 group-hover/map:opacity-100 transition-opacity pointer-events-none"></div>
-              </div>
-
-              {/* Banner Card Overlay - Center - Always Visible */}
-              <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-                <div className="bg-white/98 backdrop-blur-xl rounded-2xl px-6 py-5 shadow-2xl border-2 border-[#A9B388]/50 max-w-sm pointer-events-auto opacity-100">
-                  {/* Compact Content */}
-                  <div className="text-center">
-                    {/* Small Icon */}
-                    <div className="text-3xl mb-2">🗺️</div>
-
-                    <h3 className="text-xl font-bold text-[#5F6F52] mb-2">
-                      Interactive World Map
-                    </h3>
-
-                    <p className="text-xs text-gray-600 mb-4 leading-relaxed">
-                      Explore 50+ countries and 200+ destinations with our live interactive map
-                    </p>
-
-                    {/* Compact CTA Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMapExpanded(true);
-                      }}
-                      className="group relative px-6 py-2.5 bg-gradient-to-r from-[#5F6F52] to-[#A9B388] text-white rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all overflow-hidden w-full"
-                    >
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        <span className="hidden sm:inline">Tap to</span> Interact
-                        <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                      </span>
-                      {/* Hover effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-[#A9B388] to-[#B99470] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </button>
-
-                    {/* Minimal Helper Text */}
-                    <div className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-gray-500">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                      </svg>
-                      <span>Click markers • Search • Zoom • Explore</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div className="w-full lg:w-1/2 h-1/2 lg:h-full relative bg-[#F8F9FA] p-6 lg:p-8 flex items-center justify-center">
+          
+          {/* Map Container */}
+          <div className="relative w-full h-full max-w-4xl cursor-pointer group/map overflow-hidden rounded-2xl border-4 border-white shadow-2xl">
+            
+            {/* Map Filling the Frame */}
+            <div className="absolute inset-0 z-0">
+              <RealWorldMap isPreview={true} />
             </div>
 
-            {/* Feature Badges - Below Map */}
-            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-3">
-              <div className="bg-white/95 backdrop-blur-md rounded-full px-3 py-1.5 shadow-lg border border-[#A9B388]/30">
-                <span className="text-xs font-semibold text-[#5F6F52]">🌍 50+ Countries</span>
-              </div>
-              <div className="bg-white/95 backdrop-blur-md rounded-full px-3 py-1.5 shadow-lg border border-[#A9B388]/30">
-                <span className="text-xs font-semibold text-[#5F6F52]">🎯 200+ Destinations</span>
+            {/*Top-Right "Live Atlas" Badge */}
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-[#1A3C34]/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/10">
+              <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Atlas</span>
+            </div>
+
+            {/* 2. Bottom Branded Console */}
+            <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-[#1A3C34] via-[#1A3C34]/80 to-transparent p-6 pt-16">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                  <h3 className="text-white font-bold text-xl tracking-wide">Interactive World Map</h3>
+                  <p className="text-[#A9B388] text-xs mt-1 uppercase tracking-widest font-semibold">50+ Countries • 200+ Destinations</p>
+                </div>
+                
+                <button 
+                  onClick={() => setIsMapExpanded(true)}
+                  className="px-6 py-3 bg-white hover:bg-[#A9B388] text-[#1A3C34] font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  Open Map
+                </button>
               </div>
             </div>
           </div>

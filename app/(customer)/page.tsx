@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import HeroSection from '@/components/customer/HeroSection';
+import { Globe, Package, HeartHandshake, Smile, Compass, MapPin, Plane } from 'lucide-react';
 
 export default function Home() {
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [activeCard, setActiveCard] = useState<number | null>(null);
 
   useEffect(() => {
     // Intersection Observer for scroll animations
@@ -31,24 +34,42 @@ export default function Home() {
     };
   }, []);
 
+  // Cycle through cards to highlight them
+  useEffect(() => {
+    let currentIndex = 0;
+
+    const cycleCards = () => {
+      setActiveCard(currentIndex);
+      currentIndex = (currentIndex + 1) % 6; // Cycle through 0-5
+    };
+
+    // Start immediately
+    cycleCards();
+
+    // Continue cycling every 2 seconds
+    const interval = setInterval(cycleCards, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="w-full overflow-y-auto">
       {/* Hero Section with Carousel and Map */}
       <HeroSection />
 
       {/* Trending Packages Section */}
-      <section className="py-20 bg-[#FEFAE0]">
+      <section className="py-20 bg-[#F4F1EA]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between mb-12 scroll-animate opacity-0 translate-y-10">
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-[#5F6F52] mb-2">
+              <h2 className="text-4xl md:text-5xl font-bold text-[#1A3C34] mb-2">
                 Trending Packages
               </h2>
               <p className="text-gray-600 text-lg">
                 Explore our most popular destinations
               </p>
             </div>
-            <button className="hidden md:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#A9B388] to-[#A9B388] text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all">
+            <button className="hidden md:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all">
               View More
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -66,15 +87,14 @@ export default function Home() {
                   <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[#5F6F52] text-xs font-bold">
                     POPULAR
                   </span>
-                  <span className="text-4xl">🏝️</span>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-white mb-2">Bali Paradise</h3>
                   <p className="text-white/90 text-sm mb-3">7 Days • All Inclusive</p>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 text-xs text-white/80">
-                      <span className="px-2 py-1 bg-white/20 rounded-full backdrop-blur-sm">Beaches</span>
-                      <span className="px-2 py-1 bg-white/20 rounded-full backdrop-blur-sm">Temples</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full backdrop-blur-sm">Beaches</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full backdrop-blur-sm">Temples</span>
                     </div>
                     <span className="text-white font-bold text-lg">₹45,999</span>
                   </div>
@@ -91,15 +111,14 @@ export default function Home() {
                   <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[#5F6F52] text-xs font-bold">
                     LUXURY
                   </span>
-                  <span className="text-4xl">🏙️</span>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-white mb-2">Dubai Luxury</h3>
                   <p className="text-white/90 text-sm mb-3">5 Days • Premium Hotels</p>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 text-xs text-white/80">
-                      <span className="px-2 py-1 bg-white/20 rounded-full backdrop-blur-sm">Desert</span>
-                      <span className="px-2 py-1 bg-white/20 rounded-full backdrop-blur-sm">City Tour</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full backdrop-blur-sm">Desert</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full backdrop-blur-sm">City Tour</span>
                     </div>
                     <span className="text-white font-bold text-lg">₹59,999</span>
                   </div>
@@ -116,15 +135,14 @@ export default function Home() {
                   <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[#5F6F52] text-xs font-bold">
                     TRENDING
                   </span>
-                  <span className="text-4xl">🛶</span>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-white mb-2">Kerala Backwaters</h3>
                   <p className="text-white/90 text-sm mb-3">6 Days • Houseboat Stay</p>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 text-xs text-white/80">
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Nature</span>
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Ayurveda</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Nature</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Ayurveda</span>
                     </div>
                     <span className="text-white font-bold text-lg">₹32,999</span>
                   </div>
@@ -141,15 +159,14 @@ export default function Home() {
                   <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[#5F6F52] text-xs font-bold">
                     PREMIUM
                   </span>
-                  <span className="text-4xl">⛰️</span>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-white mb-2">Switzerland Alps</h3>
                   <p className="text-white/90 text-sm mb-3">8 Days • Mountain Resorts</p>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 text-xs text-white/80">
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Alps</span>
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Scenic</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Alps</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Scenic</span>
                     </div>
                     <span className="text-white font-bold text-lg">₹1,25,999</span>
                   </div>
@@ -166,15 +183,14 @@ export default function Home() {
                   <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[#5F6F52] text-xs font-bold">
                     HOT DEAL
                   </span>
-                  <span className="text-4xl">🏖️</span>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-white mb-2">Goa Beach Escape</h3>
                   <p className="text-white/90 text-sm mb-3">4 Days • Beach Resort</p>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 text-xs text-white/80">
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Party</span>
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Beaches</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Party</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Beaches</span>
                     </div>
                     <span className="text-white font-bold text-lg">₹18,999</span>
                   </div>
@@ -191,15 +207,14 @@ export default function Home() {
                   <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[#5F6F52] text-xs font-bold">
                     ROMANTIC
                   </span>
-                  <span className="text-4xl">💑</span>
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-white mb-2">Maldives Honeymoon</h3>
                   <p className="text-white/90 text-sm mb-3">5 Days • Overwater Villas</p>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 text-xs text-white/80">
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Luxury</span>
-                      <span className="px-2 py-1 bg-white/20 rounded-full">Romance</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Luxury</span>
+                      <span className="px-2 py-1 bg-[#1A3C34]/50 rounded-full">Romance</span>
                     </div>
                     <span className="text-white font-bold text-lg">₹95,999</span>
                   </div>
@@ -224,7 +239,7 @@ export default function Home() {
       <section className="py-20 bg-[#FEFAE0]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 scroll-animate opacity-0 translate-y-10">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#5F6F52] mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#1A3C34] mb-4">
               Travel Categories
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
@@ -238,7 +253,7 @@ export default function Home() {
               {/* International Packages */}
               <div className="group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600')] bg-cover bg-center"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/90 via-[#A9B388]/50 to-transparent group-hover:from-[#A9B388]/90 transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A3C34] via-[#A9B388]/50 to-transparent group-hover:from-[#A9B388]/90 transition-all"></div>
                 <div className="relative z-10 h-full p-6 flex flex-col justify-end">
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-2">International</h3>
@@ -262,7 +277,7 @@ export default function Home() {
               {/* Group Tours */}
               <div className="group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '200ms' }}>
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1527631746610-bca00a040d60?w=600')] bg-cover bg-center"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/90 via-[#A9B388]/50 to-transparent group-hover:from-[#A9B388]/90 transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A3C34] via-[#A9B388]/50 to-transparent group-hover:from-[#A9B388]/90 transition-all"></div>
                 <div className="relative z-10 h-full p-6 flex flex-col justify-end">
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-2">Group Tours</h3>
@@ -286,7 +301,7 @@ export default function Home() {
               {/* Stranger Trips */}
               <div className="group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '300ms' }}>
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600')] bg-cover bg-center"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/90 via-[#A9B388]/50 to-transparent group-hover:from-[#A9B388]/90 transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A3C34] via-[#A9B388]/50 to-transparent group-hover:from-[#A9B388]/90 transition-all"></div>
                 <div className="relative z-10 h-full p-6 flex flex-col justify-end">
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-2">Stranger Trips</h3>
@@ -298,7 +313,7 @@ export default function Home() {
               {/* Weddings */}
               <div className="group relative h-96 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '400ms' }}>
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=600')] bg-cover bg-center"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/90 via-[#A9B388]/50 to-transparent group-hover:from-[#5F6F52]/90 transition-all"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/90 via-[#A9B388]/50 to-transparent group-hover:from-[#A9B388]/90 transition-all"></div>
                 <div className="relative z-10 h-full p-6 flex flex-col justify-end">
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-2">Weddings</h3>
@@ -312,79 +327,56 @@ export default function Home() {
       </section>
 
       {/* Stats/Badges Section */}
-      <section className="py-20 bg-[#FEFAE0]">
+      <section className="py-24 bg-[#FEFAE0] overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-
-            {/* Stat 1 - Countries */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-64 cursor-pointer scroll-animate opacity-0 scale-90 hover:scale-110">
-              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80')] bg-cover bg-center"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#5F6F52]/90 via-[#5F6F52]/60 to-transparent group-hover:from-[#5F6F52]/95 transition-all"></div>
-              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
-                <div className="text-5xl md:text-6xl font-bold text-white mb-3">50+</div>
-                <p className="text-white font-bold text-lg uppercase tracking-wider">Countries</p>
-                <p className="text-white/80 text-xs mt-2">Worldwide Coverage</p>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-[#1A3C34] mb-4">Why Choose Us</h2>
+            <p className="text-gray-600 text-lg">Trusted by thousands of travelers worldwide</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {[
+              { val: "50+", label: "Countries", icon: Globe, bgColor: "bg-blue-50", borderColor: "border-blue-200", iconGradient: "from-blue-400 to-blue-600", textColor: "text-blue-900" },
+              { val: "200+", label: "Packages", icon: Package, bgColor: "bg-purple-50", borderColor: "border-purple-200", iconGradient: "from-purple-400 to-purple-600", textColor: "text-purple-900" },
+              { val: "24/7", label: "Support", icon: HeartHandshake, bgColor: "bg-rose-50", borderColor: "border-rose-200", iconGradient: "from-rose-400 to-rose-600", textColor: "text-rose-900" },
+              { val: "10K+", label: "Travelers", icon: Smile, bgColor: "bg-amber-50", borderColor: "border-amber-200", iconGradient: "from-amber-400 to-amber-600", textColor: "text-amber-900" },
+              { val: "500+", label: "Guides", icon: Compass, bgColor: "bg-emerald-50", borderColor: "border-emerald-200", iconGradient: "from-emerald-400 to-emerald-600", textColor: "text-emerald-900" },
+              { val: "1K+", label: "Spots", icon: MapPin, bgColor: "bg-teal-50", borderColor: "border-teal-200", iconGradient: "from-teal-400 to-teal-600", textColor: "text-teal-900" },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className={`${stat.bgColor} rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer border-2 ${stat.borderColor} ${
+                  activeCard === i
+                    ? 'scale-110 -translate-y-2 shadow-2xl ring-4 ring-offset-2'
+                    : ''
+                }`}
+                style={{
+                  animation: `float 3s ease-in-out infinite`,
+                  animationDelay: `${i * 0.3}s`,
+                  ...(activeCard === i && {
+                    ringColor: stat.borderColor.replace('border-', ''),
+                  })
+                }}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${stat.iconGradient} flex items-center justify-center mb-4 transition-transform duration-500 hover:rotate-12 hover:scale-125 ${
+                    activeCard === i ? 'rotate-12 scale-125' : ''
+                  }`}>
+                    <stat.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className={`text-3xl font-bold ${stat.textColor} mb-2`}>{stat.val}</h3>
+                  <p className="text-gray-600 font-medium text-sm uppercase tracking-wider">{stat.label}</p>
+                </div>
               </div>
-            </div>
-
-            {/* Stat 2 - Packages */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-64 cursor-pointer scroll-animate opacity-0 scale-90 hover:scale-110" style={{ animationDelay: '100ms' }}>
-              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80')] bg-cover bg-center"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/90 via-[#A9B388]/60 to-transparent group-hover:from-[#A9B388]/95 transition-all"></div>
-              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
-                <div className="text-5xl md:text-6xl font-bold text-white mb-3">200+</div>
-                <p className="text-white font-bold text-lg uppercase tracking-wider">Packages</p>
-                <p className="text-white/80 text-xs mt-2">Curated Experiences</p>
-              </div>
-            </div>
-
-            {/* Stat 3 - 24/7 Support */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-64 cursor-pointer scroll-animate opacity-0 scale-90 hover:scale-110" style={{ animationDelay: '200ms' }}>
-              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=800&q=80')] bg-cover bg-center"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/90 via-[#A9B388]/60 to-transparent group-hover:from-[#A9B388]/95 transition-all"></div>
-              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
-                <div className="text-5xl md:text-6xl font-bold text-white mb-3">24/7</div>
-                <p className="text-white font-bold text-lg uppercase tracking-wider">Support</p>
-                <p className="text-white/80 text-xs mt-2">Always Here For You</p>
-              </div>
-            </div>
-
-            {/* Stat 4 - Happy Travelers */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-64 cursor-pointer scroll-animate opacity-0 scale-90 hover:scale-110" style={{ animationDelay: '300ms' }}>
-              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800&q=80')] bg-cover bg-center"></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#5F6F52]/90 via-[#5F6F52]/60 to-transparent group-hover:from-[#5F6F52]/95 transition-all"></div>
-              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
-                <div className="text-5xl md:text-6xl font-bold text-white mb-3">10K+</div>
-                <p className="text-white font-bold text-lg uppercase tracking-wider">Happy Travelers</p>
-                <p className="text-white/80 text-xs mt-2">Satisfied Customers</p>
-              </div>
-            </div>
-
+            ))}
           </div>
 
-          {/* Feature Badges Row */}
-          <div className="mt-12 flex flex-wrap justify-center gap-4 scroll-animate opacity-0 translate-y-10">
-
-            <div className="bg-gradient-to-r from-[#A9B388] to-[#A9B388] rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:-translate-y-1">
-              <span className="text-white font-bold text-sm">World Class Service</span>
-            </div>
-
-            <div className="bg-gradient-to-r from-[#A9B388] to-[#5F6F52] rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:-translate-y-1">
-              <span className="text-white font-bold text-sm">Award Winning</span>
-            </div>
-
-            <div className="bg-gradient-to-r from-[#A9B388] to-[#A9B388] rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:-translate-y-1">
-              <span className="text-white font-bold text-sm">Best Price Guarantee</span>
-            </div>
-
-            <div className="bg-gradient-to-r from-[#A9B388] to-[#5F6F52] rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:-translate-y-1">
-              <span className="text-white font-bold text-sm">Secure Booking</span>
-            </div>
-
-            <div className="bg-gradient-to-r from-[#A9B388] to-[#A9B388] rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:-translate-y-1">
-              <span className="text-white font-bold text-sm">Expert Guides</span>
-            </div>
-
+          {/* Feature Badges */}
+          <div className="mt-20 flex flex-wrap justify-center gap-6">
+            {["World Class", "Award Winning", "Best Price", "Secure Booking", "Expert Guides"].map((text, i) => (
+              <div key={i} className="relative  bg-gradient-to-br from-[#1A3C34] to-[#A9B388] group-hover:bg-[#1A3C34] text-white px-6 py-3 rounded-sm shadow-md font-bold text-sm uppercase tracking-widest overflow-hidden hover:bg-[#1A3C34] transition-colors duration-500 before:absolute before:left-[-10px] before:top-2 before:w-5 before:h-5 before:bg-[#FEFAE0] before:rounded-full after:absolute after:right-[-10px] after:top-2 after:w-5 after:h-5 after:bg-[#FEFAE0] after:rounded-full">
+                {text}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -393,7 +385,7 @@ export default function Home() {
       <section className="py-20 bg-[#FEFAE0] overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16 scroll-animate opacity-0 translate-y-10">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#5F6F52] mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#1A3C34] mb-4">
               What Our Travelers Say
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
@@ -409,9 +401,8 @@ export default function Home() {
               {/* Testimonials Set 1 */}
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-10">💬</div>
                   <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">S</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">S</div>
                     <div className="ml-3">
                       <h4 className="font-bold text-[#5F6F52] text-lg">Sarah Johnson</h4>
                       <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
@@ -426,7 +417,6 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-20">✈️</div>
                   <div className="flex items-center mb-4">
                     <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">R</div>
                     <div className="ml-3">
@@ -443,9 +433,8 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-10">🌟</div>
                   <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">E</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">E</div>
                     <div className="ml-3">
                       <h4 className="font-bold text-[#5F6F52] text-lg">Emily Chen</h4>
                       <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
@@ -460,7 +449,6 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-[#A9B388] to-[#5F6F52] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-20">💎</div>
                   <div className="flex items-center mb-4">
                     <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#5F6F52] text-xl font-bold shadow-lg">M</div>
                     <div className="ml-3">
@@ -477,9 +465,8 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-10">💚</div>
                   <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">P</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">P</div>
                     <div className="ml-3">
                       <h4 className="font-bold text-[#5F6F52] text-lg">Priya Sharma</h4>
                       <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
@@ -494,7 +481,6 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-20">⛰️</div>
                   <div className="flex items-center mb-4">
                     <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">A</div>
                     <div className="ml-3">
@@ -511,9 +497,8 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-10">🏖️</div>
                   <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">L</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">L</div>
                     <div className="ml-3">
                       <h4 className="font-bold text-[#5F6F52] text-lg">Lisa Wang</h4>
                       <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
@@ -528,7 +513,6 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-[#A9B388] to-[#5F6F52] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-20">🌍</div>
                   <div className="flex items-center mb-4">
                     <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#5F6F52] text-xl font-bold shadow-lg">D</div>
                     <div className="ml-3">
@@ -545,9 +529,8 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-10">🌺</div>
                   <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">N</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">N</div>
                     <div className="ml-3">
                       <h4 className="font-bold text-[#5F6F52] text-lg">Nina Patel</h4>
                       <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
@@ -562,7 +545,6 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-20">🎒</div>
                   <div className="flex items-center mb-4">
                     <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">J</div>
                     <div className="ml-3">
@@ -580,9 +562,8 @@ export default function Home() {
               {/* Duplicate Set for Seamless Loop */}
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-10">💬</div>
                   <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">S</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">S</div>
                     <div className="ml-3">
                       <h4 className="font-bold text-[#5F6F52] text-lg">Sarah Johnson</h4>
                       <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
@@ -597,7 +578,6 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-20">✈️</div>
                   <div className="flex items-center mb-4">
                     <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">R</div>
                     <div className="ml-3">
@@ -614,9 +594,8 @@ export default function Home() {
 
               <div className="flex-shrink-0 w-96 mx-4">
                 <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="absolute top-4 right-4 text-6xl opacity-10">🌟</div>
                   <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">E</div>
+                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">E</div>
                     <div className="ml-3">
                       <h4 className="font-bold text-[#5F6F52] text-lg">Emily Chen</h4>
                       <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
@@ -729,15 +708,17 @@ export default function Home() {
       `}</style>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-br from-[#A9B388] to-[#5F6F52] text-white py-12 border-t-4 border-[#A9B388]">
+      <footer className="bg-gradient-to-br from-[#1A3C34] to-[#5F6F52] text-white py-12 border-t-4 border-[#A9B388]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 scroll-animate opacity-0 translate-y-10">
             {/* Company Info */}
             <div>
               <div className="mb-4">
-                <img
+                <Image
                   src="/logo.png"
                   alt="Travel Cravers"
+                  width={64}
+                  height={64}
                   className="h-16 w-auto object-contain drop-shadow-lg brightness-110"
                 />
               </div>

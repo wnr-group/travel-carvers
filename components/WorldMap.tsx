@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+import { useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 
 interface TouristLocation {

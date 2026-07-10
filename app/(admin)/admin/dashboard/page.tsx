@@ -1,5 +1,6 @@
-import { getSession, signOut } from '@/lib/supabase/auth'
+import { getSession } from '@/lib/supabase/auth'
 import { redirect } from 'next/navigation'
+import Image from 'next/image'
 import LogoutButton from './LogoutButton'
 
 export default async function AdminDashboardPage() {
@@ -16,7 +17,7 @@ export default async function AdminDashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Travel Carvers" className="h-12 w-12 rounded-full object-cover border-2 border-white/50" />
+              <Image src="/logo.png" alt="Travel Carvers" width={48} height={48} className="h-12 w-12 rounded-full object-cover border-2 border-white/50" />
               <div>
                 <h1 className="text-2xl font-bold text-white">Travel Carvers Admin</h1>
                 <p className="text-sm text-white/80">Admin Panel</p>

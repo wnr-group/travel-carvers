@@ -11,7 +11,9 @@ export default function LogoutButton() {
     try {
       await signOut()
     } catch (error) {
-      console.error('Logout error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Logout error:', error)
+      }
       setIsLoading(false)
     }
   }
