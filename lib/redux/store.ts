@@ -7,12 +7,15 @@ const placeholderSlice = createSlice({
   reducers: {},
 })
 
-export const store = configureStore({
-  reducer: {
-    placeholder: placeholderSlice.reducer,
-    // Add your real reducers here as needed
-  },
-})
+export const makeStore = () => {
+  return configureStore({
+    reducer: {
+      placeholder: placeholderSlice.reducer,
+      // Add your real reducers here as needed
+    },
+  })
+}
 
-export type RootState = ReturnType<typeof store.getState>
-export type AppDispatch = typeof store.dispatch
+export type AppStore = ReturnType<typeof makeStore>
+export type RootState = ReturnType<AppStore['getState']>
+export type AppDispatch = AppStore['dispatch']

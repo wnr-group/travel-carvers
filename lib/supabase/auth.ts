@@ -2,7 +2,6 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { supabase } from './client'
 import { supabaseAdmin } from './server'
 
 export async function signIn(email: string, password: string) {
@@ -65,7 +64,7 @@ export async function getSession() {
     }
 
     return data.user
-  } catch (error) {
+  } catch {
     return null
   }
 }

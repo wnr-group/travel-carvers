@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 
 export default function Navbar() {
@@ -11,10 +12,12 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo and Brand */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            <img
+          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity flex-shrink-0">
+            <Image
               src="/logo.png"
               alt="Travel Carvers"
+              width={48}
+              height={48}
               className="h-12 w-12 rounded-full object-cover border-2 border-white/50"
             />
             <div>
@@ -23,28 +26,43 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-white hover:text-white/80 font-medium transition-colors">
-              Home
+          {/* Desktop Navigation - Right Side */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link href="/" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
+              <span className="relative z-10">Home</span>
+              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
             </Link>
-            <Link href="#packages" className="text-white hover:text-white/80 font-medium transition-colors">
-              Packages
+            <Link href="#packages" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
+              <span className="relative z-10">Packages</span>
+              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
             </Link>
-            <Link href="#destinations" className="text-white hover:text-white/80 font-medium transition-colors">
-              Destinations
+            <Link href="#countries" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
+              <span className="relative z-10">Countries</span>
+              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
             </Link>
-            <Link href="#about" className="text-white hover:text-white/80 font-medium transition-colors">
-              About Us
+            <Link href="#india" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
+              <span className="relative z-10">India</span>
+              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
             </Link>
-            <Link href="#contact" className="text-white hover:text-white/80 font-medium transition-colors">
-              Contact
+            <Link href="#about" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
+              <span className="relative z-10">About Us</span>
+              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
+              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
             </Link>
 
-            {/* CTA Button */}
-            <button className="px-6 py-2 bg-[#1A3C34] backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-white/30 transition-all border border-white/30">
-              Get Quote
-            </button>
+            {/* Contact Us Button */}
+            <Link href="#contact">
+              <button className="ml-2 px-6 py-2.5 bg-white text-[#1A3C34] rounded-xl font-bold hover:bg-white/95 hover:scale-110 hover:shadow-xl transition-all duration-300 shadow-lg flex items-center gap-2 group">
+                <span>Contact Us</span>
+                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -71,42 +89,47 @@ export default function Navbar() {
             <div className="flex flex-col gap-3">
               <Link
                 href="/"
-                className="text-white hover:text-white/80 font-medium transition-colors py-2"
+                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link
                 href="#packages"
-                className="text-white hover:text-white/80 font-medium transition-colors py-2"
+                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Packages
               </Link>
               <Link
-                href="#destinations"
-                className="text-white hover:text-white/80 font-medium transition-colors py-2"
+                href="#countries"
+                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Destinations
+                Countries
+              </Link>
+              <Link
+                href="#india"
+                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                India
               </Link>
               <Link
                 href="#about"
-                className="text-white hover:text-white/80 font-medium transition-colors py-2"
+                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About Us
               </Link>
-              <Link
-                href="#contact"
-                className="text-white hover:text-white/80 font-medium transition-colors py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
+              <Link href="#contact" onClick={() => setIsMenuOpen(false)}>
+                <button className="w-full mt-4 px-6 py-3 bg-white text-[#1A3C34] rounded-xl font-bold hover:bg-white/95 hover:scale-105 transition-all shadow-lg text-center flex items-center justify-center gap-2">
+                  <span>Contact Us</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </Link>
-              <button className="mt-2 px-6 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-white/30 transition-all border border-white/30 text-center">
-                Get Quote
-              </button>
             </div>
           </div>
         )}

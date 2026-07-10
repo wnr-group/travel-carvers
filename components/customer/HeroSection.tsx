@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 
 const RealWorldMap = dynamic(() => import('@/components/RealWorldMap'), {
@@ -88,10 +89,13 @@ export default function HeroSection() {
                   index === currentSlide ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                <img
+                <Image
                   src={image.url}
                   alt={image.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                  priority={index === 0}
                 />
                 {/* Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#5F6F52]/60 via-[#5F6F52]/40 to-transparent"></div>
@@ -104,10 +108,13 @@ export default function HeroSection() {
             <div className="transform transition-all duration-500 translate-y-0 opacity-100">
               {/* Logo/Brand */}
               <div className="mb-6 md:mb-8">
-                <img
+                <Image
                   src="/logo.png"
                   alt="Travel Carvers"
+                  width={96}
+                  height={96}
                   className="h-16 w-16 md:h-24 md:w-24 mx-auto rounded-full object-cover border-4 border-white/50 shadow-2xl mb-3 md:mb-4"
+                  priority
                 />
                 <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-2 drop-shadow-2xl">
                   Travel Carvers

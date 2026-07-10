@@ -18,7 +18,7 @@ function loadEnv() {
         }
       }
     })
-  } catch (error) {
+  } catch {
     console.warn('Could not load .env.local file')
   }
 }
@@ -60,7 +60,7 @@ async function seedAdmin() {
   }
 
   // Create admin user
-  const { data, error } = await supabase.auth.admin.createUser({
+  const { error } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,

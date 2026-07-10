@@ -72,3 +72,23 @@ html {
 html, body {
   width: 100%;
 }
+
+/* Floating wave animation for cards */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Scroll-in animations */
+.scroll-animate {
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.scroll-animate.animate-in {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}

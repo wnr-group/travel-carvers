@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { loginAction } from './actions'
 import { toast } from 'sonner'
 
@@ -16,7 +17,7 @@ export default function AdminLoginPage() {
       if (!result.success) {
         toast.error(result.error || 'Login failed')
       }
-    } catch (error) {
+    } catch {
       toast.error('An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -28,7 +29,7 @@ export default function AdminLoginPage() {
       <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img src="/logo.png" alt="Travel Carvers" className="h-16 w-16 rounded-full object-cover" />
+            <Image src="/logo.png" alt="Travel Carvers" width={64} height={64} className="h-16 w-16 rounded-full object-cover" priority />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Admin Login

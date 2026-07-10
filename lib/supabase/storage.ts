@@ -24,14 +24,13 @@ export async function uploadFile(
 ) {
   const client = isAdmin ? supabaseAdmin : supabase
 
-  const { data, error } = await client.storage.from(bucket).upload(path, file, {
+  const { error } = await client.storage.from(bucket).upload(path, file, {
     cacheControl: '3600',
     upsert: false,
   })
 
   if (error) {
-    console.error('Upload error:', error)
-    return { error, publicUrl: null }
+    throw new Error(`Upload error: ${error.message}`)
   }
 
   const {
@@ -53,8 +52,7 @@ export async function deleteFile(bucket: string, path: string, isAdmin = false) 
   const { error } = await client.storage.from(bucket).remove([path])
 
   if (error) {
-    console.error('Delete error:', error)
-    return { error }
+    throw new Error(`Delete error: ${error.message}`)
   }
 
   return { error: null }
@@ -85,8 +83,7 @@ export async function listFiles(bucket: string, path = '', isAdmin = false) {
   const { data, error } = await client.storage.from(bucket).list(path)
 
   if (error) {
-    console.error('List files error:', error)
-    return { error, files: [] }
+    throw new Error(`List files error: ${error.message}`)
   }
 
   return { error: null, files: data }

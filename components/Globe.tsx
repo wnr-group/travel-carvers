@@ -2,8 +2,52 @@
 
 import { useRef, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import type { Object3D, Scene } from 'three';
 
-const Globe = dynamic(() => import('react-globe.gl').then(mod => mod.default), { ssr: false }) as any;
+interface GlobeInstance {
+  pointOfView: (pov: { altitude: number; lat: number; lng: number }, duration?: number) => void;
+  controls: () => {
+    autoRotate: boolean;
+    autoRotateSpeed: number;
+    addEventListener: (event: string, handler: () => void) => void;
+    removeEventListener: (event: string, handler: () => void) => void;
+  };
+  scene: () => Scene;
+  camera: () => {
+    aspect: number;
+    updateProjectionMatrix: () => void;
+  };
+}
+
+interface GlobeProps {
+  ref?: React.Ref<GlobeInstance>;
+  globeImageUrl: string;
+  bumpImageUrl: string;
+  atmosphereColor: string;
+  atmosphereAltitude: number;
+  backgroundColor: string;
+  pointsData: TouristLocation[];
+  pointLat: string;
+  pointLng: string;
+  pointColor: string;
+  pointAltitude: number;
+  pointRadius: string;
+  pointLabel: string;
+  onPointClick: (point: TouristLocation) => void;
+  pointsMerge: boolean;
+  labelsData: TouristLocation[];
+  labelLat: string;
+  labelLng: string;
+  labelText: string;
+  labelSize: number;
+  labelDotRadius: number;
+  labelColor: (d: TouristLocation) => string;
+  labelResolution: number;
+  width: number;
+  height: number;
+}
+
+const Globe = dynamic<GlobeProps>(() => import('react-globe.gl').then(mod => mod.default), { ssr: false });
 
 interface TouristLocation {
   name: string;
@@ -91,9 +135,8 @@ const touristLocations: TouristLocation[] = [
 ];
 
 export default function GlobeComponent() {
-  const globeEl = useRef<any>(null);
+  const globeEl = useRef<GlobeInstance | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<TouristLocation | null>(null);
-  const [autoRotate, setAutoRotate] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -109,23 +152,28 @@ export default function GlobeComponent() {
       // Brighten the scene significantly
       const scene = globeEl.current.scene();
       if (scene) {
-        scene.children.forEach((child: any) => {
+        scene.children.forEach((child: Object3D) => {
           if (child.type === 'DirectionalLight') {
-            child.intensity = 2.5;
+            (child as unknown as { intensity: number }).intensity = 2.5;
           }
           if (child.type === 'AmbientLight') {
-            child.intensity = 2.0;
+            (child as unknown as { intensity: number }).intensity = 2.0;
           }
         });
 
         // Find and brighten the globe material
-        scene.traverse((object: any) => {
-          if (object.isMesh && object.material) {
-            if (object.material.map) {
-              // Increase emissive light to brighten oceans
-              object.material.emissive = { r: 0.3, g: 0.3, b: 0.4 };
-              object.material.emissiveIntensity = 0.3;
-              object.material.needsUpdate = true;
+        scene.traverse((object: Object3D) => {
+          if ('isMesh' in object && object.isMesh && 'material' in object && object.material) {
+            const material = object.material as {
+              map?: unknown;
+              emissive?: { r: number; g: number; b: number };
+              emissiveIntensity?: number;
+              needsUpdate?: boolean;
+            };
+            if (material.map) {
+              material.emissive = { r: 0.3, g: 0.3, b: 0.4 };
+              material.emissiveIntensity = 0.3;
+              material.needsUpdate = true;
             }
           }
         });
@@ -133,11 +181,13 @@ export default function GlobeComponent() {
 
       // Animate to normal view (growing effect) - keeping India centered
       setTimeout(() => {
-        globeEl.current.pointOfView(
-          { altitude: 2.5, lat: 20.5937, lng: 78.9629 },
-          2000 // 2 second animation
-        );
-        setIsLoaded(true);
+        if (globeEl.current) {
+          globeEl.current.pointOfView(
+            { altitude: 2.5, lat: 20.5937, lng: 78.9629 },
+            2000 // 2 second animation
+          );
+          setIsLoaded(true);
+        }
       }, 100);
 
       // Center the globe properly
@@ -162,7 +212,6 @@ export default function GlobeComponent() {
 
     const handleInteractionStart = () => {
       controls.autoRotate = false;
-      setAutoRotate(false);
       if (inactivityTimer.current) {
         clearTimeout(inactivityTimer.current);
       }
@@ -175,7 +224,6 @@ export default function GlobeComponent() {
       inactivityTimer.current = setTimeout(() => {
         if (!selectedLocation) {
           controls.autoRotate = true;
-          setAutoRotate(true);
         }
       }, 5000);
     };
@@ -208,7 +256,6 @@ export default function GlobeComponent() {
 
       // Disable auto-rotate during zoom
       globeEl.current.controls().autoRotate = false;
-      setAutoRotate(false);
 
       // Clear selected location after 8 seconds but don't zoom out
       // User can manually zoom out or click elsewhere
@@ -248,7 +295,7 @@ export default function GlobeComponent() {
           labelText="name"
           labelSize={selectedLocation ? 1.2 : 0.5}
           labelDotRadius={0.3}
-          labelColor={(d: any) => d.labelColor}
+          labelColor={(d: TouristLocation) => d.labelColor}
           labelResolution={2}
           width={typeof window !== 'undefined' ? window.innerWidth : 1200}
           height={typeof window !== 'undefined' ? window.innerHeight : 800}

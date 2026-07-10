@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import HeroSection from '@/components/customer/HeroSection';
 import { Globe, Package, HeartHandshake, Smile, Compass, MapPin, Plane } from 'lucide-react';
 
 export default function Home() {
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [activeCard, setActiveCard] = useState<number | null>(null);
 
   useEffect(() => {
     // Intersection Observer for scroll animations
@@ -30,6 +32,24 @@ export default function Home() {
     return () => {
       observerRef.current?.disconnect();
     };
+  }, []);
+
+  // Cycle through cards to highlight them
+  useEffect(() => {
+    let currentIndex = 0;
+
+    const cycleCards = () => {
+      setActiveCard(currentIndex);
+      currentIndex = (currentIndex + 1) % 6; // Cycle through 0-5
+    };
+
+    // Start immediately
+    cycleCards();
+
+    // Continue cycling every 2 seconds
+    const interval = setInterval(cycleCards, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -311,34 +331,41 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1A3C34] mb-4">Why Choose Us</h2>
+            <p className="text-gray-600 text-lg">Trusted by thousands of travelers worldwide</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {[
-              { val: "50+", label: "Countries", icon: Globe },
-              { val: "200+", label: "Packages", icon: Package },
-              { val: "24/7", label: "Support", icon: HeartHandshake },
-              { val: "10K+", label: "Travelers", icon: Smile },
-              { val: "500+", label: "Guides", icon: Compass },
-              { val: "1K+", label: "Spots", icon: MapPin },
+              { val: "50+", label: "Countries", icon: Globe, bgColor: "bg-blue-50", borderColor: "border-blue-200", iconGradient: "from-blue-400 to-blue-600", textColor: "text-blue-900" },
+              { val: "200+", label: "Packages", icon: Package, bgColor: "bg-purple-50", borderColor: "border-purple-200", iconGradient: "from-purple-400 to-purple-600", textColor: "text-purple-900" },
+              { val: "24/7", label: "Support", icon: HeartHandshake, bgColor: "bg-rose-50", borderColor: "border-rose-200", iconGradient: "from-rose-400 to-rose-600", textColor: "text-rose-900" },
+              { val: "10K+", label: "Travelers", icon: Smile, bgColor: "bg-amber-50", borderColor: "border-amber-200", iconGradient: "from-amber-400 to-amber-600", textColor: "text-amber-900" },
+              { val: "500+", label: "Guides", icon: Compass, bgColor: "bg-emerald-50", borderColor: "border-emerald-200", iconGradient: "from-emerald-400 to-emerald-600", textColor: "text-emerald-900" },
+              { val: "1K+", label: "Spots", icon: MapPin, bgColor: "bg-teal-50", borderColor: "border-teal-200", iconGradient: "from-teal-400 to-teal-600", textColor: "text-teal-900" },
             ].map((stat, i) => (
-              <div key={i} className="flex flex-col items-center group cursor-pointer relative">
-                
-                {/* Stamp Frame with Forward Orbiting Plane */}
-                <div className="relative w-32 h-32 flex items-center justify-center mb-6">
-                  <div className="absolute w-full h-full rounded-full border-4 border-dashed border-[#A9B388] group-hover:border-[#1A3C34] animate-[spin_20s_linear_infinite] transition-colors duration-500"></div>
-                  
-                  {/*Plane */}
-                  <div className="absolute w-full h-full animate-[spin_10s_linear_infinite]">
-                    <Plane className="w-6 h-6 text-[#1A3C34] absolute -top-3 left-1/2 rotate-45" />
+              <div
+                key={i}
+                className={`${stat.bgColor} rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer border-2 ${stat.borderColor} ${
+                  activeCard === i
+                    ? 'scale-110 -translate-y-2 shadow-2xl ring-4 ring-offset-2'
+                    : ''
+                }`}
+                style={{
+                  animation: `float 3s ease-in-out infinite`,
+                  animationDelay: `${i * 0.3}s`,
+                  ...(activeCard === i && {
+                    ringColor: stat.borderColor.replace('border-', ''),
+                  })
+                }}
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${stat.iconGradient} flex items-center justify-center mb-4 transition-transform duration-500 hover:rotate-12 hover:scale-125 ${
+                    activeCard === i ? 'rotate-12 scale-125' : ''
+                  }`}>
+                    <stat.icon className="w-8 h-8 text-white" />
                   </div>
-
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#A9B388] to-[#8FA08B] group-hover:from-[#1A3C34] group-hover:to-[#1A3C34] flex flex-col items-center justify-center text-white shadow-lg transition-all duration-500">
-                    <stat.icon className="w-7 h-7 mb-1" />
-                    <span className="text-lg font-bold">{stat.val}</span>
-                  </div>
+                  <h3 className={`text-3xl font-bold ${stat.textColor} mb-2`}>{stat.val}</h3>
+                  <p className="text-gray-600 font-medium text-sm uppercase tracking-wider">{stat.label}</p>
                 </div>
-                
-                <p className="text-[#1A3C34] font-bold uppercase tracking-[0.2em] text-xs transition-colors duration-500">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -687,9 +714,11 @@ export default function Home() {
             {/* Company Info */}
             <div>
               <div className="mb-4">
-                <img
+                <Image
                   src="/logo.png"
                   alt="Travel Cravers"
+                  width={64}
+                  height={64}
                   className="h-16 w-auto object-contain drop-shadow-lg brightness-110"
                 />
               </div>
