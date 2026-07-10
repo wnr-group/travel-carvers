@@ -8,7 +8,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <nav className="bg-gradient-to-r from-[#1A3C34] to-[#A9B388] shadow-lg sticky top-0 z-[100]">
+    <nav className="bg-gradient-brand-navbar shadow-lg sticky top-0 z-[100]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo and Brand */}
@@ -56,7 +56,7 @@ export default function Navbar() {
 
             {/* Contact Us Button */}
             <Link href="#contact">
-              <button className="ml-2 px-6 py-2.5 bg-white text-[#1A3C34] rounded-xl font-bold hover:bg-white/95 hover:scale-110 hover:shadow-xl transition-all duration-300 shadow-lg flex items-center gap-2 group">
+              <button className="ml-2 px-6 py-2.5 bg-white text-brand-darkest rounded-xl font-bold hover:bg-white/95 hover:scale-110 hover:shadow-xl transition-all duration-300 shadow-lg flex items-center gap-2 group">
                 <span>Contact Us</span>
                 <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -123,7 +123,7 @@ export default function Navbar() {
                 About Us
               </Link>
               <Link href="#contact" onClick={() => setIsMenuOpen(false)}>
-                <button className="w-full mt-4 px-6 py-3 bg-white text-[#1A3C34] rounded-xl font-bold hover:bg-white/95 hover:scale-105 transition-all shadow-lg text-center flex items-center justify-center gap-2">
+                <button className="w-full mt-4 px-6 py-3 bg-white text-brand-darkest rounded-xl font-bold hover:bg-white/95 hover:scale-105 transition-all shadow-lg text-center flex items-center justify-center gap-2">
                   <span>Contact Us</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -1,58 +1,92 @@
 @import "tailwindcss";
 
 /* ========================================
-   Travel Carvers - Color Palette
+   Travel Carvers - Logo-Based Color Palette
+   Muted Sage Greens (Extracted from Logo)
    ======================================== */
 
 :root {
-  /* Brand Colors */
-  --color-sage-dark: #5F6F52;      /* Primary dark green - headers, important text */
-  --color-sage-medium: #A9B388;    /* Primary medium green - buttons, accents */
-  --color-cream: #FEFAE0;          /* Light cream - backgrounds */
-  --color-tan: #B99470;            /* Warm tan/brown - accents, highlights */
+  /* Brand Colors - From Logo (Muted Sage Tones) */
+  --logo-forest-dark: #1B4D1B;      /* Darkest - logo text, outer circle */
+  --logo-forest: #2D5F2D;           /* Dark forest green - main brand */
+  --logo-sage: #5F7A5F;             /* Medium sage - bird, mountains */
+  --logo-sage-medium: #6B8E6B;      /* Sage green - foliage, details */
+  --logo-sage-light: #8FA88F;       /* Light sage - highlights */
+  --logo-sage-soft: #9DB89D;        /* Soft sage - subtle accents */
+  --logo-mint: #B8D4B8;             /* Mint sage - very light */
+  --logo-pastel: #C8E6C8;           /* Pastel sage - subtle backgrounds */
 
   /* Semantic Colors */
-  --background: #FEFAE0;
-  --foreground: #171717;
-  --primary: #5F6F52;
-  --secondary: #A9B388;
-  --accent: #B99470;
+  --background: #FFFFFF;            /* Pure white background */
+  --foreground: #1B4D1B;            /* Forest dark for text */
+  --primary: #2D5F2D;               /* Forest green primary */
+  --secondary: #6B8E6B;             /* Sage green secondary */
+  --accent: #9DB89D;                /* Soft sage accent */
 
-  /* Opacity Variations - Sage Dark */
-  --sage-dark-10: rgba(95, 111, 82, 0.1);
-  --sage-dark-20: rgba(95, 111, 82, 0.2);
-  --sage-dark-30: rgba(95, 111, 82, 0.3);
-  --sage-dark-50: rgba(95, 111, 82, 0.5);
-  --sage-dark-70: rgba(95, 111, 82, 0.7);
-  --sage-dark-90: rgba(95, 111, 82, 0.9);
+  /* Opacity Variations - Forest Dark */
+  --forest-dark-10: rgba(27, 77, 27, 0.1);
+  --forest-dark-20: rgba(27, 77, 27, 0.2);
+  --forest-dark-30: rgba(27, 77, 27, 0.3);
+  --forest-dark-50: rgba(27, 77, 27, 0.5);
+  --forest-dark-70: rgba(27, 77, 27, 0.7);
+  --forest-dark-90: rgba(27, 77, 27, 0.9);
 
   /* Opacity Variations - Sage Medium */
-  --sage-medium-10: rgba(169, 179, 136, 0.1);
-  --sage-medium-20: rgba(169, 179, 136, 0.2);
-  --sage-medium-30: rgba(169, 179, 136, 0.3);
-  --sage-medium-50: rgba(169, 179, 136, 0.5);
-  --sage-medium-70: rgba(169, 179, 136, 0.7);
+  --sage-medium-10: rgba(107, 142, 107, 0.1);
+  --sage-medium-20: rgba(107, 142, 107, 0.2);
+  --sage-medium-30: rgba(107, 142, 107, 0.3);
+  --sage-medium-50: rgba(107, 142, 107, 0.5);
+  --sage-medium-70: rgba(107, 142, 107, 0.7);
+  --sage-medium-90: rgba(107, 142, 107, 0.9);
 
-  /* Opacity Variations - Tan */
-  --tan-10: rgba(185, 148, 112, 0.1);
-  --tan-20: rgba(185, 148, 112, 0.2);
-  --tan-30: rgba(185, 148, 112, 0.3);
-  --tan-50: rgba(185, 148, 112, 0.5);
+  /* Opacity Variations - Sage Light */
+  --sage-light-10: rgba(157, 184, 157, 0.1);
+  --sage-light-20: rgba(157, 184, 157, 0.2);
+  --sage-light-30: rgba(157, 184, 157, 0.3);
+  --sage-light-50: rgba(157, 184, 157, 0.5);
+
+  /* Gradient Variations - Logo-Based */
+  --gradient-dark: linear-gradient(135deg, #1B4D1B 0%, #2D5F2D 100%);
+  --gradient-primary: linear-gradient(135deg, #2D5F2D 0%, #5F7A5F 100%);
+  --gradient-medium: linear-gradient(135deg, #5F7A5F 0%, #6B8E6B 100%);
+  --gradient-soft: linear-gradient(135deg, #8FA88F 0%, #B8D4B8 100%);
+  --gradient-full: linear-gradient(135deg, #1B4D1B 0%, #2D5F2D 25%, #5F7A5F 50%, #8FA88F 75%, #C8E6C8 100%);
 }
+
+/* ========================================
+   Tailwind Theme Integration
+   ======================================== */
 
 @theme inline {
+  /* Background & Foreground */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --color-accent: var(--accent);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1a1a1a;
-    --foreground: #ededed;
-  }
+  /* Primary Colors */
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--logo-forest-dark);
+  --color-primary-forest: var(--logo-forest);
+
+  /* Secondary Colors */
+  --color-secondary: var(--secondary);
+  --color-secondary-sage: var(--logo-sage);
+  --color-secondary-medium: var(--logo-sage-medium);
+
+  /* Accent Colors */
+  --color-accent: var(--accent);
+  --color-accent-light: var(--logo-sage-light);
+  --color-accent-soft: var(--logo-sage-soft);
+
+  /* Pastel Colors */
+  --color-pastel-mint: var(--logo-mint);
+  --color-pastel-sage: var(--logo-pastel);
+
+  /* Brand Specific - Easy access names */
+  --color-brand-darkest: var(--logo-forest-dark);
+  --color-brand-dark: var(--logo-forest);
+  --color-brand-medium: var(--logo-sage-medium);
+  --color-brand-light: var(--logo-sage-soft);
+  --color-brand-lightest: var(--logo-pastel);
 }
 
 body {
@@ -63,6 +97,7 @@ body {
   padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  min-height: 100vh;
 }
 
 html {
@@ -91,4 +126,90 @@ html, body {
 .scroll-animate.animate-in {
   opacity: 1 !important;
   transform: translateY(0) !important;
+}
+
+/* ========================================
+   Custom Utility Classes - Brand Colors
+   ======================================== */
+
+/* Background Colors */
+.bg-brand-darkest { background-color: var(--logo-forest-dark); }
+.bg-brand-dark { background-color: var(--logo-forest); }
+.bg-brand-medium { background-color: var(--logo-sage-medium); }
+.bg-brand-light { background-color: var(--logo-sage-soft); }
+.bg-brand-lightest { background-color: var(--logo-pastel); }
+
+/* Text Colors */
+.text-brand-darkest { color: var(--logo-forest-dark); }
+.text-brand-dark { color: var(--logo-forest); }
+.text-brand-medium { color: var(--logo-sage-medium); }
+.text-brand-light { color: var(--logo-sage-soft); }
+.text-brand-lightest { color: var(--logo-pastel); }
+
+/* Border Colors */
+.border-brand-darkest { border-color: var(--logo-forest-dark); }
+.border-brand-dark { border-color: var(--logo-forest); }
+.border-brand-medium { border-color: var(--logo-sage-medium); }
+.border-brand-light { border-color: var(--logo-sage-soft); }
+
+/* Brand Gradients */
+.bg-gradient-brand-dark {
+  background: linear-gradient(135deg, var(--logo-forest-dark) 0%, var(--logo-forest) 100%);
+}
+
+.bg-gradient-brand-primary {
+  background: linear-gradient(135deg, var(--logo-forest) 0%, var(--logo-sage) 100%);
+}
+
+.bg-gradient-brand-navbar {
+  background: linear-gradient(to right, var(--logo-forest-dark) 0%, var(--logo-sage) 100%);
+}
+
+.bg-gradient-brand-medium {
+  background: linear-gradient(135deg, var(--logo-sage) 0%, var(--logo-sage-medium) 100%);
+}
+
+.bg-gradient-brand-soft {
+  background: linear-gradient(135deg, var(--logo-sage-light) 0%, var(--logo-mint) 100%);
+}
+
+.bg-gradient-brand-full {
+  background: linear-gradient(135deg, var(--logo-forest-dark) 0%, var(--logo-forest) 25%, var(--logo-sage) 50%, var(--logo-sage-light) 75%, var(--logo-pastel) 100%);
+}
+
+/* Gradient overlays for cards */
+.overlay-brand-dark {
+  background: linear-gradient(to top,
+    rgba(107, 142, 107, 0.7) 0%,
+    rgba(107, 142, 107, 0.3) 50%,
+    transparent 100%);
+}
+
+.overlay-brand-dark-hover:hover {
+  background: linear-gradient(to top,
+    rgba(107, 142, 107, 0.8) 0%,
+    rgba(107, 142, 107, 0.4) 50%,
+    transparent 100%);
+}
+
+.overlay-brand-primary {
+  background: linear-gradient(to top,
+    rgba(27, 77, 27, 0.7) 0%,
+    rgba(95, 122, 95, 0.5) 50%,
+    transparent 100%);
+}
+
+/* Subtle background tints */
+.bg-brand-tint-light {
+  background: linear-gradient(to bottom,
+    white 0%,
+    rgba(200, 230, 200, 0.2) 50%,
+    white 100%);
+}
+
+.bg-brand-tint-subtle {
+  background: linear-gradient(to bottom,
+    white 0%,
+    rgba(184, 212, 184, 0.1) 50%,
+    white 100%);
 }
