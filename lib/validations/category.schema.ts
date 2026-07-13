@@ -19,5 +19,6 @@ export const subcategorySchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-export type CategoryFormData = z.infer<typeof categorySchema>;
+// export type CategoryFormData = z.infer<typeof categorySchema>;
+export type CategoryFormData = z.input<typeof categorySchema>;
 export type SubcategoryFormData = z.infer<typeof subcategorySchema>;

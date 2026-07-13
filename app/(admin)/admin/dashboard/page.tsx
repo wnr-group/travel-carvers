@@ -1,113 +1,109 @@
-import { getSession } from '@/lib/supabase/auth'
-import { redirect } from 'next/navigation'
-import Image from 'next/image'
-import LogoutButton from './LogoutButton'
+'use server';
+
+import { getSession } from '@/lib/supabase/auth';
+import { redirect } from 'next/navigation';
+import { supabaseAdmin } from '@/lib/supabase/server';
+import { Package, Mail, MessageSquare, FolderTree } from 'lucide-react';
+
+async function getDashboardStats() {
+  // Use Promise.all to fetch them in parallel
+  const [packages, leads, reviews, categories] = await Promise.all([
+    supabaseAdmin.from('packages').select('id', { count: 'exact', head: true }),
+    supabaseAdmin.from('leads').select('id', { count: 'exact', head: true }),
+    supabaseAdmin.from('reviews').select('id', { count: 'exact', head: true }),
+    supabaseAdmin.from('categories').select('id', { count: 'exact', head: true }),
+  ]);
+
+  console.log(packages);
+  return {
+    packages: packages.count ?? 0,
+    leads: leads.count ?? 0,
+    reviews: reviews.count ?? 0,
+    categories: categories.count ?? 0,
+  };
+}
+
+async function getRecentLeads() {
+  const { data, error } = await supabaseAdmin
+    .from('leads')
+    .select(`
+      id, 
+      name, 
+      email, 
+      created_at,
+      packages ( title )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  if (error) {
+    return [];
+  }
+  
+  return data || [];
+}
 
 export default async function AdminDashboardPage() {
-  const user = await getSession()
+  const session = await getSession();
+  if (!session) redirect('/admin/login');
 
-  if (!user) {
-    redirect('/admin/login')
-  }
-
+  const stats = await getDashboardStats();
+  const recentLeads = await getRecentLeads();
+  
   return (
-    <div className="min-h-screen bg-[#FEFAE0]">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-[#5F6F52] to-[#A9B388] shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-3">
-              <Image src="/logo.png" alt="Travel Carvers" width={48} height={48} className="h-12 w-12 rounded-full object-cover border-2 border-white/50" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">Travel Carvers Admin</h1>
-                <p className="text-sm text-white/80">Admin Panel</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Profile */}
-              <div className="flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                <div className="w-10 h-10 bg-gradient-to-br from-white/90 to-white/70 rounded-full flex items-center justify-center text-[#5F6F52] font-bold">
-                  {user.email?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">{user.email}</p>
-                  <p className="text-xs text-white/70">Administrator</p>
-                </div>
-              </div>
-
-              {/* Logout Button */}
-              <LogoutButton />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-[#A9B388] to-[#A9B388] rounded-xl shadow-2xl p-8 mb-8 text-white">
-          <h2 className="text-3xl font-bold mb-2">Welcome back, Admin! 👋</h2>
-          <p className="text-white/90">
-            Manage your travel packages, destinations, and customer leads from this dashboard.
-          </p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-[#A9B388]">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Total Packages</h3>
-              <span className="text-2xl">📦</span>
-            </div>
-            <p className="text-3xl font-bold text-[#5F6F52]">0</p>
-            <p className="text-xs text-gray-500 mt-1">No packages yet</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-[#A9B388]">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Total Leads</h3>
-              <span className="text-2xl">📧</span>
-            </div>
-            <p className="text-3xl font-bold text-[#5F6F52]">0</p>
-            <p className="text-xs text-gray-500 mt-1">No inquiries yet</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 border-[#A9B388]">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Destinations</h3>
-              <span className="text-2xl">🌍</span>
-            </div>
-            <p className="text-3xl font-bold text-[#5F6F52]">0</p>
-            <p className="text-xs text-gray-500 mt-1">No destinations yet</p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white p-8 rounded-2xl shadow-lg">
-          <h2 className="text-2xl font-bold text-[#5F6F52] mb-6">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="flex flex-col items-center justify-center gap-3 px-4 py-8 bg-gradient-to-br from-[#A9B388]/20 to-[#A9B388]/10 text-[#5F6F52] rounded-xl font-semibold hover:from-[#A9B388]/30 hover:to-[#A9B388]/20 hover:shadow-lg hover:scale-105 transition-all border border-[#A9B388]/30">
-              <span className="text-4xl">➕</span>
-              <span>Add Package</span>
-            </button>
-            <button className="flex flex-col items-center justify-center gap-3 px-4 py-8 bg-gradient-to-br from-[#A9B388]/20 to-[#A9B388]/10 text-[#5F6F52] rounded-xl font-semibold hover:from-[#A9B388]/30 hover:to-[#A9B388]/20 hover:shadow-lg hover:scale-105 transition-all border border-[#A9B388]/30">
-              <span className="text-4xl">📋</span>
-              <span>View Leads</span>
-            </button>
-            <button className="flex flex-col items-center justify-center gap-3 px-4 py-8 bg-gradient-to-br from-[#A9B388]/20 to-[#A9B388]/10 text-[#5F6F52] rounded-xl font-semibold hover:from-[#A9B388]/30 hover:to-[#A9B388]/20 hover:shadow-lg hover:scale-105 transition-all border border-[#A9B388]/30">
-              <span className="text-4xl">🗺️</span>
-              <span>Destinations</span>
-            </button>
-            <button className="flex flex-col items-center justify-center gap-3 px-4 py-8 bg-gradient-to-br from-[#A9B388]/20 to-[#A9B388]/10 text-[#5F6F52] rounded-xl font-semibold hover:from-[#A9B388]/30 hover:to-[#A9B388]/20 hover:shadow-lg hover:scale-105 transition-all border border-[#A9B388]/30">
-              <span className="text-4xl">⚙️</span>
-              <span>Settings</span>
-            </button>
-          </div>
-          <p className="text-sm text-gray-600 mt-8 text-center bg-[#FEFAE0] py-3 px-4 rounded-lg">
-            💡 These features will be implemented after database schema is ready.
-          </p>
-        </div>
-      </main>
+    <div className="min-h-screen bg-brand-tint-subtle p-8">
+      <h1 className="text-3xl font-bold text-brand-darkest mb-8">Dashboard</h1>
+      
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard title="Total Packages" value={stats.packages} icon={<Package />} color="bg-blue-500" />
+        <StatCard title="Total Leads" value={stats.leads} icon={<Mail />} color="bg-green-500" />
+        <StatCard title="Total Reviews" value={stats.reviews} icon={<MessageSquare />} color="bg-purple-500" />
+        <StatCard title="Categories" value={stats.categories} icon={<FolderTree />} color="bg-orange-500" />
+      </div>
+      
+      {/* Recent Leads Table */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-bold text-brand-darkest mb-4">Recent Leads</h2>
+        {recentLeads.length === 0 ? (
+          <p className="text-gray-500">No leads yet</p>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b text-left text-brand-dark">
+                <th className="py-2">Name</th>
+                <th className="py-2">Email</th>
+                <th className="py-2">Package</th>
+                <th className="py-2">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentLeads.map((lead: any) => (
+                <tr key={lead.id} className="border-b">
+                  <td className="py-3">{lead.name}</td>
+                  <td className="py-3">{lead.email}</td>
+                  <td className="py-3">{lead.packages?.title || 'General Inquiry'}</td>
+                  <td className="py-3">{new Date(lead.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
-  )
+  );
+}
+
+function StatCard({ title, value, icon, color }: any) {
+  return (
+    <div className="bg-white rounded-lg shadow p-6 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-default">
+      <div>
+        <p className="text-gray-600 text-sm font-medium">{title}</p>
+        <p className="text-3xl font-bold text-brand-darkest mt-2">{value}</p>
+      </div>
+      <div className={`${color} text-white p-3 rounded-lg shadow-md`}>
+        {icon}
+      </div>
+    </div>
+  );
 }
