@@ -7,21 +7,34 @@
 
 :root {
   /* Brand Colors - From Logo (Muted Sage Tones) */
-  --logo-forest-dark: #1B4D1B;      /* Darkest - logo text, outer circle */
-  --logo-forest: #2D5F2D;           /* Dark forest green - main brand */
-  --logo-sage: #5F7A5F;             /* Medium sage - bird, mountains */
-  --logo-sage-medium: #6B8E6B;      /* Sage green - foliage, details */
-  --logo-sage-light: #8FA88F;       /* Light sage - highlights */
-  --logo-sage-soft: #9DB89D;        /* Soft sage - subtle accents */
-  --logo-mint: #B8D4B8;             /* Mint sage - very light */
-  --logo-pastel: #C8E6C8;           /* Pastel sage - subtle backgrounds */
+  --logo-forest-dark: #1B4D1B;
+  /* Darkest - logo text, outer circle */
+  --logo-forest: #2D5F2D;
+  /* Dark forest green - main brand */
+  --logo-sage: #5F7A5F;
+  /* Medium sage - bird, mountains */
+  --logo-sage-medium: #6B8E6B;
+  /* Sage green - foliage, details */
+  --logo-sage-light: #8FA88F;
+  /* Light sage - highlights */
+  --logo-sage-soft: #9DB89D;
+  /* Soft sage - subtle accents */
+  --logo-mint: #B8D4B8;
+  /* Mint sage - very light */
+  --logo-pastel: #C8E6C8;
+  /* Pastel sage - subtle backgrounds */
 
   /* Semantic Colors */
-  --background: #FFFFFF;            /* Pure white background */
-  --foreground: #1B4D1B;            /* Forest dark for text */
-  --primary: #2D5F2D;               /* Forest green primary */
-  --secondary: #6B8E6B;             /* Sage green secondary */
-  --accent: #9DB89D;                /* Soft sage accent */
+  --background: #FFFFFF;
+  /* Pure white background */
+  --foreground: #1B4D1B;
+  /* Forest dark for text */
+  --primary: #2D5F2D;
+  /* Forest green primary */
+  --secondary: #6B8E6B;
+  /* Sage green secondary */
+  --accent: #9DB89D;
+  /* Soft sage accent */
 
   /* Opacity Variations - Forest Dark */
   --forest-dark-10: rgba(27, 77, 27, 0.1);
@@ -104,15 +117,19 @@ html {
   scroll-behavior: smooth;
 }
 
-html, body {
+html,
+body {
   width: 100%;
 }
 
 /* Floating wave animation for cards */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -133,24 +150,63 @@ html, body {
    ======================================== */
 
 /* Background Colors */
-.bg-brand-darkest { background-color: var(--logo-forest-dark); }
-.bg-brand-dark { background-color: var(--logo-forest); }
-.bg-brand-medium { background-color: var(--logo-sage-medium); }
-.bg-brand-light { background-color: var(--logo-sage-soft); }
-.bg-brand-lightest { background-color: var(--logo-pastel); }
+.bg-brand-darkest {
+  background-color: var(--logo-forest-dark);
+}
+
+.bg-brand-dark {
+  background-color: var(--logo-forest);
+}
+
+.bg-brand-medium {
+  background-color: var(--logo-sage-medium);
+}
+
+.bg-brand-light {
+  background-color: var(--logo-sage-soft);
+}
+
+.bg-brand-lightest {
+  background-color: var(--logo-pastel);
+}
 
 /* Text Colors */
-.text-brand-darkest { color: var(--logo-forest-dark); }
-.text-brand-dark { color: var(--logo-forest); }
-.text-brand-medium { color: var(--logo-sage-medium); }
-.text-brand-light { color: var(--logo-sage-soft); }
-.text-brand-lightest { color: var(--logo-pastel); }
+.text-brand-darkest {
+  color: var(--logo-forest-dark);
+}
+
+.text-brand-dark {
+  color: var(--logo-forest);
+}
+
+.text-brand-medium {
+  color: var(--logo-sage-medium);
+}
+
+.text-brand-light {
+  color: var(--logo-sage-soft);
+}
+
+.text-brand-lightest {
+  color: var(--logo-pastel);
+}
 
 /* Border Colors */
-.border-brand-darkest { border-color: var(--logo-forest-dark); }
-.border-brand-dark { border-color: var(--logo-forest); }
-.border-brand-medium { border-color: var(--logo-sage-medium); }
-.border-brand-light { border-color: var(--logo-sage-soft); }
+.border-brand-darkest {
+  border-color: var(--logo-forest-dark);
+}
+
+.border-brand-dark {
+  border-color: var(--logo-forest);
+}
+
+.border-brand-medium {
+  border-color: var(--logo-sage-medium);
+}
+
+.border-brand-light {
+  border-color: var(--logo-sage-soft);
+}
 
 /* Brand Gradients */
 .bg-gradient-brand-dark {
@@ -180,36 +236,36 @@ html, body {
 /* Gradient overlays for cards */
 .overlay-brand-dark {
   background: linear-gradient(to top,
-    rgba(107, 142, 107, 0.7) 0%,
-    rgba(107, 142, 107, 0.3) 50%,
-    transparent 100%);
+      rgba(107, 142, 107, 0.7) 0%,
+      rgba(107, 142, 107, 0.3) 50%,
+      transparent 100%);
 }
 
 .overlay-brand-dark-hover:hover {
   background: linear-gradient(to top,
-    rgba(107, 142, 107, 0.8) 0%,
-    rgba(107, 142, 107, 0.4) 50%,
-    transparent 100%);
+      rgba(107, 142, 107, 0.8) 0%,
+      rgba(107, 142, 107, 0.4) 50%,
+      transparent 100%);
 }
 
 .overlay-brand-primary {
   background: linear-gradient(to top,
-    rgba(27, 77, 27, 0.7) 0%,
-    rgba(95, 122, 95, 0.5) 50%,
-    transparent 100%);
+      rgba(27, 77, 27, 0.7) 0%,
+      rgba(95, 122, 95, 0.5) 50%,
+      transparent 100%);
 }
 
 /* Subtle background tints */
 .bg-brand-tint-light {
   background: linear-gradient(to bottom,
-    white 0%,
-    rgba(200, 230, 200, 0.2) 50%,
-    white 100%);
+      white 0%,
+      rgba(200, 230, 200, 0.2) 50%,
+      white 100%);
 }
 
 .bg-brand-tint-subtle {
   background: linear-gradient(to bottom,
-    white 0%,
-    rgba(184, 212, 184, 0.1) 50%,
-    white 100%);
+      white 0%,
+      rgba(184, 212, 184, 0.1) 50%,
+      white 100%);
 }

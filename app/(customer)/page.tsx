@@ -3,11 +3,19 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import HeroSection from '@/components/customer/HeroSection';
+import { LeadFormModal } from '@/components/customer/LeadFormModal';
 import { Globe, Package, HeartHandshake, Smile, Compass, MapPin, Plane } from 'lucide-react';
 
 export default function Home() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const [activeCard, setActiveCard] = useState<number | null>(null);
+  const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<{ id: string; title: string } | null>(null);
+
+  const handleSelectPackage = (title: string) => {
+    setSelectedPackage({ id: title.toLowerCase().replace(/\s+/g, '-'), title });
+    setIsLeadFormOpen(true);
+  };
 
   useEffect(() => {
     // Intersection Observer for scroll animations
@@ -58,7 +66,7 @@ export default function Home() {
       <HeroSection />
 
       {/* Trending Packages Section */}
-      <section className="py-20 bg-[#F4F1EA]">
+      <section id="packages" className="py-20 bg-[#F4F1EA]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between mb-12 scroll-animate opacity-0 translate-y-10">
             <div>
@@ -79,7 +87,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Bali Paradise - 7 Days */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2">
+            <div onClick={() => handleSelectPackage('Bali Paradise')} className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2">
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800')] bg-cover bg-center"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent group-hover:from-[#A9B388]/80 transition-all"></div>
               <div className="absolute inset-0 p-6 flex flex-col justify-between">
@@ -103,7 +111,7 @@ export default function Home() {
             </div>
 
             {/* Dubai Luxury - 5 Days */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '100ms' }}>
+            <div onClick={() => handleSelectPackage('Dubai Luxury')} className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '100ms' }}>
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800')] bg-cover bg-center"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent group-hover:from-[#A9B388]/80 transition-all"></div>
               <div className="absolute inset-0 p-6 flex flex-col justify-between">
@@ -127,7 +135,7 @@ export default function Home() {
             </div>
 
             {/* Kerala Backwaters - 6 Days */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '200ms' }}>
+            <div onClick={() => handleSelectPackage('Kerala Backwaters')} className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '200ms' }}>
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800')] bg-cover bg-center"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent group-hover:from-[#A9B388]/80 transition-all"></div>
               <div className="absolute inset-0 p-6 flex flex-col justify-between">
@@ -151,7 +159,7 @@ export default function Home() {
             </div>
 
             {/* Switzerland Alps - 8 Days */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '300ms' }}>
+            <div onClick={() => handleSelectPackage('Switzerland Alps')} className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '300ms' }}>
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800')] bg-cover bg-center"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent group-hover:from-[#A9B388]/80 transition-all"></div>
               <div className="absolute inset-0 p-6 flex flex-col justify-between">
@@ -175,7 +183,7 @@ export default function Home() {
             </div>
 
             {/* Goa Beach Escape - 4 Days */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '400ms' }}>
+            <div onClick={() => handleSelectPackage('Goa Beach Escape')} className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '400ms' }}>
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800')] bg-cover bg-center"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent group-hover:from-[#A9B388]/80 transition-all"></div>
               <div className="absolute inset-0 p-6 flex flex-col justify-between">
@@ -199,7 +207,7 @@ export default function Home() {
             </div>
 
             {/* Maldives Honeymoon - 5 Days */}
-            <div className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '500ms' }}>
+            <div onClick={() => handleSelectPackage('Maldives Honeymoon')} className="group relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer h-72 scroll-animate opacity-0 translate-y-10 hover:scale-105 hover:-translate-y-2" style={{ animationDelay: '500ms' }}>
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=800')] bg-cover bg-center"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent group-hover:from-[#A9B388]/80 transition-all"></div>
               <div className="absolute inset-0 p-6 flex flex-col justify-between">
@@ -771,6 +779,13 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <LeadFormModal
+        isOpen={isLeadFormOpen}
+        onClose={() => setIsLeadFormOpen(false)}
+        packageId={selectedPackage?.id}
+        packageTitle={selectedPackage?.title}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+SET search_path TO public, extensions;
 
 -- =====================================================
 -- 1. CATEGORIES & SUBCATEGORIES
@@ -224,7 +225,11 @@ CREATE TABLE leads (
   email VARCHAR(100) NOT NULL,
   phone VARCHAR(20) NOT NULL,
   message TEXT,
-  status VARCHAR(20) DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'qualified', 'converted', 'lost')),
+  number_of_adults INTEGER DEFAULT 1,
+  number_of_children INTEGER DEFAULT 0,
+  number_of_infants INTEGER DEFAULT 0,
+  travel_start_date DATE,
+  travel_end_date DATE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -299,7 +304,6 @@ CREATE INDEX idx_packages_trending ON packages(is_trending) WHERE is_trending = 
 CREATE INDEX idx_packages_slug ON packages(slug);
 CREATE INDEX idx_categories_slug ON categories(slug);
 CREATE INDEX idx_subcategories_slug ON subcategories(slug);
-CREATE INDEX idx_leads_status ON leads(status);
 CREATE INDEX idx_reviews_approved ON reviews(is_approved) WHERE is_approved = true;
 CREATE INDEX idx_itinerary_package ON itinerary_days(package_id, day_number);
 
