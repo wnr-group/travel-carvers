@@ -20,5 +20,6 @@ export const subcategorySchema = z.object({
 });
 
 // export type CategoryFormData = z.infer<typeof categorySchema>;
-export type CategoryFormData = z.input<typeof categorySchema>;
+export type CategoryFormInput = z.input<typeof categorySchema>;
+export type CategoryFormOutput = z.output<typeof categorySchema>;
 export type SubcategoryFormData = z.infer<typeof subcategorySchema>;

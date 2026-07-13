@@ -62,7 +62,7 @@ USING (bucket_id = 'category-images');
 
 CREATE POLICY "Authenticated users can upload category images"
 ON storage.objects FOR INSERT
-TO authenticated
+TO anon,authenticated
 WITH CHECK (bucket_id = 'category-images');
 
 CREATE POLICY "Service role can manage category images"

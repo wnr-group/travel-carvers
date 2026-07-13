@@ -48,6 +48,7 @@ export default function CategoriesPage() {
                 <th className="p-4 text-left">Image</th>
                 <th className="p-4 text-left">Name</th>
                 <th className="p-4 text-left">Slug</th>
+                <th className="p-4 text-left">Icon</th>
                 <th className="p-4 text-left">Active</th>
                 <th className="p-4 text-left">Actions</th>
               </tr>
@@ -59,6 +60,7 @@ export default function CategoriesPage() {
                   <td className="p-4"><img src={cat.cover_image_url || ''} className="w-10 h-10 rounded" /></td>
                   <td className="p-4 font-medium">{cat.name}</td>
                   <td className="p-4 text-gray-600">{cat.slug}</td>
+                  <td className="p-4 text-gray-600 font-mono text-sm">{cat.icon_name}</td>
                   <td className="p-4">{cat.is_active ? 'Yes' : 'No'}</td>
                   <td className="p-4 flex gap-2">
                     <button onClick={() => { setEditingCategory(cat); setShowForm(true); }}><Edit className="w-4 h-4 text-blue-600" /></button>
