@@ -1,20 +1,23 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import HeroSection from '@/components/customer/HeroSection';
 import { LeadFormModal } from '@/components/customer/LeadFormModal';
 import { Globe, Package, HeartHandshake, Smile, Compass, MapPin, Plane } from 'lucide-react';
 
 export default function Home() {
+  const router = useRouter();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<{ id: string; title: string } | null>(null);
 
   const handleSelectPackage = (title: string) => {
-    setSelectedPackage({ id: title.toLowerCase().replace(/\s+/g, '-'), title });
-    setIsLeadFormOpen(true);
+    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    router.push(`/packages/${slug}`);
   };
 
   useEffect(() => {
@@ -77,12 +80,12 @@ export default function Home() {
                 Explore our most popular destinations
               </p>
             </div>
-            <button className="hidden md:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all">
+            <Link href="/packages" className="hidden md:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all">
               View More
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -233,12 +236,12 @@ export default function Home() {
 
           {/* Mobile View More Button */}
           <div className="md:hidden mt-8 text-center">
-            <button className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#A9B388] to-[#A9B388] text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all">
+            <Link href="/packages" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all">
               View More
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
-            </button>
+            </Link>
           </div>
         </div>
       </section>

@@ -3,8 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
-if (process.env.NODE_ENV === 'development') {
-  console.log("sup", supabaseServiceKey)
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'development') {
   if (!supabaseServiceKey || supabaseServiceKey.length < 100) {
     throw new Error(
       'SUPABASE_SERVICE_ROLE_KEY is not set or invalid. Expected JWT token with length ~160 characters. Run: npm run supabase:status to get your credentials'
