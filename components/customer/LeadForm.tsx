@@ -359,8 +359,8 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={createLead.isPending}
-        className="w-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-75 flex justify-center items-center gap-2 cursor-pointer shadow-lg"
+        disabled={!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.travel_start_date.trim() || createLead.isPending}
+        className="w-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] text-white py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex justify-center items-center gap-2 cursor-pointer shadow-lg"
       >
         {createLead.isPending ? (
           <>
