@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Search, Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Bell, Search, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 interface AdminHeaderProps {
   isCollapsed: boolean;
@@ -24,14 +24,17 @@ export default function AdminHeader({ isCollapsed, onToggleCollapse, onOpenMobil
         {/* Desktop Collapse/Expand Toggle */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:block text-brand-dark hover:text-brand-darkest transition-colors p-2 hover:bg-brand-medium/10 rounded-lg"
+          className="hidden lg:block text-brand-dark hover:text-brand-darkest transition-colors p-2 hover:bg-brand-medium/10 rounded-lg relative group"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
+            <PanelLeftOpen className="w-5 h-5" />
           ) : (
-            <ChevronLeft className="w-5 h-5" />
+            <PanelLeftClose className="w-5 h-5" />
           )}
+          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1.5 admin-tooltip text-xs font-semibold rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+            {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          </div>
         </button>
 
         {/* Search Bar */}

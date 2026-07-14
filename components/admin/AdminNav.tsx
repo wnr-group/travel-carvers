@@ -40,7 +40,7 @@ export default function AdminNav({ isCollapsed, isMobileOpen, onCloseMobile }: A
       <nav 
         className={`bg-brand-darkest h-screen fixed left-0 top-0 p-4 flex flex-col z-40 w-64 transition-all duration-300 ease-in-out lg:translate-x-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${isCollapsed ? 'lg:w-20 lg:p-2' : 'lg:w-64'}` }
+        } ${isCollapsed ? 'lg:w-20 lg:p-2 lg:overflow-visible' : 'lg:w-64'}` }
       >
         
         {/* Logo Area */}
@@ -65,7 +65,7 @@ export default function AdminNav({ isCollapsed, isMobileOpen, onCloseMobile }: A
         </div>
 
         {/* Navigation list */}
-        <ul className={`space-y-2 flex-1 overflow-y-auto ${isCollapsed ? 'lg:items-center' : ''}`}>
+        <ul className={`space-y-2 flex-1 overflow-y-auto ${isCollapsed ? 'lg:items-center lg:overflow-visible' : ''}`}>
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
@@ -75,15 +75,20 @@ export default function AdminNav({ isCollapsed, isMobileOpen, onCloseMobile }: A
                 <Link
                   href={item.href}
                   onClick={onCloseMobile}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative group ${
                     isActive 
                       ? 'bg-brand-medium text-white' 
                       : 'text-white/70 hover:bg-white/10 hover:text-white'
                   } ${isCollapsed ? 'lg:justify-center lg:px-0 lg:w-16 lg:mx-auto' : ''}`}
-                  title={isCollapsed ? item.label : undefined}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span className={isCollapsed ? 'lg:hidden' : 'block'}>{item.label}</span>
+                  
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-2 px-2.5 py-1.5 admin-tooltip text-xs font-semibold rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 hidden lg:block">
+                      {item.label}
+                    </div>
+                  )}
                 </Link>
               </li>
             );
@@ -91,7 +96,7 @@ export default function AdminNav({ isCollapsed, isMobileOpen, onCloseMobile }: A
         </ul>
 
         {/* Bottom logout area */}
-        <div className="border-t border-white/10 pt-4 mt-auto">
+        <div className={`border-t border-white/10 pt-4 mt-auto ${isCollapsed ? 'lg:overflow-visible' : ''}`}>
           <LogoutButton isCollapsed={isCollapsed} />
         </div>
       </nav>
