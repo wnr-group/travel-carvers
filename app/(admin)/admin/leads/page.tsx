@@ -13,7 +13,12 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  Plus
+  Plus,
+  User,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,6 +30,10 @@ export default function AdminLeadsPage() {
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'contacted' | 'qualified' | 'converted'>('all');
+
+  // Sorting State
+  const [sortField, setSortField] = useState<'name' | 'email' | 'phone' | 'created_at' | 'status'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,6 +60,11 @@ export default function AdminLeadsPage() {
     }
   };
 
+  const handleCopy = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${type} copied to clipboard`);
+  };
+
   // Filter leads
   const filteredLeads = leads.filter((lead) => {
     const searchLower = searchTerm.toLowerCase();
@@ -66,13 +80,43 @@ export default function AdminLeadsPage() {
     return matchesSearch && matchesStatus;
   });
 
+  // Sorting Handler
+  const handleSort = (field: 'name' | 'email' | 'phone' | 'created_at' | 'status') => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  // Sort leads
+  const sortedLeads = [...filteredLeads].sort((a, b) => {
+    if (sortField === 'created_at') {
+      return sortOrder === 'asc'
+        ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+    
+    let valA = a[sortField] || '';
+    let valB = b[sortField] || '';
+
+    valA = String(valA).toLowerCase();
+    valB = String(valB).toLowerCase();
+
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   // Pagination logic
   const totalItems = filteredLeads.length;
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
   const currentPageSafe = Math.min(currentPage, totalPages);
   const startIndex = (currentPageSafe - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
-  const paginatedLeads = filteredLeads.slice(startIndex, endIndex);
+  const paginatedLeads = sortedLeads.slice(startIndex, endIndex);
 
   // CSV Export
   const exportToCSV = () => {
@@ -123,6 +167,23 @@ export default function AdminLeadsPage() {
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
+  };
+
+  const renderSortHeader = (field: 'name' | 'email' | 'phone' | 'created_at' | 'status', label: string) => {
+    const isCurrent = sortField === field;
+    return (
+      <button 
+        onClick={() => handleSort(field)}
+        className="flex items-center gap-1.5 hover:text-brand-light transition-colors uppercase font-semibold text-xs tracking-wider focus:outline-none"
+      >
+        {label}
+        {isCurrent ? (
+          sortOrder === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-50" />
+        )}
+      </button>
+    );
   };
 
   return (
@@ -204,32 +265,55 @@ export default function AdminLeadsPage() {
             <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
               <thead className="bg-brand-darkest text-white">
                 <tr>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[12%]">Name</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[15%]">Email</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[12%]">Phone</th>
+                  <th className="px-6 py-4 w-[15%]">{renderSortHeader('name', 'Name')}</th>
+                  <th className="px-6 py-4 w-[18%]">{renderSortHeader('email', 'Email')}</th>
+                  <th className="px-6 py-4 w-[15%]">{renderSortHeader('phone', 'Phone')}</th>
                   <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[15%]">Requested Package</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[20%]">Message</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[12%]">Date</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[10%]">Status Stage</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[4%] text-right">Actions</th>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[18%]">Message</th>
+                  <th className="px-6 py-4 w-[12%]">{renderSortHeader('created_at', 'Date')}</th>
+                  <th className="px-6 py-4 w-[12%]">{renderSortHeader('status', 'Status Stage')}</th>
+                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[5%] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginatedLeads.map((lead) => (
                   <tr key={lead.id} className="transition-colors hover:bg-brand-lightest/10 duration-200">
                     {/* Name */}
-                    <td className="px-6 py-4 font-semibold text-gray-900">
-                      {lead.name}
+                    <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-brand-medium flex-shrink-0" />
+                        <span>{lead.name}</span>
+                      </div>
                     </td>
 
                     {/* Email */}
                     <td className="px-6 py-4 text-gray-600">
-                      {lead.email}
+                      <div className="flex items-center gap-2 group/copy">
+                        <Mail className="w-4 h-4 text-brand-medium flex-shrink-0" />
+                        <span>{lead.email}</span>
+                        <button 
+                          onClick={() => handleCopy(lead.email, 'Email')}
+                          className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-brand-dark focus:outline-none cursor-pointer"
+                          title="Copy Email"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
 
                     {/* Phone */}
                     <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                      {lead.phone}
+                      <div className="flex items-center gap-2 group/copy">
+                        <Phone className="w-4 h-4 text-brand-medium flex-shrink-0" />
+                        <span>{lead.phone}</span>
+                        <button 
+                          onClick={() => handleCopy(lead.phone, 'Phone number')}
+                          className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-brand-dark focus:outline-none cursor-pointer"
+                          title="Copy Phone Number"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
 
                     {/* Requested Package */}
