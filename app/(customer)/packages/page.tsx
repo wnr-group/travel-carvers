@@ -41,7 +41,7 @@ export default function PackageSearchFilter() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-brand-tint-light">
       {/* Header / search bar */}
       <div className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:px-8">
@@ -174,48 +174,46 @@ export default function PackageSearchFilter() {
       </div>
 
       {/* ---------------- Mobile drawer ---------------- */}
-      {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div
-            className="absolute inset-0 bg-brand-darkest/40 backdrop-blur-sm transition-opacity"
-            onClick={() => setMobileFiltersOpen(false)}
-          />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-[var(--background)] shadow-2xl transition-transform">
-            <div className="flex items-center justify-between border-b border-brand-light px-5 py-4">
-              <h2 className="text-base font-semibold text-brand-darkest">Filters</h2>
-              <button
-                type="button"
-                onClick={() => setMobileFiltersOpen(false)}
-                className="rounded-full p-1.5 text-brand-medium transition hover:bg-brand-lightest"
-                aria-label="Close filters"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              <PackageFilters
-                filters={filters}
-                activeFilterCount={activeFilterCount}
-                toggleCategory={toggleCategory}
-                toggleDifficulty={toggleDifficulty}
-                setPriceMin={setPriceMin}
-                setPriceMax={setPriceMax}
-                setDuration={setDuration}
-                clearFilters={clearFilters}
-              />
-            </div>
-            <div className="border-t border-brand-light px-5 py-4">
-              <button
-                type="button"
-                onClick={() => setMobileFiltersOpen(false)}
-                className="w-full rounded-full bg-gradient-brand-primary py-3 text-sm font-semibold text-white transition hover:opacity-90"
-              >
-                Show {sortedPackages.length} packages
-              </button>
-            </div>
+      <div className={`fixed inset-0 z-[150] lg:hidden transition-opacity duration-300 ${mobileFiltersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div
+          className="absolute inset-0 bg-brand-darkest/40 backdrop-blur-sm transition-opacity duration-300"
+          onClick={() => setMobileFiltersOpen(false)}
+        />
+        <div className={`absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-in-out ${mobileFiltersOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="flex items-center gap-3 border-b border-brand-light px-5 py-4">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(false)}
+              className="flex items-center justify-center rounded-full p-2 bg-brand-lightest text-brand-darkest border border-brand-light hover:bg-brand-medium hover:text-white transition-all duration-200 cursor-pointer shadow-sm active:scale-95"
+              aria-label="Close filters"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h2 className="text-base font-semibold text-brand-darkest">Filters</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            <PackageFilters
+              filters={filters}
+              activeFilterCount={activeFilterCount}
+              toggleCategory={toggleCategory}
+              toggleDifficulty={toggleDifficulty}
+              setPriceMin={setPriceMin}
+              setPriceMax={setPriceMax}
+              setDuration={setDuration}
+              clearFilters={clearFilters}
+            />
+          </div>
+          <div className="border-t border-brand-light px-5 py-4">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(false)}
+              className="w-full rounded-full bg-gradient-brand-primary py-3 text-sm font-semibold text-white transition hover:opacity-90 shadow-md active:scale-95"
+            >
+              Apply Filters ({sortedPackages.length})
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

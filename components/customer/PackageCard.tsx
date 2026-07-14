@@ -1,6 +1,7 @@
 'use client';
 
 import { MapPin, Clock3, Star, Tent } from 'lucide-react';
+import Link from 'next/link';
 import { TravelPackage, Difficulty, formatPrice } from '@/lib/hooks/usePackageFilters';
 
 interface DifficultyBadgeProps {
@@ -23,6 +24,8 @@ interface PackageCardProps {
 }
 
 export function PackageCard({ pkg }: PackageCardProps) {
+  const slug = pkg.name.toLowerCase().replace(/\s+/g, '-');
+
   return (
     <article className="group overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)] transition hover:-translate-y-1 hover:shadow-lg">
       <div className="relative h-44 w-full overflow-hidden">
@@ -68,14 +71,15 @@ export function PackageCard({ pkg }: PackageCardProps) {
             <span className="text-base font-bold text-brand-darkest">{formatPrice(pkg.price)}</span>
             <span className="ml-1 text-xs text-brand-medium">/ person</span>
           </div>
-          <button
-            type="button"
-            className="rounded-full bg-gradient-brand-primary px-4 py-1.5 text-xs font-semibold text-white transition hover:opacity-90"
+          <Link
+            href={`/packages/${slug}`}
+            className="rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] px-4 py-1.5 text-xs font-semibold text-white transition hover:shadow-md hover:scale-105"
           >
             View
-          </button>
+          </Link>
         </div>
       </div>
     </article>
   );
 }
+
