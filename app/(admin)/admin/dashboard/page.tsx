@@ -14,7 +14,6 @@ async function getDashboardStats() {
     supabaseAdmin.from('categories').select('id', { count: 'exact', head: true }),
   ]);
 
-  console.log(packages);
   return {
     packages: packages.count ?? 0,
     leads: leads.count ?? 0,
