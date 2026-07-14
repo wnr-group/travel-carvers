@@ -3,9 +3,19 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
+
+const NAV_ITEMS = [
+  { label: 'Home', href: '/' },
+  { label: 'Packages', href: '/packages' },
+  { label: 'Countries', href: '/countries' },
+  { label: 'India', href: '/india' },
+  { label: 'About Us', href: '/about' },
+];
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
 
   return (
     <nav className="bg-gradient-brand-navbar shadow-lg sticky top-0 z-[100]">
@@ -28,34 +38,29 @@ export default function Navbar() {
 
           {/* Desktop Navigation - Right Side */}
           <div className="hidden md:flex items-center gap-2">
-            <Link href="/" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
-              <span className="relative z-10">Home</span>
-              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
-              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
-            </Link>
-            <Link href="#packages" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
-              <span className="relative z-10">Packages</span>
-              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
-              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
-            </Link>
-            <Link href="#countries" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
-              <span className="relative z-10">Countries</span>
-              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
-              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
-            </Link>
-            <Link href="#india" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
-              <span className="relative z-10">India</span>
-              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
-              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
-            </Link>
-            <Link href="#about" className="relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group">
-              <span className="relative z-10">About Us</span>
-              <span className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
-              <span className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-3/4 transition-all duration-300"></span>
-            </Link>
+            {NAV_ITEMS.map((item) => {
+              const active = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group ${
+                    active ? 'scale-105' : ''
+                  }`}
+                >
+                  <span className="relative z-10">{item.label}</span>
+                  <span className={`absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg transition-transform duration-300 ${
+                    active ? 'scale-100' : 'scale-0 group-hover:scale-100'
+                  }`}></span>
+                  <span className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-white transition-all duration-300 ${
+                    active ? 'w-3/4' : 'w-0 group-hover:w-3/4'
+                  }`}></span>
+                </Link>
+              )
+            })}
 
             {/* Contact Us Button */}
-            <Link href="#contact">
+            <Link href="/#contact">
               <button className="ml-2 px-6 py-2.5 bg-white text-brand-darkest rounded-xl font-bold hover:bg-white/95 hover:scale-110 hover:shadow-xl transition-all duration-300 shadow-lg flex items-center gap-2 group">
                 <span>Contact Us</span>
                 <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,42 +92,24 @@ export default function Navbar() {
         {isMenuOpen && (
           <div className="md:hidden pb-4 border-t border-white/20 mt-2 pt-4">
             <div className="flex flex-col gap-3">
-              <Link
-                href="/"
-                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link
-                href="#packages"
-                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Packages
-              </Link>
-              <Link
-                href="#countries"
-                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Countries
-              </Link>
-              <Link
-                href="#india"
-                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                India
-              </Link>
-              <Link
-                href="#about"
-                className="text-white hover:bg-white/10 font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                About Us
-              </Link>
-              <Link href="#contact" onClick={() => setIsMenuOpen(false)}>
+              {NAV_ITEMS.map((item) => {
+                const active = pathname === item.href
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2 ${
+                      active
+                        ? 'bg-white/20 text-white'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+              <Link href="/#contact" onClick={() => setIsMenuOpen(false)}>
                 <button className="w-full mt-4 px-6 py-3 bg-white text-brand-darkest rounded-xl font-bold hover:bg-white/95 hover:scale-105 transition-all shadow-lg text-center flex items-center justify-center gap-2">
                   <span>Contact Us</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

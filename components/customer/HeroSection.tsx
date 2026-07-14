@@ -8,6 +8,8 @@ const RealWorldMap = dynamic(() => import('@/components/RealWorldMap'), {
   ssr: false,
 });
 
+import Link from 'next/link';
+
 const heroImages = [
   {
     url: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&q=80',
@@ -135,9 +137,12 @@ export default function HeroSection() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4">
-                  <button className="px-6 md:px-8 py-3 md:py-4 bg-gradient-brand-dark text-white rounded-full font-bold text-base md:text-lg hover:shadow-2xl hover:scale-105 transition-all">
+                  <Link
+                    href="/packages"
+                    className="px-6 md:px-8 py-3 md:py-4 bg-gradient-brand-dark text-white rounded-full font-bold text-base md:text-lg hover:shadow-2xl hover:scale-105 transition-all text-center inline-block"
+                  >
                     Explore Packages
-                  </button>
+                  </Link>
                   <button className="px-6 md:px-8 py-3 md:py-4 bg-white/20 backdrop-blur-md text-white rounded-full font-bold text-base md:text-lg border-2 border-white/50 hover:bg-white/30 hover:scale-105 transition-all">
                     Get Quote
                   </button>
