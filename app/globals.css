@@ -64,6 +64,7 @@
   --gradient-medium: linear-gradient(135deg, #5F7A5F 0%, #6B8E6B 100%);
   --gradient-soft: linear-gradient(135deg, #8FA88F 0%, #B8D4B8 100%);
   --gradient-full: linear-gradient(135deg, #1B4D1B 0%, #2D5F2D 25%, #5F7A5F 50%, #8FA88F 75%, #C8E6C8 100%);
+  --tooltip-bg: var(--logo-sage);
 }
 
 /* ========================================
@@ -268,4 +269,11 @@ body {
       white 0%,
       rgba(184, 212, 184, 0.1) 50%,
       white 100%);
+}
+
+.admin-tooltip {
+  background-color: var(--tooltip-bg) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }

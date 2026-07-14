@@ -1,5 +1,10 @@
-import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import type { Subcategory } from '@/lib/types/category';
+import type {
+  CategoryFormOutput,
+  CategoryUpdateOutput,
+  SubcategoryFormData,
+} from '@/lib/validations/category.schema';
 
 /**
  * Get all active categories (Public)
@@ -72,7 +77,7 @@ export async function getAllCategoriesAdmin() {
 /**
  * Admin: Create category (requires server-side)
  */
-export async function createCategory(categoryData: any) {
+export async function createCategory(categoryData: CategoryFormOutput) {
 
   const { data, error } = await supabaseAdmin
     .from('categories')
@@ -87,7 +92,7 @@ export async function createCategory(categoryData: any) {
 /**
  * Admin: Update category (requires server-side)
  */
-export async function updateCategory(id: string, categoryData: any) {
+export async function updateCategory(id: string, categoryData: CategoryUpdateOutput) {
 
   const { data, error } = await supabaseAdmin
     .from('categories')
@@ -102,15 +107,20 @@ export async function updateCategory(id: string, categoryData: any) {
 
 /**
  * Admin: Delete category (requires server-side)
+ *
+ * Returns the deleted row, or null when no category had that id
  */
 export async function deleteCategory(id: string) {
 
-  const { error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('categories')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  return data;
 }
 
 /**
@@ -127,10 +137,51 @@ export async function getAllSubcategoriesAdmin() {
   return data;
 }
 
+
+interface SubcategoryRow {
+  id: string;
+  name: string;
+  slug: string;
+  display_order: number | null;
+  is_active: boolean | null;
+  category_subcategory: { category_id: string }[] | null;
+}
+
+/**
+ * Admin: Get every subcategory together with the categories it belongs to.
+ */
+export async function getSubcategoriesAdmin(): Promise<Subcategory[]> {
+  const { data, error } = await supabaseAdmin
+    .from('subcategories')
+    .select(`
+      id,
+      name,
+      slug,
+      display_order,
+      is_active,
+      category_subcategory (
+        category_id
+      )
+    `)
+    .order('display_order', { ascending: true })
+    .overrideTypes<SubcategoryRow[], { merge: false }>();
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    display_order: row.display_order ?? 0,
+    is_active: row.is_active ?? true,
+    category_ids: (row.category_subcategory ?? []).map((join) => join.category_id),
+  }));
+}
+
 /**
  * Admin: Create subcategory (requires server-side)
  */
-export async function createSubcategory(subcategoryData: any) {
+export async function createSubcategory(subcategoryData: SubcategoryFormData) {
 
   const { data, error } = await supabaseAdmin
     .from('subcategories')
@@ -145,7 +196,7 @@ export async function createSubcategory(subcategoryData: any) {
 /**
  * Admin: Update subcategory (requires server-side)
  */
-export async function updateSubcategory(id: string, subcategoryData: any) {
+export async function updateSubcategory(id: string, subcategoryData: SubcategoryFormData) {
 
   const { data, error } = await supabaseAdmin
     .from('subcategories')
