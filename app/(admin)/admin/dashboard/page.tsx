@@ -60,7 +60,7 @@ export default async function AdminDashboardPage() {
   const recentLeads = await getRecentLeads();
   
   return (
-    <div className="min-h-screen bg-brand-tint-subtle p-8">
+    <div className="py-4">
       <h1 className="text-3xl font-bold text-brand-darkest mb-8">Dashboard</h1>
       
       {/* Stats Grid */}
@@ -72,31 +72,33 @@ export default async function AdminDashboardPage() {
       </div>
       
       {/* Recent Leads Table */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <h2 className="text-xl font-bold text-brand-darkest mb-4">Recent Leads</h2>
         {recentLeads.length === 0 ? (
           <p className="text-gray-500">No leads yet</p>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b text-left text-brand-dark">
-                <th className="py-2">Name</th>
-                <th className="py-2">Email</th>
-                <th className="py-2">Package</th>
-                <th className="py-2">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentLeads.map((lead) => (
-                <tr key={lead.id} className="border-b">
-                  <td className="py-3">{lead.name}</td>
-                  <td className="py-3">{lead.email}</td>
-                  <td className="py-3">{lead.packages?.title || 'General Inquiry'}</td>
-                  <td className="py-3">{new Date(lead.created_at).toLocaleDateString()}</td>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b text-left text-brand-dark">
+                  <th className="py-2">Name</th>
+                  <th className="py-2">Email</th>
+                  <th className="py-2">Package</th>
+                  <th className="py-2">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentLeads.map((lead) => (
+                  <tr key={lead.id} className="border-b">
+                    <td className="py-3">{lead.name}</td>
+                    <td className="py-3">{lead.email}</td>
+                    <td className="py-3">{lead.packages?.title || 'General Inquiry'}</td>
+                    <td className="py-3">{new Date(lead.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

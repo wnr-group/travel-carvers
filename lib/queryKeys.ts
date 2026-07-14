@@ -1,4 +1,9 @@
-import type { PackageFilters } from '@/lib/validations/package.schema'
+export interface PackageFilters {
+  status?: string;
+  category?: string;
+  search?: string;
+  [key: string]: any;
+}
 
 /**
  * Shared React Query keys.

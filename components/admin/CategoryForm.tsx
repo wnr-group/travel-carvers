@@ -95,7 +95,7 @@ export default function CategoryForm({ category, onClose }: CategoryFormProps) {
               id="name"
               {...form.register('name')}
               onChange={handleNameChange}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-base lg:text-sm"
             />
             <FieldError message={errors.name?.message} />
           </div>
@@ -122,19 +122,19 @@ export default function CategoryForm({ category, onClose }: CategoryFormProps) {
           {/* Other Fields */}
           <div>
             <label htmlFor="icon_name" className="block text-sm font-medium">Icon Name</label>
-            <input id="icon_name" {...form.register('icon_name')} className="w-full border p-2 rounded" placeholder="e.g., Camera" />
+            <input id="icon_name" {...form.register('icon_name')} className="w-full border p-2 rounded text-base lg:text-sm" placeholder="e.g., Camera" />
             <FieldError message={errors.icon_name?.message} />
           </div>
 
           <div>
             <label htmlFor="slug" className="block text-sm font-medium mb-1">Slug</label>
-            <input id="slug" {...form.register('slug')} readOnly={isEditing} className="w-full border p-2 rounded bg-gray-50" />
+            <input id="slug" {...form.register('slug')} readOnly={isEditing} className="w-full border p-2 rounded bg-gray-50 text-base lg:text-sm" />
             <FieldError message={errors.slug?.message} />
           </div>
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
-            <textarea id="description" {...form.register('description')} className="w-full border p-2 rounded" rows={3} />
+            <textarea id="description" {...form.register('description')} className="w-full border p-2 rounded text-base lg:text-sm" rows={3} />
             <FieldError message={errors.description?.message} />
           </div>
 
@@ -145,7 +145,7 @@ export default function CategoryForm({ category, onClose }: CategoryFormProps) {
               type="number"
               min={0}
               {...form.register('display_order', { valueAsNumber: true })}
-              className="w-full border p-2 rounded"
+              className="w-full border p-2 rounded text-base lg:text-sm"
             />
             <FieldError message={errors.display_order?.message} />
           </div>

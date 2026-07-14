@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
               type="email"
               name="email"
               defaultValue="admin@travelcarvers.in"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-medium focus:border-transparent text-gray-900 bg-white"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-medium focus:border-transparent text-gray-900 bg-white text-base lg:text-sm"
               placeholder="admin@travelcarvers.in"
               required
               disabled={isLoading}
@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
               type="password"
               name="password"
               defaultValue="Admin@123"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-medium focus:border-transparent text-gray-900 bg-white"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-medium focus:border-transparent text-gray-900 bg-white text-base lg:text-sm"
               placeholder="••••••••"
               required
               disabled={isLoading}

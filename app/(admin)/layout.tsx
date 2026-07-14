@@ -1,5 +1,6 @@
 'use client'; // This must be a client component to use usePathname
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminNav from '@/components/admin/AdminNav';
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -12,14 +13,35 @@ export default function AdminLayout({
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
   return (
     <div className={!isLoginPage ? "flex min-h-screen bg-brand-tint-subtle" : ""}>
-      {!isLoginPage && <AdminNav />}
+      {!isLoginPage && (
+        <AdminNav 
+          isCollapsed={isCollapsed} 
+          isMobileOpen={isMobileOpen} 
+          onCloseMobile={() => setIsMobileOpen(false)} 
+        />
+      )}
       
-      <div className={!isLoginPage ? "ml-64 flex-1" : "w-full"}>
-        {!isLoginPage && <AdminHeader />}
+      <div 
+        className={
+          !isLoginPage 
+            ? `flex-1 min-w-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'} ml-0` 
+            : "w-full"
+        }
+      >
+        {!isLoginPage && (
+          <AdminHeader 
+            isCollapsed={isCollapsed} 
+            onToggleCollapse={() => setIsCollapsed(!isCollapsed)} 
+            onOpenMobile={() => setIsMobileOpen(true)}
+          />
+        )}
         
-        <main className={!isLoginPage ? "px-8 pb-8" : ""}>
+        <main className={!isLoginPage ? "px-4 sm:px-8 pb-8" : ""}>
           {children}
         </main>
       </div>

@@ -29,10 +29,10 @@ export default function CategoriesPage() {
   });
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="py-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-brand-darkest">Categories</h1>
-        <button onClick={() => { setEditingCategory(null); setShowForm(true); }} className="px-4 py-2 bg-brand-dark text-white rounded-lg flex items-center gap-2 hover:bg-brand-darkest transition-colors">
+        <button onClick={() => { setEditingCategory(null); setShowForm(true); }} className="px-4 py-2 bg-brand-dark text-white rounded-lg flex items-center gap-2 hover:bg-brand-darkest transition-colors w-full sm:w-auto justify-center">
           <Plus className="w-5 h-5" /> Add Category
         </button>
       </div>
@@ -55,7 +55,8 @@ export default function CategoriesPage() {
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[800px]">
             <thead className="bg-brand-lightest/40 border-b text-brand-darkest">
               <tr>
                 <th className="p-4 text-left">Order</th>
@@ -104,6 +105,7 @@ export default function CategoriesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
       {showForm && (

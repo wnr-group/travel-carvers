@@ -47,7 +47,7 @@ interface GlobeProps {
   height: number;
 }
 
-const Globe = dynamic<GlobeProps>(() => import('react-globe.gl').then(mod => mod.default), { ssr: false });
+const Globe = dynamic<any>(() => import('react-globe.gl').then(mod => mod.default), { ssr: false });
 
 interface TouristLocation {
   name: string;
