@@ -23,23 +23,32 @@ async function getDashboardStats() {
   };
 }
 
-async function getRecentLeads() {
+interface RecentLead {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+  packages: { title: string } | null;
+}
+
+async function getRecentLeads(): Promise<RecentLead[]> {
   const { data, error } = await supabaseAdmin
     .from('leads')
     .select(`
-      id, 
-      name, 
-      email, 
+      id,
+      name,
+      email,
       created_at,
       packages ( title )
     `)
     .order('created_at', { ascending: false })
-    .limit(5);
+    .limit(5)
+    .overrideTypes<RecentLead[], { merge: false }>();
 
   if (error) {
     return [];
   }
-  
+
   return data || [];
 }
 
@@ -56,10 +65,10 @@ export default async function AdminDashboardPage() {
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total Packages" value={stats.packages} icon={<Package />} color="bg-blue-500" />
-        <StatCard title="Total Leads" value={stats.leads} icon={<Mail />} color="bg-green-500" />
-        <StatCard title="Total Reviews" value={stats.reviews} icon={<MessageSquare />} color="bg-purple-500" />
-        <StatCard title="Categories" value={stats.categories} icon={<FolderTree />} color="bg-orange-500" />
+        <StatCard title="Total Packages" value={stats.packages} icon={<Package />} color="bg-brand-darkest" />
+        <StatCard title="Total Leads" value={stats.leads} icon={<Mail />} color="bg-brand-dark" />
+        <StatCard title="Total Reviews" value={stats.reviews} icon={<MessageSquare />} color="bg-secondary-sage" />
+        <StatCard title="Categories" value={stats.categories} icon={<FolderTree />} color="bg-brand-medium" />
       </div>
       
       {/* Recent Leads Table */}
@@ -78,7 +87,7 @@ export default async function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {recentLeads.map((lead: any) => (
+              {recentLeads.map((lead) => (
                 <tr key={lead.id} className="border-b">
                   <td className="py-3">{lead.name}</td>
                   <td className="py-3">{lead.email}</td>
@@ -94,7 +103,17 @@ export default async function AdminDashboardPage() {
   );
 }
 
-function StatCard({ title, value, icon, color }: any) {
+function StatCard({
+  title,
+  value,
+  icon,
+  color,
+}: {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  color: string;
+}) {
   return (
     <div className="bg-white rounded-lg shadow p-6 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-default">
       <div>

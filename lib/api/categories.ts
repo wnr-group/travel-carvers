@@ -1,5 +1,9 @@
-import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import type {
+  CategoryFormOutput,
+  CategoryUpdateOutput,
+  SubcategoryFormData,
+} from '@/lib/validations/category.schema';
 
 /**
  * Get all active categories (Public)
@@ -72,7 +76,7 @@ export async function getAllCategoriesAdmin() {
 /**
  * Admin: Create category (requires server-side)
  */
-export async function createCategory(categoryData: any) {
+export async function createCategory(categoryData: CategoryFormOutput) {
 
   const { data, error } = await supabaseAdmin
     .from('categories')
@@ -87,7 +91,7 @@ export async function createCategory(categoryData: any) {
 /**
  * Admin: Update category (requires server-side)
  */
-export async function updateCategory(id: string, categoryData: any) {
+export async function updateCategory(id: string, categoryData: CategoryUpdateOutput) {
 
   const { data, error } = await supabaseAdmin
     .from('categories')
@@ -102,15 +106,21 @@ export async function updateCategory(id: string, categoryData: any) {
 
 /**
  * Admin: Delete category (requires server-side)
+ *
+ * Returns the deleted row, or null when no category had that id, so callers can
+ * distinguish a successful delete from a no-op and respond with 404.
  */
 export async function deleteCategory(id: string) {
 
-  const { error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('categories')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  return data;
 }
 
 /**
@@ -130,7 +140,7 @@ export async function getAllSubcategoriesAdmin() {
 /**
  * Admin: Create subcategory (requires server-side)
  */
-export async function createSubcategory(subcategoryData: any) {
+export async function createSubcategory(subcategoryData: SubcategoryFormData) {
 
   const { data, error } = await supabaseAdmin
     .from('subcategories')
@@ -145,7 +155,7 @@ export async function createSubcategory(subcategoryData: any) {
 /**
  * Admin: Update subcategory (requires server-side)
  */
-export async function updateSubcategory(id: string, subcategoryData: any) {
+export async function updateSubcategory(id: string, subcategoryData: SubcategoryFormData) {
 
   const { data, error } = await supabaseAdmin
     .from('subcategories')

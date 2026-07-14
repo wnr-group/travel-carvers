@@ -1,9 +1,12 @@
 'use client';
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Edit, Trash2, ImageOff } from 'lucide-react';
 import { toast } from 'sonner';
 import CategoryForm from '@/components/admin/CategoryForm';
+import { fetchJson } from '@/lib/api/fetchJson';
+import { useAdminCategories } from '@/lib/hooks/useAdminCategories';
+import { ADMIN_CATEGORIES_KEY } from '@/lib/queryKeys';
 import { Category } from '@/lib/types/category';
 
 export default function CategoriesPage() {
@@ -11,21 +14,16 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ['admin-categories'],
-    queryFn: async () => {
-      const res = await fetch('/api/admin/categories');
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      return json.data as Category[];
-    },
-  });
+  const { data: categories, isPending, isError, error } = useAdminCategories();
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/admin/categories/${id}`, { method: 'DELETE' }),
+    // fetchJson turns a 404/500 into a throw; without that, onSuccess would fire and claim
+    // the delete worked.
+    mutationFn: (id: string) =>
+      fetchJson<{ id: string }>(`/api/admin/categories/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast.success('Category deleted');
-      queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
+      queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -33,16 +31,32 @@ export default function CategoriesPage() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Categories</h1>
-        <button onClick={() => { setEditingCategory(null); setShowForm(true); }} className="px-4 py-2 bg-green-900 text-white rounded-lg flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-brand-darkest">Categories</h1>
+        <button onClick={() => { setEditingCategory(null); setShowForm(true); }} className="px-4 py-2 bg-brand-dark text-white rounded-lg flex items-center gap-2 hover:bg-brand-darkest transition-colors">
           <Plus className="w-5 h-5" /> Add Category
         </button>
       </div>
 
-      {isLoading ? <div>Loading...</div> : (
+      {isPending ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">Loading...</div>
+      ) : isError ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <p className="font-semibold text-red-600">Could not load categories</p>
+          <p className="mt-1 text-sm text-gray-500">
+            {error instanceof Error ? error.message : 'Unknown error'}
+          </p>
+        </div>
+      ) : categories.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <p className="font-semibold">No categories yet</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Create your first category to start organising packages.
+          </p>
+        </div>
+      ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-brand-lightest/40 border-b text-brand-darkest">
               <tr>
                 <th className="p-4 text-left">Order</th>
                 <th className="p-4 text-left">Image</th>
@@ -54,17 +68,37 @@ export default function CategoriesPage() {
               </tr>
             </thead>
             <tbody>
-              {categories?.map((cat) => (
+              {categories.map((cat) => (
                 <tr key={cat.id} className="border-b">
-                  <td className="p-4"><GripVertical className="text-gray-400" /></td>
-                  <td className="p-4"><img src={cat.cover_image_url || ''} className="w-10 h-10 rounded" /></td>
+                  <td className="p-4 text-gray-600">{cat.display_order}</td>
+                  <td className="p-4">
+                    {cat.cover_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- Supabase host is not in next.config remotePatterns
+                      <img src={cat.cover_image_url} alt={cat.name} className="w-10 h-10 rounded object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-400">
+                        <ImageOff className="w-4 h-4" />
+                      </div>
+                    )}
+                  </td>
                   <td className="p-4 font-medium">{cat.name}</td>
                   <td className="p-4 text-gray-600">{cat.slug}</td>
                   <td className="p-4 text-gray-600 font-mono text-sm">{cat.icon_name}</td>
                   <td className="p-4">{cat.is_active ? 'Yes' : 'No'}</td>
                   <td className="p-4 flex gap-2">
-                    <button onClick={() => { setEditingCategory(cat); setShowForm(true); }}><Edit className="w-4 h-4 text-blue-600" /></button>
-                    <button onClick={() => confirm('Delete?') && deleteMutation.mutate(cat.id)}><Trash2 className="w-4 h-4 text-red-600" /></button>
+                    <button
+                      onClick={() => { setEditingCategory(cat); setShowForm(true); }}
+                      aria-label={`Edit ${cat.name}`}
+                    >
+                      <Edit className="w-4 h-4 text-brand-dark" />
+                    </button>
+                    <button
+                      onClick={() => confirm(`Delete "${cat.name}"? This cannot be undone.`) && deleteMutation.mutate(cat.id)}
+                      disabled={deleteMutation.isPending}
+                      aria-label={`Delete ${cat.name}`}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -72,7 +106,13 @@ export default function CategoriesPage() {
           </table>
         </div>
       )}
-      {showForm && <CategoryForm category={editingCategory} onClose={() => setShowForm(false)} />}
+      {showForm && (
+        <CategoryForm
+          key={editingCategory?.id ?? 'create'}
+          category={editingCategory}
+          onClose={() => setShowForm(false)}
+        />
+      )}
     </div>
   );
 }

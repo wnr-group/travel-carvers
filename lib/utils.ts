@@ -19,6 +19,34 @@ export function slugify(value: string) {
 }
 
 /**
+ * Format a price for display. Returns a dash when there is no price, so the table and the
+ * cards render the same placeholder for a package that has none.
+ */
+export function formatPrice(value: number | null | undefined) {
+  if (value === null || value === undefined) return '—'
+
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+/**
+ * Format a timestamp as a short, locale-aware date.
+ */
+export function formatDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+
+  return date.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+/**
  * ZodError into a single message suitable for an API response.
  */
 export function firstZodIssue(error: ZodError): string {

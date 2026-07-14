@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function ImageUploader({ onUpload }: { onUpload: (url: string) => void }) {
@@ -11,37 +10,40 @@ export default function ImageUploader({ onUpload }: { onUpload: (url: string) =>
     if (!file) return;
 
     setUploading(true);
-    
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
 
-    // Upload to 'category-images'
-    const { data, error } = await supabase.storage
-      .from('category-images') 
-      .upload(fileName, file);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    if (error) {
-      console.error("Upload Error:", error);
-      toast.error(`Upload failed: ${error.message}`);
-    } else {
-      const { data: urlData } = supabase.storage
-        .from('category-images')
-        .getPublicUrl(data.path);
-      
-      onUpload(urlData.publicUrl);
+      // Uploads go through the admin API (service-role key) rather than the browser
+      // Supabase client, which carries no session and would upload as `anon`.
+      const res = await fetch('/api/admin/categories/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error ?? 'Upload failed');
+
+      onUpload(json.data.url);
       toast.success('Image uploaded');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+      // Let the same file be re-selected after a failure.
+      e.target.value = '';
     }
-    setUploading(false);
   }
 
   return (
     <div className="flex flex-col gap-2">
-      <input 
-        type="file" 
-        accept="image/*" 
-        onChange={handleUpload} 
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={handleUpload}
         disabled={uploading}
-        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-brand-lightest file:text-brand-darkest hover:file:bg-brand-light disabled:opacity-50"
       />
       {uploading && <p className="text-xs text-gray-400">Uploading...</p>}
     </div>

@@ -15,21 +15,26 @@ export async function signIn(email: string, password: string) {
   }
 
   if (data.session) {
-    // Set session in cookies
     const cookieStore = await cookies()
+    const secure = process.env.NODE_ENV === 'production'
+
+    // The access token is only valid for `expires_in` seconds (jwt_expiry, 1h by default).
+    // Giving the cookie a longer life than the token it holds leaves the user "logged in"
+    // with a dead token: pages render but every API call 401s. Keep the two in step and
+    // let proxy.ts mint a new one from the refresh token.
     cookieStore.set('supabase-auth-token', data.session.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 6, // 6 hours
+      maxAge: data.session.expires_in,
       path: '/',
     })
 
     cookieStore.set('supabase-refresh-token', data.session.refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure,
       sameSite: 'lax',
-      maxAge: 60 * 60 * 6, // 6 hours
+      maxAge: 60 * 60 * 24 * 7, // 7 days — this is what keeps the admin signed in
       path: '/',
     })
   }
