@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { loginAction } from './actions'
 import { toast } from 'sonner'
 
 export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter() 
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -14,11 +16,15 @@ export default function AdminLoginPage() {
     try {
       const result = await loginAction(formData)
 
-      if (!result.success) {
+      if (result.success) {
+        toast.success('Login successful!')
+        router.push('/admin/dashboard') 
+      } else {
         toast.error(result.error || 'Login failed')
       }
-    } catch {
+    } catch (e) {
       toast.error('An error occurred. Please try again.')
+      console.error(e)
     } finally {
       setIsLoading(false)
     }
