@@ -213,6 +213,7 @@ export function usePackageFilters() {
     setFilters(initial);
     setSearchInput(initial.search);
     setHydrated(true);
+    window.scrollTo(0, 0);
   }, []);
 
   // ---- Push debounced search text into filters ----
