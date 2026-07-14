@@ -7,7 +7,7 @@ const LOGIN_PATH = '/admin/login'
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: true,
   sameSite: 'lax' as const,
   path: '/',
 }

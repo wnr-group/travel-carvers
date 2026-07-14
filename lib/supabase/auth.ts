@@ -40,11 +40,10 @@ export async function signIn(email: string, password: string) {
 
   if (data.session) {
     const cookieStore = await cookies()
-    const secure = process.env.NODE_ENV === 'production'
 
     cookieStore.set('supabase-auth-token', data.session.access_token, {
       httpOnly: true,
-      secure,
+      secure: true,
       sameSite: 'lax',
       maxAge: data.session.expires_in,
       path: '/',
@@ -52,7 +51,7 @@ export async function signIn(email: string, password: string) {
 
     cookieStore.set('supabase-refresh-token', data.session.refresh_token, {
       httpOnly: true,
-      secure,
+      secure: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days — this is what keeps the admin signed in
       path: '/',
