@@ -18,7 +18,9 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Copy
+  Copy,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,6 +36,9 @@ export default function AdminLeadsPage() {
   // Sorting State
   const [sortField, setSortField] = useState<'name' | 'email' | 'phone' | 'created_at' | 'status'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Dropdown menus state
+  const [openStatusMenuId, setOpenStatusMenuId] = useState<string | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -174,13 +179,13 @@ export default function AdminLeadsPage() {
     return (
       <button 
         onClick={() => handleSort(field)}
-        className="flex items-center gap-1.5 hover:text-brand-light transition-colors uppercase font-semibold text-xs tracking-wider focus:outline-none"
+        className="flex items-center gap-1.5 hover:text-brand-light transition-colors uppercase font-semibold text-sm tracking-wider focus:outline-none whitespace-nowrap"
       >
         {label}
         {isCurrent ? (
-          sortOrder === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+          sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />
         ) : (
-          <ArrowUpDown className="w-3 h-3 opacity-50" />
+          <ArrowUpDown className="w-4 h-4 opacity-60" />
         )}
       </button>
     );
@@ -262,34 +267,34 @@ export default function AdminLeadsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
-            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
-              <thead className="bg-brand-darkest text-white">
+            <table className="w-full min-w-[1100px] border-collapse text-left text-[15px]">
+              <thead className="bg-brand-lightest/40 border-b text-brand-darkest">
                 <tr>
                   <th className="px-6 py-4 w-[15%]">{renderSortHeader('name', 'Name')}</th>
                   <th className="px-6 py-4 w-[18%]">{renderSortHeader('email', 'Email')}</th>
                   <th className="px-6 py-4 w-[15%]">{renderSortHeader('phone', 'Phone')}</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[15%]">Requested Package</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[18%]">Message</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[15%]">Requested Package</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[18%]">Message</th>
                   <th className="px-6 py-4 w-[12%]">{renderSortHeader('created_at', 'Date')}</th>
                   <th className="px-6 py-4 w-[12%]">{renderSortHeader('status', 'Status Stage')}</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[5%] text-right">Actions</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[5%] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {paginatedLeads.map((lead) => (
+                {paginatedLeads.map((lead, idx) => (
                   <tr key={lead.id} className="transition-colors hover:bg-brand-lightest/10 duration-200">
                     {/* Name */}
-                    <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">
+                    <td className="px-6 py-4 text-base font-semibold text-gray-900 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-brand-medium flex-shrink-0" />
+                        <User className="w-5 h-5 text-brand-medium flex-shrink-0" />
                         <span>{lead.name}</span>
                       </div>
                     </td>
 
                     {/* Email */}
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="px-6 py-4 text-[15px] text-gray-600">
                       <div className="flex items-center gap-2 group/copy">
-                        <Mail className="w-4 h-4 text-brand-medium flex-shrink-0" />
+                        <Mail className="w-4.5 h-4.5 text-brand-medium flex-shrink-0" />
                         <span>{lead.email}</span>
                         <button 
                           onClick={() => handleCopy(lead.email, 'Email')}
@@ -302,9 +307,9 @@ export default function AdminLeadsPage() {
                     </td>
 
                     {/* Phone */}
-                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
+                    <td className="px-6 py-4 text-[15px] text-gray-600 whitespace-nowrap">
                       <div className="flex items-center gap-2 group/copy">
-                        <Phone className="w-4 h-4 text-brand-medium flex-shrink-0" />
+                        <Phone className="w-4.5 h-4.5 text-brand-medium flex-shrink-0" />
                         <span>{lead.phone}</span>
                         <button 
                           onClick={() => handleCopy(lead.phone, 'Phone number')}
@@ -317,7 +322,7 @@ export default function AdminLeadsPage() {
                     </td>
 
                     {/* Requested Package */}
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-base">
                       <div className="font-medium text-gray-800 line-clamp-2">
                         {lead.packages?.title || 'General Inquiry'}
                       </div>
@@ -326,14 +331,14 @@ export default function AdminLeadsPage() {
                     {/* Message */}
                     <td className="px-6 py-4">
                       <div className="text-gray-700 max-w-[220px]">
-                        <p className="text-xs leading-relaxed whitespace-pre-wrap line-clamp-3">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap line-clamp-3">
                           {lead.message || 'No additional message.'}
                         </p>
                       </div>
                     </td>
 
                     {/* Date */}
-                    <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                       {new Date(lead.created_at).toLocaleDateString(undefined, {
                         year: 'numeric',
                         month: 'short',
@@ -343,21 +348,56 @@ export default function AdminLeadsPage() {
 
                     {/* Status Stage Selector */}
                     <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1.5">
-                        <span className={`inline-flex items-center w-fit px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeClass(lead.status)}`}>
-                          {(lead.status || 'new').toUpperCase()}
-                        </span>
-                        <select
-                          value={lead.status || 'new'}
+                      <div className="relative">
+                        <button
+                          onClick={() => setOpenStatusMenuId(openStatusMenuId === lead.id ? null : lead.id)}
                           disabled={updateStatusMutation.isPending}
-                          onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                          className="px-2 py-1 border border-gray-200 rounded text-xs bg-white text-gray-700 focus:outline-none w-fit font-medium cursor-pointer"
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm transition-all hover:shadow cursor-pointer focus:outline-none ${getStatusBadgeClass(lead.status)}`}
                         >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="qualified">Qualified</option>
-                          <option value="converted">Converted</option>
-                        </select>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                          <span>{(lead.status || 'new').toUpperCase()}</span>
+                          <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                        </button>
+                        
+                        {openStatusMenuId === lead.id && (
+                          <>
+                            {/* Backdrop to close click */}
+                            <div className="fixed inset-0 z-10" onClick={() => setOpenStatusMenuId(null)} />
+                            
+                            <div className={`absolute right-0 w-36 bg-white border border-gray-100 rounded-lg shadow-lg z-20 py-1 animate-in fade-in duration-100 ${
+                              idx >= paginatedLeads.length - 2 && paginatedLeads.length > 2
+                                ? 'bottom-full mb-1.5 slide-in-from-bottom-1' 
+                                : 'top-full mt-1.5 slide-in-from-top-1'
+                            }`}>
+                              {['new', 'contacted', 'qualified', 'converted'].map((statusOption) => {
+                                const isActive = lead.status === statusOption;
+                                return (
+                                  <button
+                                    key={statusOption}
+                                    onClick={() => {
+                                      handleStatusChange(lead.id, statusOption);
+                                      setOpenStatusMenuId(null);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors flex items-center justify-between hover:bg-brand-lightest/30 hover:text-brand-darkest cursor-pointer ${
+                                      isActive ? 'text-brand-dark bg-brand-lightest/20' : 'text-gray-700'
+                                    }`}
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${
+                                        statusOption === 'new' ? 'bg-blue-500' :
+                                        statusOption === 'contacted' ? 'bg-amber-500' :
+                                        statusOption === 'qualified' ? 'bg-indigo-500' :
+                                        'bg-emerald-500'
+                                      }`} />
+                                      <span>{statusOption.charAt(0).toUpperCase() + statusOption.slice(1)}</span>
+                                    </span>
+                                    {isActive && <Check className="w-3 h-3 text-brand-dark" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </td>
 

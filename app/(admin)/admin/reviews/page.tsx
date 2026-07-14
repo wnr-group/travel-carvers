@@ -246,15 +246,15 @@ export default function AdminReviewsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
-            <table className="w-full min-w-[900px] border-collapse text-left text-sm">
-              <thead className="bg-brand-darkest text-white">
+            <table className="w-full min-w-[900px] border-collapse text-left text-[15px]">
+              <thead className="bg-brand-lightest/40 border-b text-brand-darkest">
                 <tr>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[20%]">Reviewer</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[20%]">Package</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[12%]">Rating</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[25%]">Review</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[10%]">Status</th>
-                  <th className="px-6 py-4 font-semibold text-xs uppercase tracking-wider w-[13%] text-right">Actions</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[20%]">Reviewer</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[20%]">Package</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[12%]">Rating</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[25%]">Review</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[10%]">Status</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[13%] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -268,9 +268,9 @@ export default function AdminReviewsPage() {
                     >
                       {/* Reviewer Details */}
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-gray-900">{review.reviewer_name}</div>
-                        <div className="text-xs text-gray-500">{review.reviewer_email}</div>
-                        <div className="text-[10px] text-gray-400 mt-1">
+                        <div className="text-base font-semibold text-gray-900">{review.reviewer_name}</div>
+                        <div className="text-sm text-gray-500">{review.reviewer_email}</div>
+                        <div className="text-xs text-gray-400 mt-1.5">
                           {new Date(review.created_at).toLocaleDateString(undefined, {
                             year: 'numeric',
                             month: 'short',
@@ -280,7 +280,7 @@ export default function AdminReviewsPage() {
                       </td>
 
                       {/* Package Name */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-base">
                         <div className="font-medium text-gray-800 line-clamp-2">
                           {review.packages?.title || 'General / Unknown'}
                         </div>
@@ -301,11 +301,11 @@ export default function AdminReviewsPage() {
                       {/* Review Text */}
                       <td className="px-6 py-4">
                         <div className="text-gray-700 relative max-w-md">
-                          <p className="line-clamp-2 text-xs leading-relaxed">{review.review_text}</p>
+                          <p className="line-clamp-2 text-sm leading-relaxed">{review.review_text}</p>
                           {review.review_text.length > 80 && (
                             <button
                               onClick={() => setSelectedReviewText(review.review_text)}
-                              className="text-[10px] text-brand-dark hover:text-brand-darkest font-semibold flex items-center gap-1 mt-1 cursor-pointer"
+                              className="text-xs text-brand-dark hover:text-brand-darkest font-semibold flex items-center gap-1 mt-1 cursor-pointer"
                             >
                               <Eye className="w-3 h-3" /> Read Full Review
                             </button>
@@ -317,7 +317,7 @@ export default function AdminReviewsPage() {
                       <td className="px-6 py-4">
                         {review.is_approved === null && (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                            <Clock className="w-3. h-3 mr-1" /> Pending
+                            <Clock className="w-3 h-3 mr-1" /> Pending
                           </span>
                         )}
                         {review.is_approved === true && (
