@@ -1,6 +1,6 @@
 'use client'; // This must be a client component to use usePathname
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminNav from '@/components/admin/AdminNav';
 import AdminHeader from '@/components/admin/AdminHeader';
@@ -15,6 +15,18 @@ export default function AdminLayout({
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Lock body scroll when mobile sidebar drawer is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileOpen]);
 
   return (
     <div className={!isLoginPage ? "flex min-h-screen bg-brand-tint-subtle" : ""}>
