@@ -1,165 +1,259 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePackages } from '@/lib/hooks/usePackages';
-import { Clock, MapPin, Star, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  ChevronDown,
+  Compass,
+} from 'lucide-react';
+import {
+  usePackageFilters,
+  SORT_OPTIONS,
+  TOTAL_CATALOG_SIZE,
+  PRICE_FLOOR,
+  PRICE_CEIL,
+  DURATION_RANGES,
+  formatPrice,
+} from '@/lib/hooks/usePackageFilters';
+import { PackageCard } from '@/components/customer/PackageCard';
+import { PackageFilters, Chip } from '@/components/customer/PackageFilters';
 
-const mockPackagesList = [
-  {
-    title: "Bali Paradise",
-    slug: "bali-paradise",
-    duration: "7 Days • All Inclusive",
-    location: "Bali, Indonesia",
-    price: 45999,
-    tag: "POPULAR",
-    img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800",
-  },
-  {
-    title: "Dubai Luxury",
-    slug: "dubai-luxury",
-    duration: "5 Days • Premium Hotels",
-    location: "Dubai, UAE",
-    price: 59999,
-    tag: "LUXURY",
-    img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800",
-  },
-  {
-    title: "Kerala Backwaters",
-    slug: "kerala-backwaters",
-    duration: "6 Days • Houseboat Stay",
-    location: "Kerala, India",
-    price: 32999,
-    tag: "TRENDING",
-    img: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800",
-  },
-  {
-    title: "Switzerland Alps",
-    slug: "switzerland-alps",
-    duration: "8 Days • Mountain Resorts",
-    location: "Alps, Switzerland",
-    price: 125999,
-    tag: "PREMIUM",
-    img: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800",
-  },
-  {
-    title: "Goa Beach Escape",
-    slug: "goa-beach-escape",
-    duration: "4 Days • Beach Resort",
-    location: "Goa, India",
-    price: 18999,
-    tag: "HOT DEAL",
-    img: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800",
-  },
-  {
-    title: "Maldives Honeymoon",
-    slug: "maldives-honeymoon",
-    duration: "5 Days • Overwater Villas",
-    location: "Maldives",
-    price: 95999,
-    tag: "ROMANTIC",
-    img: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=800",
-  },
-  {
-    title: "Ladakh High Passes Circuit",
-    slug: "ladakh-high-passes-circuit",
-    duration: "8 Days / 7 Nights",
-    location: "Leh, Ladakh, India",
-    price: 68500,
-    tag: "ADVENTURE",
-    img: "https://picsum.photos/seed/ladakh-hero/800/600",
-  }
-];
+export default function PackageSearchFilter() {
+  const {
+    filters,
+    setFilters,
+    searchInput,
+    setSearchInput,
+    loading,
+    sortedPackages,
+    activeFilterCount,
+    toggleCategory,
+    toggleDifficulty,
+    setPriceMin,
+    setPriceMax,
+    setDuration,
+    setSort,
+    clearFilters,
+  } = usePackageFilters();
 
-export default function PackagesCatalogPage() {
-  const { data: dbPackages, isLoading } = usePackages();
-
-  const getDisplayPackages = () => {
-    if (!dbPackages || dbPackages.length === 0) return mockPackagesList;
-    return dbPackages.map((p: any) => ({
-      title: p.title,
-      slug: p.slug,
-      duration: `${p.duration_days} Days / ${p.duration_nights} Nights`,
-      location: p.destination_name || 'India',
-      price: Number(p.price_adult) || 45000,
-      tag: p.is_trending ? 'TRENDING' : p.is_featured ? 'FEATURED' : 'HOT',
-      img: p.package_gallery?.find((g: any) => g.is_cover)?.image_url || p.package_gallery?.[0]?.image_url || 'https://picsum.photos/seed/placeholder/800/600',
-    }));
-  };
-
-  const packages = getDisplayPackages();
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-dark" />
-        <p className="text-slate-500 font-medium text-sm">Loading package catalog...</p>
-      </div>
-    );
-  }
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   return (
-    <div className="bg-[#F4F1EA] min-h-screen py-12 px-6 sm:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-[#1A3C34] mb-4">
-            Our Tour Packages
-          </h1>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Choose your perfect adventure from our curated travel catalog. Click any package to explore itinerary skyline details.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {packages.map((pkg) => (
-            <Link
-              key={pkg.slug}
-              href={`/packages/${pkg.slug}`}
-              className="group relative bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] flex flex-col h-96"
+    <div className="min-h-screen bg-brand-tint-light">
+      {/* Header / search bar */}
+      <div className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-medium" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search packages by name or description..."
+                className="w-full rounded-full border border-brand-light bg-[var(--background)] py-2.5 pl-10 pr-4 text-sm text-brand-darkest placeholder:text-brand-medium/70 outline-none transition focus:border-brand-medium focus:ring-2 focus:ring-brand-light/60"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(true)}
+              className="relative flex shrink-0 items-center gap-2 rounded-full border border-brand-light bg-[var(--background)] px-4 py-2.5 text-sm font-medium text-brand-darkest transition hover:bg-brand-lightest lg:hidden"
             >
-              <div className="relative h-56 w-full">
-                <Image
-                  src={pkg.img}
-                  alt={pkg.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <span className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[#5F6F52] text-xs font-bold shadow-sm">
-                  {pkg.tag}
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-dark px-1 text-xs font-semibold text-white">
+                  {activeFilterCount}
                 </span>
-              </div>
-              <div className="p-6 flex flex-col justify-between flex-1">
-                <div>
-                  <h3 className="text-2xl font-bold text-[#1A3C34] mb-1 leading-tight group-hover:text-[#5F6F52] transition-colors">
-                    {pkg.title}
-                  </h3>
-                  <div className="flex items-center gap-4 text-slate-500 text-sm mt-1">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" /> {pkg.duration}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" /> {pkg.location}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-4">
-                  <div className="flex items-center gap-0.5 text-amber-400">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-[#1A3C34] font-extrabold text-xl font-mono">
-                    ₹{pkg.price.toLocaleString('en-IN')}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
+      <div className="mx-auto flex max-w-7xl gap-8 px-4 py-6 sm:px-6 lg:px-8">
+        {/* ---------------- Desktop sidebar ---------------- */}
+        <aside className="hidden w-72 shrink-0 lg:block">
+          <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border border-brand-light bg-[var(--background)] p-5">
+            <PackageFilters
+              filters={filters}
+              activeFilterCount={activeFilterCount}
+              toggleCategory={toggleCategory}
+              toggleDifficulty={toggleDifficulty}
+              setPriceMin={setPriceMin}
+              setPriceMax={setPriceMax}
+              setDuration={setDuration}
+              clearFilters={clearFilters}
+            />
+          </div>
+        </aside>
+
+        {/* ---------------- Results ---------------- */}
+        <main className="min-w-0 flex-1">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-brand-medium">
+              {loading ? (
+                'Searching packages…'
+              ) : (
+                <>
+                  Showing{' '}
+                  <span className="font-semibold text-brand-darkest">{sortedPackages.length}</span> of{' '}
+                  <span className="font-semibold text-brand-darkest">{TOTAL_CATALOG_SIZE}</span> packages
+                </>
+              )}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort" className="text-sm text-brand-medium">
+                Sort by
+              </label>
+              <div className="relative">
+                <select
+                  id="sort"
+                  value={filters.sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="appearance-none rounded-full border border-brand-light bg-[var(--background)] py-2 pl-4 pr-9 text-sm font-medium text-brand-darkest outline-none transition focus:border-brand-medium focus:ring-2 focus:ring-brand-light/60"
+                >
+                  {Object.entries(SORT_OPTIONS).map(([key, opt]) => (
+                    <option key={key} value={key}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-medium" />
+              </div>
+            </div>
+          </div>
+
+          {/* Active filter chips */}
+          {activeFilterCount > 0 && (
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              {filters.search && (
+                <Chip label={`"${filters.search}"`} onRemove={() => setSearchInput('')} />
+              )}
+              {filters.categories.map((c) => (
+                <Chip key={c} label={c} onRemove={() => toggleCategory(c)} />
+              ))}
+              {filters.difficulty.map((d) => (
+                <Chip key={d} label={d} onRemove={() => toggleDifficulty(d)} />
+              ))}
+              {(filters.priceMin !== PRICE_FLOOR || filters.priceMax !== PRICE_CEIL) && (
+                <Chip
+                  label={`${formatPrice(filters.priceMin)} – ${formatPrice(filters.priceMax)}`}
+                  onRemove={() => setFilters((prev) => ({ ...prev, priceMin: PRICE_FLOOR, priceMax: PRICE_CEIL }))}
+                />
+              )}
+              {filters.duration !== 'any' && (
+                <Chip label={DURATION_RANGES[filters.duration].label} onRemove={() => setDuration('any')} />
+              )}
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-sm font-medium text-brand-dark underline-offset-2 hover:underline"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
+          {/* Grid */}
+          {loading ? (
+            <SkeletonGrid />
+          ) : sortedPackages.length === 0 ? (
+            <EmptyState onClear={clearFilters} />
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {sortedPackages.map((pkg) => (
+                <PackageCard key={pkg.id} pkg={pkg} />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* ---------------- Mobile drawer ---------------- */}
+      <div className={`fixed inset-0 z-[150] lg:hidden transition-opacity duration-300 ${mobileFiltersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        <div
+          className="absolute inset-0 bg-brand-darkest/40 backdrop-blur-sm transition-opacity duration-300"
+          onClick={() => setMobileFiltersOpen(false)}
+        />
+        <div className={`absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-in-out ${mobileFiltersOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="flex items-center gap-3 border-b border-brand-light px-5 py-4">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(false)}
+              className="flex items-center justify-center rounded-full p-2 bg-brand-lightest text-brand-darkest border border-brand-light hover:bg-brand-medium hover:text-white transition-all duration-200 cursor-pointer shadow-sm active:scale-95"
+              aria-label="Close filters"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h2 className="text-base font-semibold text-brand-darkest">Filters</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-4">
+            <PackageFilters
+              filters={filters}
+              activeFilterCount={activeFilterCount}
+              toggleCategory={toggleCategory}
+              toggleDifficulty={toggleDifficulty}
+              setPriceMin={setPriceMin}
+              setPriceMax={setPriceMax}
+              setDuration={setDuration}
+              clearFilters={clearFilters}
+            />
+          </div>
+          <div className="border-t border-brand-light px-5 py-4">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen(false)}
+              className="w-full rounded-full bg-gradient-brand-primary py-3 text-sm font-semibold text-white transition hover:opacity-90 shadow-md active:scale-95"
+            >
+              Apply Filters ({sortedPackages.length})
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonGrid() {
+  return (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)]">
+          <div className="h-44 w-full animate-pulse bg-brand-lightest" />
+          <div className="space-y-2 p-4">
+            <div className="h-4 w-3/4 animate-pulse rounded bg-brand-lightest" />
+            <div className="h-3 w-full animate-pulse rounded bg-brand-lightest" />
+            <div className="h-3 w-2/3 animate-pulse rounded bg-brand-lightest" />
+            <div className="h-8 w-full animate-pulse rounded-full bg-brand-lightest" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-brand-light bg-brand-lightest/40 px-6 py-20 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-lightest">
+        <Compass className="h-7 w-7 text-brand-medium" />
+      </div>
+      <h3 className="mb-1 text-base font-semibold text-brand-darkest">No packages match these filters</h3>
+      <p className="mb-5 max-w-sm text-sm text-brand-medium">
+        Try widening your price range, choosing a different duration, or clearing filters to see everything we
+        offer.
+      </p>
+      <button
+        type="button"
+        onClick={onClear}
+        className="rounded-full bg-gradient-brand-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+      >
+        Clear all filters
+      </button>
     </div>
   );
 }
