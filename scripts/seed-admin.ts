@@ -52,28 +52,41 @@ async function seedAdmin() {
   // Check if user already exists
   const { data: existingUsers } = await supabase.auth.admin.listUsers()
 
-  const userExists = existingUsers?.users.some((user) => user.email === email)
+  const existing = existingUsers?.users.find((user) => user.email === email)
 
-  if (userExists) {
+  let userId = existing?.id
+
+  if (existing) {
     console.log('✅ Admin user already exists:', email)
-    return
+  } else {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    })
+
+    if (error) {
+      console.error('❌ Error creating admin user:', error.message)
+      process.exit(1)
+    }
+
+    userId = data.user.id
+    console.log('✅ Admin user created successfully!')
+    console.log('📧 Email:', email)
+    console.log('🔑 Password:', password)
   }
 
-  // Create admin user
-  const { error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  })
+  const { error: grantError } = await supabase
+    .from('admin_users')
+    .upsert({ user_id: userId, email }, { onConflict: 'user_id' })
 
-  if (error) {
-    console.error('❌ Error creating admin user:', error.message)
+  if (grantError) {
+    console.error('❌ Error granting admin access:', grantError.message)
+    console.error('   Has the admin_users migration been applied? Run: npx supabase migration up')
     process.exit(1)
   }
 
-  console.log('✅ Admin user created successfully!')
-  console.log('📧 Email:', email)
-  console.log('🔑 Password:', password)
+  console.log('🔐 Admin access granted (admin_users)')
   console.log('🔗 Login at: http://localhost:3000/admin/login')
 }
 

@@ -1,12 +1,33 @@
 import { z } from 'zod';
+import { slugify } from '@/lib/utils';
 
-export const packageSchema = z.object({
-  // Basic Info
-  title: z.string().min(5, 'Title must be at least 5 characters'),
-  slug: z.string().min(3, 'Slug must be at least 3 characters'),
-  short_description: z.string().min(20, 'Short description must be at least 20 characters').max(200),
+export const SHORT_DESCRIPTION_MAX = 200;
+
+export const META_TITLE_MAX = 60;
+export const META_DESCRIPTION_MAX = 160;
+
+export const basicInfoSchema = z.object({
+  title: z.string().min(5, 'Title must be at least 5 characters').max(200),
+  slug: z
+    .string()
+    .max(200)
+    .transform(slugify)
+    .refine((value) => value.length >= 3, 'Slug must be at least 3 characters'),
+  short_description: z
+    .string()
+    .min(20, 'Short description must be at least 20 characters')
+    .max(SHORT_DESCRIPTION_MAX, `Short description must be ${SHORT_DESCRIPTION_MAX} characters or fewer`),
   full_description: z.string().min(50, 'Full description must be at least 50 characters'),
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
+
+  // Flags
+  is_featured: z.boolean().default(false),
+  is_trending: z.boolean().default(false),
+  is_new: z.boolean().default(false),
+});
+
+export const packageSchema = z.object({
+  ...basicInfoSchema.shape,
 
   // Pricing
   price_adult: z.number().positive('Adult price must be positive').optional(),
@@ -29,14 +50,9 @@ export const packageSchema = z.object({
   main_destination_lat: z.number().min(-90).max(90).optional(),
   main_destination_lng: z.number().min(-180).max(180).optional(),
 
-  // Flags
-  is_featured: z.boolean().default(false),
-  is_trending: z.boolean().default(false),
-  is_new: z.boolean().default(false),
-
   // SEO
-  meta_title: z.string().max(60).optional(),
-  meta_description: z.string().max(160).optional(),
+  meta_title: z.string().max(META_TITLE_MAX).optional(),
+  meta_description: z.string().max(META_DESCRIPTION_MAX).optional(),
   meta_keywords: z.string().optional(),
   og_image: z.string().url().optional(),
 
@@ -99,4 +115,53 @@ export const packageSchema = z.object({
   })).optional(),
 });
 
+
+export type PackageFormInput = z.input<typeof packageSchema>;
+export type PackageFormOutput = z.output<typeof packageSchema>;
 export type PackageFormData = z.infer<typeof packageSchema>;
+
+
+export const packageUpdateSchema = packageSchema.omit({ slug: true });
+
+export type PackageUpdateOutput = z.output<typeof packageUpdateSchema>;
+
+export type PackageRelations = Pick<
+  PackageFormOutput,
+  | 'category_ids'
+  | 'subcategory_ids'
+  | 'gallery_images'
+  | 'video_urls'
+  | 'itinerary_days'
+  | 'inclusions'
+  | 'exclusions'
+  | 'stay_details'
+  | 'travel_tips'
+  | 'best_time_to_visit'
+  | 'places_to_visit'
+>;
+
+export type PackageRecordInput = Omit<
+  PackageFormData,
+  | 'category_ids'
+  | 'subcategory_ids'
+  | 'gallery_images'
+  | 'video_urls'
+  | 'itinerary_days'
+  | 'inclusions'
+  | 'exclusions'
+  | 'stay_details'
+  | 'travel_tips'
+  | 'best_time_to_visit'
+  | 'places_to_visit'
+>;
+
+/**
+ * Query-string filters for the admin package list
+ */
+export const packageFiltersSchema = z.object({
+  status: z.enum(['draft', 'published', 'archived']).optional(),
+  search: z.string().trim().max(100).optional(),
+  category: z.uuid({ error: 'Category must be a valid id' }).optional(),
+});
+
+export type PackageFilters = z.output<typeof packageFiltersSchema>;

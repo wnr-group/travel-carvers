@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getSession } from '@/lib/supabase/auth'
+import { getSession, isAdminUser } from '@/lib/supabase/auth'
 
-/**
- * Admin route handlers query Supabase with the service-role key, which bypasses RLS.
- * They must therefore verify the caller is a signed-in admin themselves.
- *
- * Returns a 401 response to bail out with, or `null` when the caller is allowed.
- */
 export async function requireAdmin(): Promise<NextResponse | null> {
-  const session = await getSession()
+  const user = await getSession()
 
-  if (!session) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!(await isAdminUser(user.id))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   return null

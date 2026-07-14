@@ -2,25 +2,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
 import { toApiError } from '@/lib/api/errors';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_UPLOAD_BYTES,
+  isSafeStoragePath,
+  isUploadBucket,
+  normalizeStoragePath,
+} from '@/lib/storage/buckets';
 
-const BUCKET = 'category-images';
-const MAX_BYTES = 5 * 1024 * 1024; // matches the bucket's file_size_limit
 
-// Extension is derived from the sniffed mime type, never from the client-supplied filename.
-const ALLOWED_TYPES: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/jpg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
-
-/**
- * Uploads a category cover image using the service-role key.
- *
- * The browser Supabase client has no session (auth is held in a server-side httpOnly
- * cookie), so uploading directly from the browser would have to run as `anon`. Doing it
- * here keeps the bucket closed to the public while still letting admins upload.
- */
 export async function POST(req: NextRequest) {
   const denied = await requireAdmin();
   if (denied) return denied;
@@ -28,12 +18,18 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get('file');
+    const bucket = formData.get('bucket');
+    const path = formData.get('path');
+
+    if (typeof bucket !== 'string' || !isUploadBucket(bucket)) {
+      return NextResponse.json({ error: 'Unknown storage bucket' }, { status: 400 });
+    }
 
     if (!(file instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const extension = ALLOWED_TYPES[file.type];
+    const extension = ALLOWED_IMAGE_TYPES[file.type];
     if (!extension) {
       return NextResponse.json(
         { error: 'Unsupported file type. Use JPEG, PNG or WebP.' },
@@ -45,23 +41,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File is empty' }, { status: 400 });
     }
 
-    if (file.size > MAX_BYTES) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json({ error: 'Image must be 5MB or smaller' }, { status: 413 });
     }
 
-    const path = `${crypto.randomUUID()}.${extension}`;
+    const folder = normalizeStoragePath(typeof path === 'string' ? path : '');
+    if (!isSafeStoragePath(folder)) {
+      return NextResponse.json({ error: 'Invalid upload path' }, { status: 400 });
+    }
+
+    const key = `${folder ? `${folder}/` : ''}${crypto.randomUUID()}.${extension}`;
 
     const { error: uploadError } = await supabaseAdmin.storage
-      .from(BUCKET)
-      .upload(path, file, { contentType: file.type, upsert: false });
+      .from(bucket)
+      .upload(key, file, { contentType: file.type, upsert: false });
 
     if (uploadError) throw uploadError;
 
     const {
       data: { publicUrl },
-    } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
+    } = supabaseAdmin.storage.from(bucket).getPublicUrl(key);
 
-    return NextResponse.json({ data: { url: publicUrl, path } }, { status: 201 });
+    return NextResponse.json({ data: { url: publicUrl, path: key } }, { status: 201 });
   } catch (error: unknown) {
     const { message, status } = toApiError(error);
     return NextResponse.json({ error: message }, { status });

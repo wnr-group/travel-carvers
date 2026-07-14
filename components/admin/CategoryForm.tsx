@@ -13,6 +13,7 @@ import {
 import { ADMIN_CATEGORIES_KEY } from '@/lib/queryKeys';
 import type { Category } from '@/lib/types/category';
 import { slugify } from '@/lib/utils';
+import FieldError from './FieldError';
 import ImageUploader from './ImageUploader';
 
 interface CategoryFormProps {
@@ -20,17 +21,11 @@ interface CategoryFormProps {
   onClose: () => void;
 }
 
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="mt-1 text-sm text-red-600">{message}</p>;
-}
-
 export default function CategoryForm({ category, onClose }: CategoryFormProps) {
   const queryClient = useQueryClient();
   const isEditing = !!category;
 
-  // <input, context, transformed-output>: the resolver applies Zod's defaults and
-  // ''-to-null transforms, so handleSubmit hands us CategoryFormOutput.
+  // input, context, transformed-output
   const form = useForm<CategoryFormInput, unknown, CategoryFormOutput>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
@@ -72,8 +67,6 @@ export default function CategoryForm({ category, onClose }: CategoryFormProps) {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     form.setValue('name', name, { shouldValidate: true });
-    // Only mirror the name into the slug while creating, and only until the admin
-    // edits the slug by hand.
     if (!isEditing && !form.formState.dirtyFields.slug) {
       form.setValue('slug', slugify(name));
     }
@@ -102,19 +95,15 @@ export default function CategoryForm({ category, onClose }: CategoryFormProps) {
 
           <div>
             <label className="block text-sm font-medium mb-2">Cover Image</label>
-            <ImageUploader onUpload={(url) => form.setValue('cover_image_url', url, { shouldValidate: true })} />
-
-            {/* Image Preview Box */}
-            {coverImageUrl && (
-              <div className="mt-3 w-full h-32 relative border rounded-lg overflow-hidden bg-gray-100">
-                {/* eslint-disable-next-line @next/next/no-img-element -- user-supplied Supabase host is not in next.config remotePatterns */}
-                <img
-                  src={coverImageUrl}
-                  alt="Cover preview"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+            {/* upload one image */}
+            <ImageUploader
+              bucket="category-images"
+              maxFiles={1}
+              initialImages={coverImageUrl ? [coverImageUrl] : []}
+              onUpload={(urls) =>
+                form.setValue('cover_image_url', urls[0] ?? '', { shouldValidate: true })
+              }
+            />
             <input {...form.register('cover_image_url')} type="hidden" />
             <FieldError message={errors.cover_image_url?.message} />
           </div>

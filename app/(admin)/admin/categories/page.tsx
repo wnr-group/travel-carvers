@@ -17,8 +17,6 @@ export default function CategoriesPage() {
   const { data: categories, isPending, isError, error } = useAdminCategories();
 
   const deleteMutation = useMutation({
-    // fetchJson turns a 404/500 into a throw; without that, onSuccess would fire and claim
-    // the delete worked.
     mutationFn: (id: string) =>
       fetchJson<{ id: string }>(`/api/admin/categories/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
@@ -74,7 +72,6 @@ export default function CategoriesPage() {
                   <td className="p-4 text-gray-600">{cat.display_order}</td>
                   <td className="p-4">
                     {cat.cover_image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- Supabase host is not in next.config remotePatterns
                       <img src={cat.cover_image_url} alt={cat.name} className="w-10 h-10 rounded object-cover" />
                     ) : (
                       <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-400">

@@ -23,7 +23,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
     const data = await updateCategory(id, validated.data);
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    const { message, status } = toApiError(error);
+    const { message, status } = toApiError(error, 'category');
     return NextResponse.json({ error: message }, { status });
   }
 }
@@ -41,7 +41,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
     }
     return NextResponse.json({ data: deleted });
   } catch (error: unknown) {
-    const { message, status } = toApiError(error);
+    const { message, status } = toApiError(error, 'category');
     return NextResponse.json({ error: message }, { status });
   }
 }

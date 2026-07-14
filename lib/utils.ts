@@ -19,8 +19,34 @@ export function slugify(value: string) {
 }
 
 /**
- * Format a price for display. Returns a dash when there is no price, so the table and the
- * cards render the same placeholder for a package that has none.
+ * Public URL of a package.
+ */
+export function packagePath(slug: string) {
+  return `/package/${slug}`
+}
+
+const YOUTUBE_HOSTS = new Set([
+  'youtube.com',
+  'm.youtube.com',
+  'music.youtube.com',
+  'youtube-nocookie.com',
+  'youtu.be',
+])
+
+/**
+    Check youtube url
+ */
+export function isYouTubeUrl(value: string) {
+  try {
+    const { hostname } = new URL(value.trim())
+    return YOUTUBE_HOSTS.has(hostname.replace(/^www\./, ''))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Format a price for display. When there is no price , display as '-'
  */
 export function formatPrice(value: number | null | undefined) {
   if (value === null || value === undefined) return '—'

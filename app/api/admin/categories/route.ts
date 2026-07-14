@@ -13,7 +13,7 @@ export async function GET() {
     const data = await getAllCategoriesAdmin();
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    const { message, status } = toApiError(error);
+    const { message, status } = toApiError(error, 'category');
     return NextResponse.json({ error: message }, { status });
   }
 }
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const data = await createCategory(validated.data);
     return NextResponse.json({ data }, { status: 201 });
   } catch (error: unknown) {
-    const { message, status } = toApiError(error);
+    const { message, status } = toApiError(error, 'category');
     return NextResponse.json({ error: message }, { status });
   }
 }

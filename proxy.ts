@@ -12,17 +12,6 @@ const COOKIE_OPTIONS = {
   path: '/',
 }
 
-/**
- * Guards the admin area and keeps the session alive.
- *
- * Supabase access tokens expire after jwt_expiry (1h). Without a refresh the admin is
- * left holding a cookie containing a dead token: pages still render, but every API call
- * fails authorization. This runs ahead of both pages and route handlers and is the only
- * place that can write cookies for either, so it is where the refresh belongs.
- *
- * Uses the anon key — refreshing a session is exactly what an unprivileged client does,
- * and the service-role key must never be shipped to a proxy that may run at the edge.
- */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -38,6 +27,7 @@ export async function proxy(request: NextRequest) {
     return deny(request)
   }
 
+  // Anon key: refreshing a session is exactly what an unprivileged client does.
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -46,8 +36,9 @@ export async function proxy(request: NextRequest) {
 
   if (accessToken) {
     const { data } = await supabase.auth.getUser(accessToken)
+
     if (data.user) {
-      return NextResponse.next()
+      return (await isAdmin(data.user.id)) ? NextResponse.next() : forbid(request)
     }
   }
 
@@ -61,13 +52,15 @@ export async function proxy(request: NextRequest) {
     return deny(request)
   }
 
-  // Make the fresh token visible to the page/route handler serving *this* request...
+
+  if (!(await isAdmin(data.session.user.id))) {
+    return forbid(request)
+  }
+
   request.cookies.set(AUTH_COOKIE, data.session.access_token)
   request.cookies.set(REFRESH_COOKIE, data.session.refresh_token)
   const response = NextResponse.next({ request })
 
-  // ...and persist it in the browser. Refresh-token rotation is enabled, so the new
-  // refresh token must be stored or the next refresh will be rejected.
   response.cookies.set(AUTH_COOKIE, data.session.access_token, {
     ...COOKIE_OPTIONS,
     maxAge: data.session.expires_in,
@@ -80,9 +73,42 @@ export async function proxy(request: NextRequest) {
   return response
 }
 
+async function isAdmin(userId: string): Promise<boolean> {
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  )
+
+  const { data, error } = await admin
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  // Fail closed: a broken lookup denies access rather than granting it.
+  if (error) {
+    console.error('[proxy] admin lookup failed', error)
+    return false
+  }
+
+  return Boolean(data)
+}
+
+/** Not signed in. */
 function deny(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  return NextResponse.redirect(new URL(LOGIN_PATH, request.url))
+}
+
+/**
+ * Signed in, but not an admin.
+ */
+function forbid(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
   return NextResponse.redirect(new URL(LOGIN_PATH, request.url))
 }

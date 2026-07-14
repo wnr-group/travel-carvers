@@ -1,6 +1,6 @@
 'use server';
 
-import { getSession } from '@/lib/supabase/auth';
+import { getAdminUser } from '@/lib/supabase/auth';
 import { redirect } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { Package, Mail, MessageSquare, FolderTree } from 'lucide-react';
@@ -53,7 +53,7 @@ async function getRecentLeads(): Promise<RecentLead[]> {
 }
 
 export default async function AdminDashboardPage() {
-  const session = await getSession();
+  const session = await getAdminUser();
   if (!session) redirect('/admin/login');
 
   const stats = await getDashboardStats();

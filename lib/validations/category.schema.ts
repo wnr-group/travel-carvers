@@ -2,9 +2,7 @@ import { z } from 'zod';
 import { slugify } from '@/lib/utils';
 
 /**
- * Optional text fields arrive from the form as '' rather than undefined. Store them as
- * NULL so that clearing a field in the UI actually clears the column, and so that an
- * empty string is never validated as a URL.
+ * Optional text fields arrive from the form as '' rather than undefined. Store them as NULL 
  */
 const emptyToNull = <T extends z.ZodType<string>>(schema: T) =>
   z
@@ -14,9 +12,6 @@ const emptyToNull = <T extends z.ZodType<string>>(schema: T) =>
 
 export const categorySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
-  // Normalised rather than rejected: a legacy row whose slug predates this rule (spaces,
-  // uppercase) must still be editable, and a rejected slug would be unfixable from the UI
-  // because the field is read-only when editing.
   slug: z
     .string()
     .max(100)
@@ -39,9 +34,7 @@ export const subcategorySchema = z.object({
 });
 
 /**
- * Updates deliberately omit `slug`: it is part of the public URL and is immutable once
- * created. The form shows it read-only, but that is only a UI affordance — omitting it
- * here means a hand-crafted PUT cannot rewrite it either. Zod strips the key if sent.
+ * Updates deliberately omit `slug`
  */
 export const categoryUpdateSchema = categorySchema.omit({ slug: true });
 

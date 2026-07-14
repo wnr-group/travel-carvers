@@ -1,9 +1,5 @@
 /**
   convert database errors (Supabase/Postgres errors) into safe, user-friendly HTTP responses.
- 
- * Raw Postgres messages ("duplicate key value violates unique constraint
- * categories_slug_key") disclose the schema, so they are logged server-side and replaced
- * with a friendly message before they reach the client.
  */
 
 const UNIQUE_VIOLATION = '23505'
@@ -24,14 +20,22 @@ function isPostgrestError(error: unknown): error is PostgrestLikeError {
   )
 }
 
-export function toApiError(error: unknown): { message: string; status: number } {
+/**
+ * @param resource what the caller is working with ("category", "package"), so a duplicate-slug
+ *   message names the right thing. It used to be hardcoded to "category", which read as
+ *   nonsense the moment a second route started using this.
+ */
+export function toApiError(
+  error: unknown,
+  resource = 'record'
+): { message: string; status: number } {
   console.error('[api]', error)
 
   if (isPostgrestError(error)) {
     switch (error.code) {
       case UNIQUE_VIOLATION:
         return {
-          message: 'A category with that name or slug already exists',
+          message: `A ${resource} with that name or slug already exists`,
           status: 409,
         }
       case FOREIGN_KEY_VIOLATION:
@@ -40,7 +44,7 @@ export function toApiError(error: unknown): { message: string; status: number } 
           status: 409,
         }
       case NO_ROWS_RETURNED:
-        return { message: 'Category not found', status: 404 }
+        return { message: `${resource[0].toUpperCase()}${resource.slice(1)} not found`, status: 404 }
     }
   }
 

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
+import type { Subcategory } from '@/lib/types/category';
 import type {
   CategoryFormOutput,
   CategoryUpdateOutput,
@@ -107,8 +108,7 @@ export async function updateCategory(id: string, categoryData: CategoryUpdateOut
 /**
  * Admin: Delete category (requires server-side)
  *
- * Returns the deleted row, or null when no category had that id, so callers can
- * distinguish a successful delete from a no-op and respond with 404.
+ * Returns the deleted row, or null when no category had that id
  */
 export async function deleteCategory(id: string) {
 
@@ -135,6 +135,47 @@ export async function getAllSubcategoriesAdmin() {
 
   if (error) throw error;
   return data;
+}
+
+
+interface SubcategoryRow {
+  id: string;
+  name: string;
+  slug: string;
+  display_order: number | null;
+  is_active: boolean | null;
+  category_subcategory: { category_id: string }[] | null;
+}
+
+/**
+ * Admin: Get every subcategory together with the categories it belongs to.
+ */
+export async function getSubcategoriesAdmin(): Promise<Subcategory[]> {
+  const { data, error } = await supabaseAdmin
+    .from('subcategories')
+    .select(`
+      id,
+      name,
+      slug,
+      display_order,
+      is_active,
+      category_subcategory (
+        category_id
+      )
+    `)
+    .order('display_order', { ascending: true })
+    .overrideTypes<SubcategoryRow[], { merge: false }>();
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    display_order: row.display_order ?? 0,
+    is_active: row.is_active ?? true,
+    category_ids: (row.category_subcategory ?? []).map((join) => join.category_id),
+  }));
 }
 
 /**
