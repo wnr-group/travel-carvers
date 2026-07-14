@@ -390,24 +390,6 @@ export default function AdminReviewsPage() {
 
             {/* Pagination Controls */}
             <div className="flex items-center gap-4">
-              {/* Rows Per Page */}
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <span>Show:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="px-2 py-1 border border-gray-200 rounded bg-white font-medium text-gray-700 focus:outline-none"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-
               {/* Navigation Buttons */}
               <div className="flex items-center gap-1">
                 <button
