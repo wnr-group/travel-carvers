@@ -22,6 +22,7 @@ import {
   Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function AdminReviewsPage() {
   const { data: reviews = [], isPending, isError, error } = useAdminReviews();
@@ -40,6 +41,9 @@ export default function AdminReviewsPage() {
 
   // Selected Review for Modal View
   const [selectedReviewText, setSelectedReviewText] = useState<string | null>(null);
+
+  // Pending delete (drives the confirmation dialog)
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Stats calculation
   const totalCount = reviews.length;
@@ -66,14 +70,17 @@ export default function AdminReviewsPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete the review by ${name}? This cannot be undone.`)) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        toast.success('Review deleted successfully');
-      } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Failed to delete review');
-      }
+  const handleDelete = (id: string, name: string) => setPendingDelete({ id, name });
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      await deleteMutation.mutateAsync(pendingDelete.id);
+      toast.success('Review deleted successfully');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to delete review');
+    } finally {
+      setPendingDelete(null);
     }
   };
 
@@ -439,6 +446,22 @@ export default function AdminReviewsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete review"
+        message={
+          pendingDelete
+            ? `Delete the review by ${pendingDelete.name}? This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
 
       {/* Full Review Text Modal */}
       {selectedReviewText && (

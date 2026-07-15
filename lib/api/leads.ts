@@ -1,46 +1,44 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { leadSchema, type LeadFormData } from '@/lib/validations/lead.schema';
 
 /**
- * Public: Submit a lead form
+ * Public: Submit a lead form.
  */
-export async function createLead(leadData: {
-  name: string;
-  email: string;
-  phone: string;
-  message?: string;
-  package_id?: string | null;
-  number_of_adults?: number;
-  number_of_children?: number;
-  number_of_infants?: number;
-  travel_start_date?: string;
-  travel_end_date?: string | null;
-}) {
+export async function createLead(input: LeadFormData) {
+  const leadData = leadSchema.parse(input);
+
+  // `package_id` may arrive as a real UUID or as a slug; resolve slugs to the actual id.
   let actualPackageId: string | null = null;
-  if (leadData.package_id) {
+  const rawPackageId = leadData.package_id;
+  if (rawPackageId) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(leadData.package_id)) {
-      actualPackageId = leadData.package_id;
+    if (uuidRegex.test(rawPackageId)) {
+      actualPackageId = rawPackageId;
     } else {
-      // Find package by slug
       const { data: pkg } = await supabaseAdmin
         .from('packages')
         .select('id')
-        .eq('slug', leadData.package_id)
-        .single();
-      if (pkg) {
-        actualPackageId = pkg.id;
-      }
+        .eq('slug', rawPackageId)
+        .maybeSingle();
+      if (pkg) actualPackageId = pkg.id;
     }
   }
 
-  // Insert lead
   const { data, error } = await supabaseAdmin
     .from('leads')
     .insert({
-      ...leadData,
-      package_id: actualPackageId || null,
+      name: leadData.name,
+      email: leadData.email,
+      phone: leadData.phone,
+      message: leadData.message || null,
+      number_of_adults: leadData.number_of_adults,
+      number_of_children: leadData.number_of_children,
+      number_of_infants: leadData.number_of_infants,
+      travel_start_date: leadData.travel_start_date,
+      travel_end_date: leadData.travel_end_date || null,
+      package_id: actualPackageId,
     })
     .select(`
       *,

@@ -53,7 +53,7 @@ export default function AdminLayout({
           />
         )}
         
-        <main className={!isLoginPage ? "px-4 sm:px-8 pb-8" : ""}>
+        <main id="main-content" tabIndex={-1} className={!isLoginPage ? "px-4 sm:px-8 pb-8" : ""}>
           {children}
         </main>
       </div>

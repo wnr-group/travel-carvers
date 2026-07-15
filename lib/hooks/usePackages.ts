@@ -1,13 +1,13 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   getPublishedPackages,
   getPackageBySlug,
   getTrendingPackages,
   getFeaturedPackages,
   getPackagesByCategory,
-} from '@/lib/api/packages';
+} from '@/lib/api/public/packages';
 
 /**
  * Get all published packages

@@ -33,7 +33,7 @@ export function useCreateReview(packageId: string) {
       // Invalidate package reviews query
       queryClient.invalidateQueries({ queryKey: ['reviews', 'package', packageId] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Review submission error:', error);
       toast.error('Failed to submit review. Please try again.');
     },

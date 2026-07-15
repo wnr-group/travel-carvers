@@ -55,9 +55,9 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions) {
 
     const data = await response.json();
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Email send error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 

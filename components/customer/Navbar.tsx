@@ -31,7 +31,7 @@ export default function Navbar() {
               className="h-12 w-12 rounded-full object-cover border-2 border-white/50"
             />
             <div>
-              <h1 className="text-xl font-bold text-white">Travel Carvers</h1>
+              <span className="block text-xl font-bold text-white">Travel Carvers</span>
               <p className="text-xs text-white/80">Explore Your Next Adventure</p>
             </div>
           </Link>
@@ -63,7 +63,7 @@ export default function Navbar() {
             <Link href="/#contact">
               <button className="ml-2 px-6 py-2.5 bg-white text-brand-darkest rounded-xl font-bold hover:bg-white/95 hover:scale-110 hover:shadow-xl transition-all duration-300 shadow-lg flex items-center gap-2 group">
                 <span>Contact Us</span>
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -73,15 +73,17 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-white p-2"
-            aria-label="Toggle menu"
+            className="md:hidden text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
           >
             {isMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}
@@ -90,7 +92,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-white/20 mt-2 pt-4">
+          <div id="mobile-menu" className="md:hidden pb-4 border-t border-white/20 mt-2 pt-4">
             <div className="flex flex-col gap-3">
               {NAV_ITEMS.map((item) => {
                 const active = pathname === item.href
@@ -112,7 +114,7 @@ export default function Navbar() {
               <Link href="/#contact" onClick={() => setIsMenuOpen(false)}>
                 <button className="w-full mt-4 px-6 py-3 bg-white text-brand-darkest rounded-xl font-bold hover:bg-white/95 hover:scale-105 transition-all shadow-lg text-center flex items-center justify-center gap-2">
                   <span>Contact Us</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>

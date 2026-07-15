@@ -31,6 +31,7 @@ export function useCreateTrustBadge() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TRUST_BADGES_KEY });
     },
+    onError: (error) => console.error('[trust badge mutation]', error),
   });
 }
 
@@ -44,5 +45,6 @@ export function useDeleteTrustBadge() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TRUST_BADGES_KEY });
     },
+    onError: (error) => console.error('[trust badge mutation]', error),
   });
 }

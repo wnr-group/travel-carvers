@@ -2,7 +2,7 @@ export interface PackageFilters {
   status?: string;
   category?: string;
   search?: string;
-  [key: string]: any;
+  [key: string]: string | undefined;
 }
 
 /**

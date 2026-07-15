@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useHomepageSections, useUpdateHomepageSections } from '@/lib/hooks/useHomepageSections';
-import { 
-  Save, 
-  Sparkles, 
-  Bookmark, 
-  Flame, 
-  Info, 
-  Loader2, 
-  LayoutGrid,
-  ExternalLink
+import {
+  Save,
+  Sparkles,
+  Bookmark,
+  Flame,
+  Info,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,7 +28,8 @@ export default function HomepageManagerPage() {
   const [trendingTitle, setTrendingTitle] = useState('');
   const [trendingDescription, setTrendingDescription] = useState('');
 
-  // Sync form states with retrieved query data
+  // Sync form states with retrieved query data. One-time initialisation of editable fields from
+  // the fetched record — intentional, so the cascading-render lint rule is not applicable here.
   useEffect(() => {
     if (data) {
       setId(data.id || '');
@@ -44,7 +43,7 @@ export default function HomepageManagerPage() {
     }
   }, [data]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     try {
       await updateMutation.mutateAsync({

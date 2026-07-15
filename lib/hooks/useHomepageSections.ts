@@ -35,5 +35,6 @@ export function useUpdateHomepageSections() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HOMEPAGE_SECTIONS_KEY });
     },
+    onError: (error) => console.error('[homepage sections mutation]', error),
   });
 }

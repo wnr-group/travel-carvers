@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, ImageOff } from 'lucide-react';
 import { toast } from 'sonner';
 import CategoryForm from '@/components/admin/CategoryForm';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { fetchJson } from '@/lib/api/fetchJson';
 import { useAdminCategories } from '@/lib/hooks/useAdminCategories';
 import { ADMIN_CATEGORIES_KEY } from '@/lib/queryKeys';
@@ -12,6 +13,7 @@ import { Category } from '@/lib/types/category';
 export default function CategoriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: categories, isPending, isError, error } = useAdminCategories();
@@ -25,6 +27,17 @@ export default function CategoriesPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      await deleteMutation.mutateAsync(pendingDelete.id);
+    } catch {
+      // Surfaced by the mutation's onError toast.
+    } finally {
+      setPendingDelete(null);
+    }
+  };
 
   return (
     <div className="py-4">
@@ -91,7 +104,7 @@ export default function CategoriesPage() {
                       <Edit className="w-4 h-4 text-brand-dark" />
                     </button>
                     <button
-                      onClick={() => confirm(`Delete "${cat.name}"? This cannot be undone.`) && deleteMutation.mutate(cat.id)}
+                      onClick={() => setPendingDelete({ id: cat.id, name: cat.name })}
                       disabled={deleteMutation.isPending}
                       aria-label={`Delete ${cat.name}`}
                     >
@@ -112,6 +125,18 @@ export default function CategoriesPage() {
           onClose={() => setShowForm(false)}
         />
       )}
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete category"
+        message={pendingDelete ? `Delete “${pendingDelete.name}”? This action cannot be undone.` : ''}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

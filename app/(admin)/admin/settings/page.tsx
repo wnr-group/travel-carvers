@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useSiteSettings, useUpdateSiteSettings } from '@/lib/hooks/useSiteSettings';
-import { 
-  Save, 
-  Settings, 
-  Building2, 
-  Globe2, 
-  Share2, 
-  Loader2, 
-  Info
+import {
+  Save,
+  Building2,
+  Globe2,
+  Share2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,7 +28,8 @@ export default function SiteSettingsPage() {
   const [twitterUrl, setTwitterUrl] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
 
-  // Sync form states with query data
+  // Sync form states with query data. Initialising editable form fields from fetched data is an
+  // intentional effect here; the cascading-render lint rule doesn't apply to this one-time sync.
   useEffect(() => {
     if (data) {
       setId(data.id || '');
@@ -46,7 +45,7 @@ export default function SiteSettingsPage() {
     }
   }, [data]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     try {
       await updateMutation.mutateAsync({
@@ -182,7 +181,7 @@ export default function SiteSettingsPage() {
             <div className="space-y-0.5 max-w-[80%]">
               <h3 className="font-semibold text-[15px] text-gray-900">Show Prices Globally</h3>
               <p className="text-xs text-gray-500">
-                When enabled, pricing structures are visible to all website users. Turn off to switch to an "Inquiry Only" catalog model.
+                When enabled, pricing structures are visible to all website users. Turn off to switch to an &ldquo;Inquiry Only&rdquo; catalog model.
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">

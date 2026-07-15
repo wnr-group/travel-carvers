@@ -2,18 +2,14 @@
 
 import { useState } from 'react';
 import { useAdminLeads, useUpdateLeadStatus, useDeleteLead } from '@/lib/hooks/useAdminLeads';
-import { 
-  Search, 
-  Trash2, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Download, 
-  MessageSquare,
+import {
+  Search,
+  Trash2,
+  Mail,
+  Phone,
+  Download,
   ChevronLeft,
   ChevronRight,
-  RefreshCw,
-  Plus,
   User,
   ArrowUpDown,
   ArrowUp,
@@ -23,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function AdminLeadsPage() {
   const { data: leads = [], isPending, isError, error } = useAdminLeads();
@@ -44,6 +41,9 @@ export default function AdminLeadsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // Pending delete (drives the confirmation dialog)
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
+
   // Handlers
   const handleStatusChange = async (id: string, status: string) => {
     try {
@@ -54,14 +54,17 @@ export default function AdminLeadsPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete the lead from ${name}? This cannot be undone.`)) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        toast.success('Lead deleted successfully');
-      } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Failed to delete lead');
-      }
+  const handleDelete = (id: string, name: string) => setPendingDelete({ id, name });
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      await deleteMutation.mutateAsync(pendingDelete.id);
+      toast.success('Lead deleted successfully');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to delete lead');
+    } finally {
+      setPendingDelete(null);
     }
   };
 
@@ -232,7 +235,7 @@ export default function AdminLeadsPage() {
             <select
               value={statusFilter}
               onChange={(e) => {
-                setStatusFilter(e.target.value as any);
+                setStatusFilter(e.target.value as 'all' | 'new' | 'contacted' | 'qualified' | 'converted');
                 setCurrentPage(1);
               }}
               className="w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-lg text-base lg:text-sm bg-white text-gray-700 focus:ring-1 focus:ring-brand-medium"
@@ -471,6 +474,22 @@ export default function AdminLeadsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete lead"
+        message={
+          pendingDelete
+            ? `Delete the lead from ${pendingDelete.name}? This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

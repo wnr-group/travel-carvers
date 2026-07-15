@@ -9,11 +9,12 @@ import {
   Building2,
   Clock3,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   Filters,
   Difficulty,
-  CATEGORIES,
+  CategoryOption,
   DIFFICULTIES,
   PRICE_FLOOR,
   PRICE_CEIL,
@@ -22,7 +23,7 @@ import {
 } from '@/lib/hooks/usePackageFilters';
 
 // Map categories to Lucide icons
-export const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
+export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Beach: Waves,
   Adventure: Compass,
   Mountain: Mountain,
@@ -51,6 +52,7 @@ export function Chip({ label, onRemove }: ChipProps) {
 
 export interface PackageFiltersProps {
   filters: Filters;
+  categories: CategoryOption[];
   activeFilterCount: number;
   toggleCategory: (value: string) => void;
   toggleDifficulty: (value: Difficulty) => void;
@@ -62,6 +64,7 @@ export interface PackageFiltersProps {
 
 export function PackageFilters({
   filters,
+  categories,
   activeFilterCount,
   toggleCategory,
   toggleDifficulty,
@@ -86,10 +89,11 @@ export function PackageFilters({
       </div>
 
       {/* Category */}
+      {categories.length > 0 && (
       <section>
         <h3 className="mb-3 text-sm font-semibold text-brand-darkest">Category</h3>
         <div className="space-y-2">
-          {CATEGORIES.map(({ value, label }) => {
+          {categories.map(({ value, label }) => {
             const checked = filters.categories.includes(value);
             const Icon = CATEGORY_ICONS[value] || Compass;
             return (
@@ -114,6 +118,7 @@ export function PackageFilters({
           })}
         </div>
       </section>
+      )}
 
       {/* Price range */}
       <section>

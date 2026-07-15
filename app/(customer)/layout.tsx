@@ -1,4 +1,5 @@
 import Navbar from '@/components/customer/Navbar'
+import Footer from '@/components/customer/Footer'
 
 export default function CustomerLayout({
   children,
@@ -8,8 +9,8 @@ export default function CustomerLayout({
   return (
     <>
       <Navbar />
-      <main>{children}</main>
-      {/* Add customer footer here later */}
+      <main id="main-content" tabIndex={-1}>{children}</main>
+      <Footer />
     </>
   )
 }
