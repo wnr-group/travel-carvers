@@ -182,7 +182,7 @@ export default function AboutPage() {
             <section className="relative overflow-hidden bg-brand-darkest text-white">
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                    style={{ backgroundImage: 'url("/about-hero-bg.png")' }}
+                    style={{ backgroundImage: 'url("/about-hero-bg.webp")' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--logo-forest-dark)]/60 via-[var(--logo-sage)]/40 to-transparent" />
 
