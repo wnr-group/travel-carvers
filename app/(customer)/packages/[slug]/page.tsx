@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import { LeadFormModal } from "@/components/customer/LeadFormModal";
+import { ReviewForm } from "@/components/customer/ReviewForm";
+import { usePackage } from "@/lib/hooks/usePackages";
+import { usePackageReviews } from "@/lib/hooks/useReviews";
 
 
 
@@ -216,6 +220,17 @@ export default function PackageDetailsPage() {
     const navSentinel = useRef<HTMLDivElement>(null);
     const sectionRef = useRef<HTMLDivElement>(null);
 
+    const params = useParams();
+    const slug = params?.slug as string;
+    const { data: dbPackage } = usePackage(slug);
+    const packageId = dbPackage?.id || "73a06558-ff42-40c3-b0ec-02ad54abb287";
+    const { data: dbReviews } = usePackageReviews(packageId);
+
+    const totalReviewsCount = dbReviews && dbReviews.length > 0 ? dbReviews.length : reviews.length;
+    const averageRating = dbReviews && dbReviews.length > 0
+      ? Number((dbReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / dbReviews.length).toFixed(1))
+      : pkg.rating;
+
     useEffect(() => {
         const el = navSentinel.current;
         if (!el) return;
@@ -302,7 +317,7 @@ export default function PackageDetailsPage() {
                     <Stat
                         icon={<Icon.star className="h-4 w-4 fill-current text-amber-400" />}
                         label="Rating"
-                        value={`${pkg.rating} · ${pkg.reviewCount} reviews`}
+                        value={`${averageRating} · ${totalReviewsCount} reviews`}
                     />
                     <TicketDivider />
                     <Stat icon={<Icon.users className="h-4 w-4" />} label="Group size" value={pkg.groupSize} />
@@ -363,7 +378,7 @@ export default function PackageDetailsPage() {
                         {activeTab === "pricing" && <Pricing />}
                         {activeTab === "info" && <AdditionalInfo />}
                         {activeTab === "faqs" && <FAQs open={openFaq} setOpen={setOpenFaq} />}
-                        {activeTab === "reviews" && <Reviews />}
+                        {activeTab === "reviews" && <Reviews packageId={packageId} dbReviews={dbReviews} />}
                         {activeTab === "similar" && <SimilarPackages />}
                     </main>
 
@@ -697,23 +712,69 @@ function FAQs({ open, setOpen }: { open: number | null; setOpen: (i: number | nu
     );
 }
 
-function Reviews() {
-    return (
-        <div>
-            <SectionHeading eyebrow="Traveler Voices" title="Reviews" />
+interface ReviewsProps {
+  packageId: string;
+  dbReviews?: any[];
+}
 
-            <div className="mb-8 flex flex-col gap-6 rounded-xl border border-brand-light/70 p-5 sm:flex-row sm:items-center sm:gap-10">
+function Reviews({ packageId, dbReviews }: ReviewsProps) {
+    const [showWriteReview, setShowWriteReview] = useState(false);
+
+    // Calculate rating breakdown dynamically if dbReviews exist
+    const hasDbReviews = dbReviews && dbReviews.length > 0;
+    
+    // Map dbReviews format or use mock reviews
+    const displayReviews = hasDbReviews 
+      ? dbReviews.map((r) => ({
+          name: r.reviewer_name,
+          rating: r.rating,
+          date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          text: r.review_text
+        })) 
+      : reviews;
+
+    const totalReviews = displayReviews.length;
+    const averageRating = hasDbReviews 
+      ? Number((dbReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / totalReviews).toFixed(1))
+      : pkg.rating;
+
+    // Calculate breakdown percentages
+    const dynamicBreakdown = [5, 4, 3, 2, 1].map((stars) => {
+        const count = displayReviews.filter((r) => r.rating === stars).length;
+        const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+        return { stars, pct };
+    });
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <SectionHeading eyebrow="Traveler Voices" title="Reviews" />
+                <button
+                    onClick={() => setShowWriteReview(!showWriteReview)}
+                    className="rounded-full bg-brand-dark hover:bg-brand-darkest text-white px-5 py-2.5 text-xs font-semibold shadow transition-all duration-200 cursor-pointer"
+                >
+                    {showWriteReview ? "Cancel Review" : "Write a Review"}
+                </button>
+            </div>
+
+            {showWriteReview && (
+                <div className="mb-6">
+                    <ReviewForm packageId={packageId} onSuccess={() => setShowWriteReview(false)} />
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-6 rounded-xl border border-brand-light/70 bg-white p-5 sm:grid-cols-[150px_1fr] sm:items-center sm:gap-10">
                 <div className="text-center sm:text-left">
-                    <p className="font-display text-4xl font-semibold text-brand-darkest">{pkg.rating}</p>
+                    <p className="font-display text-4xl font-bold text-brand-darkest">{averageRating}</p>
                     <div className="mt-1 flex justify-center gap-0.5 text-amber-400 sm:justify-start">
                         {Array.from({ length: 5 }).map((_, i) => (
-                            <Icon.star key={i} className="h-4 w-4" />
+                            <Icon.star key={i} className={`h-4 w-4 ${i < Math.round(averageRating) ? "fill-current" : "text-slate-200"}`} />
                         ))}
                     </div>
-                    <p className="mt-1 text-xs text-slate-600">{pkg.reviewCount} reviews</p>
+                    <p className="mt-1 text-xs text-slate-600">{totalReviews} reviews</p>
                 </div>
                 <div className="flex-1 space-y-1.5">
-                    {ratingBreakdown.map((r) => (
+                    {dynamicBreakdown.map((r) => (
                         <div key={r.stars} className="flex items-center gap-3 text-xs text-slate-700">
                             <span className="w-8 shrink-0">{r.stars} star</span>
                             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
@@ -725,9 +786,9 @@ function Reviews() {
                 </div>
             </div>
 
-            <div className="space-y-5">
-                {reviews.map((r, i) => (
-                    <div key={i} className="rounded-xl border border-brand-light/60 p-5">
+            <div className="space-y-4">
+                {displayReviews.map((r, i) => (
+                    <div key={i} className="rounded-xl border border-brand-light/60 bg-white p-5 shadow-sm">
                         <div className="flex items-center justify-between">
                             <p className="text-sm font-semibold text-brand-darkest">{r.name}</p>
                             <span className="text-xs text-slate-600">{r.date}</span>
