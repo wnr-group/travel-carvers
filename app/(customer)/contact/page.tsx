@@ -15,6 +15,8 @@ import {
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
+import { createLead } from "@/lib/api/leads";
+import { toast } from "sonner";
 
 
 type IconProps = { className?: string; strokeWidth?: number };
@@ -229,7 +231,7 @@ export default function ContactPage() {
         };
     }
 
-    function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const nextErrors = validate(formData);
         setErrors(nextErrors);
@@ -240,11 +242,37 @@ export default function ContactPage() {
 
         setStatus("submitting");
 
-        // Simulated submit — wire this up to a real API route or email service.
-        window.setTimeout(() => {
+        try {
+            // Submit to leads API
+            // For general contact inquiries, use today's date as placeholder for required travel_start_date
+            const today = new Date().toISOString().split('T')[0];
+
+            await createLead({
+                name: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+                // Combine subject and message for the message field
+                message: formData.subject
+                    ? `Subject: ${formData.subject}\n\n${formData.message}`
+                    : formData.message,
+                // No specific package - general contact inquiry
+                package_id: '',
+                // Contact form doesn't collect travel dates/counts
+                number_of_adults: 1,
+                number_of_children: 0,
+                number_of_infants: 0,
+                travel_start_date: today,
+                travel_end_date: '',
+            });
+
             setStatus("success");
             setFormData(initialForm);
-        }, 900);
+            toast.success("Message sent! We'll get back to you soon.");
+        } catch (error) {
+            console.error("Contact form error:", error);
+            setStatus("idle");
+            toast.error("Failed to send message. Please try again.");
+        }
     }
 
     return (
