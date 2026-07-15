@@ -19,6 +19,7 @@ import {
   BadgeAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 // A map of selectable Lucide icons for Trust Badges
 const ICON_OPTIONS = [
@@ -43,7 +44,10 @@ export default function TrustBadgesPage() {
   const [icon, setIcon] = useState('Shield');
   const [displayOrder, setDisplayOrder] = useState(0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Pending delete (drives the confirmation dialog)
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; text: string } | null>(null);
+
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     try {
       await createMutation.mutateAsync({
@@ -60,14 +64,17 @@ export default function TrustBadgesPage() {
     }
   };
 
-  const handleDelete = async (id: string, badgeText: string) => {
-    if (confirm(`Are you sure you want to delete the trust badge "${badgeText}"?`)) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        toast.success('Trust badge deleted successfully');
-      } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Failed to delete badge');
-      }
+  const handleDelete = (id: string, badgeText: string) => setPendingDelete({ id, text: badgeText });
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      await deleteMutation.mutateAsync(pendingDelete.id);
+      toast.success('Trust badge deleted successfully');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to delete badge');
+    } finally {
+      setPendingDelete(null);
     }
   };
 
@@ -230,6 +237,18 @@ export default function TrustBadgesPage() {
         </div>
 
       </div>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete trust badge"
+        message={pendingDelete ? `Delete the trust badge “${pendingDelete.text}”? This action cannot be undone.` : ''}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getPublishedPackages } from '@/lib/api/public/packages';
 
 /* ============================== Types ============================== */
 
@@ -9,15 +11,22 @@ export type Difficulty = 'Easy' | 'Moderate' | 'Challenging';
 export interface TravelPackage {
   id: string;
   name: string;
+  slug: string;
   description: string;
-  category: string;
-  price: number;
+  categories: string[];
+  price: number; // 0 = "on request"
   durationDays: number;
-  difficulty: Difficulty;
-  rating: number;
-  popularity: number; // 0-100, higher = more popular
+  difficulty: Difficulty | null;
+  rating: number; // 0 = no reviews yet
+  popularity: number;
   image: string;
   location: string;
+  createdAt: number; // epoch ms, for "newest" ordering
+}
+
+export interface CategoryOption {
+  value: string;
+  label: string;
 }
 
 export interface Filters {
@@ -33,18 +42,16 @@ export interface Filters {
 /* ============================ Constants ============================= */
 
 export const PRICE_FLOOR = 0;
-export const PRICE_CEIL = 5000;
-
-export const CATEGORIES = [
-  { value: 'Beach', label: 'Beach' },
-  { value: 'Adventure', label: 'Adventure' },
-  { value: 'Mountain', label: 'Mountain' },
-  { value: 'Cultural', label: 'Cultural' },
-  { value: 'Wildlife', label: 'Wildlife' },
-  { value: 'City', label: 'City' },
-] as const;
+// INR ceiling that comfortably covers the catalogue; the slider filters within this range.
+export const PRICE_CEIL = 500000;
 
 export const DIFFICULTIES: Difficulty[] = ['Easy', 'Moderate', 'Challenging'];
+
+const DIFFICULTY_MAP: Record<string, Difficulty> = {
+  easy: 'Easy',
+  moderate: 'Moderate',
+  hard: 'Challenging',
+};
 
 export const DURATION_RANGES: Record<string, { label: string; min: number; max: number }> = {
   any: { label: 'Any duration', min: 0, max: Infinity },
@@ -55,12 +62,12 @@ export const DURATION_RANGES: Record<string, { label: string; min: number; max: 
 };
 
 export const SORT_OPTIONS: Record<string, { label: string; compare: (a: TravelPackage, b: TravelPackage) => number }> = {
+  newest: { label: 'Newest first', compare: (a, b) => b.createdAt - a.createdAt },
   popular: { label: 'Most popular', compare: (a, b) => b.popularity - a.popularity },
   'price-asc': { label: 'Price: low to high', compare: (a, b) => a.price - b.price },
   'price-desc': { label: 'Price: high to low', compare: (a, b) => b.price - a.price },
   'duration-asc': { label: 'Duration: shortest first', compare: (a, b) => a.durationDays - b.durationDays },
   'duration-desc': { label: 'Duration: longest first', compare: (a, b) => b.durationDays - a.durationDays },
-  rating: { label: 'Highest rated', compare: (a, b) => b.rating - a.rating },
 };
 
 export const DEFAULT_FILTERS: Filters = {
@@ -70,75 +77,51 @@ export const DEFAULT_FILTERS: Filters = {
   priceMin: PRICE_FLOOR,
   priceMax: PRICE_CEIL,
   duration: 'any',
-  sort: 'popular',
+  sort: 'newest',
 };
 
-/* ============================ Mock data ============================= */
+/* ============================== Mapping ============================== */
 
-const NAME_PARTS: Record<string, string[]> = {
-  Beach: ['Coastal Escape', 'Island Drift', 'Lagoon Retreat', 'Reef & Shore'],
-  Adventure: ['Canyon Rush', 'Rapids Run', 'Jungle Trek', 'Desert Crossing'],
-  Mountain: ['Summit Trail', 'Alpine Ridge', 'Peak Circuit', 'Highland Pass'],
-  Cultural: ['Old Town Wander', 'Heritage Route', 'Artisan Trail', 'Temple Circuit'],
-  Wildlife: ['Safari Horizon', 'Wild Frontier', 'Migration Watch', 'Reserve Expedition'],
-  City: ['Skyline Sampler', 'Downtown Dash', 'Metro Discovery', 'Rooftop Circuit'],
-};
+/** Loosely-typed shape of a published-package row (the Supabase client is untyped). */
+interface RawListPackage {
+  id: string;
+  title: string;
+  slug: string;
+  short_description?: string | null;
+  price_adult?: number | string | null;
+  duration_days?: number | null;
+  difficulty_level?: string | null;
+  destination_name?: string | null;
+  view_count?: number | null;
+  created_at?: string | null;
+  package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
+  package_categories?: { categories: { name: string; slug: string } | null }[] | null;
+}
 
-const LOCATIONS: Record<string, string[]> = {
-  Beach: ['Zanzibar', 'Palawan', 'Maldives', 'Amalfi Coast'],
-  Adventure: ['Patagonia', 'Costa Rica', 'Iceland', 'Nepal'],
-  Mountain: ['Swiss Alps', 'Dolomites', 'Rockies', 'Andes'],
-  Cultural: ['Kyoto', 'Marrakech', 'Istanbul', 'Oaxaca'],
-  Wildlife: ['Serengeti', 'Galápagos', 'Borneo', 'Kruger'],
-  City: ['Lisbon', 'Singapore', 'Buenos Aires', 'Seoul'],
-};
+function mapPackage(row: RawListPackage): TravelPackage {
+  const gallery = row.package_gallery ?? [];
+  const cover = gallery.find((g) => g.is_cover) ?? gallery[0];
+  const categories = (row.package_categories ?? [])
+    .map((pc) => pc.categories?.name)
+    .filter((name): name is string => Boolean(name));
+  const price = row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
 
-function seedRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
+  return {
+    id: row.id,
+    name: row.title,
+    slug: row.slug,
+    description: row.short_description ?? '',
+    categories,
+    price: Number.isNaN(price) ? 0 : price,
+    durationDays: row.duration_days ?? 0,
+    difficulty: row.difficulty_level ? DIFFICULTY_MAP[row.difficulty_level] ?? null : null,
+    rating: 0,
+    popularity: row.view_count ?? 0,
+    image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
+    location: row.destination_name ?? '',
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
   };
 }
-
-function buildMockPackages(): TravelPackage[] {
-  const packages: TravelPackage[] = [];
-  const categories = CATEGORIES.map((c) => c.value);
-  let idCounter = 1;
-
-  categories.forEach((category, catIdx) => {
-    const names = NAME_PARTS[category];
-    const locations = LOCATIONS[category];
-    names.forEach((namePart, i) => {
-      const rand = seedRandom(catIdx * 100 + i * 7 + 3);
-      const durationDays = Math.floor(rand() * 13) + 2; // 2-14
-      const price = Math.round((rand() * 4200 + 300) / 10) * 10; // 300-4500
-      const difficulty = DIFFICULTIES[Math.floor(rand() * DIFFICULTIES.length)];
-      const rating = Math.round((rand() * 1.5 + 3.5) * 10) / 10; // 3.5-5.0
-      const popularity = Math.round(rand() * 100);
-      const location = locations[i % locations.length];
-
-      packages.push({
-        id: `pkg-${idCounter++}`,
-        name: `${location} ${namePart}`,
-        description: `A ${durationDays}-day ${category.toLowerCase()} experience through ${location}, rated ${difficulty.toLowerCase()} for travelers seeking something memorable.`,
-        category,
-        price,
-        durationDays,
-        difficulty,
-        rating,
-        popularity,
-        location,
-        image: `https://picsum.photos/seed/travelcarvers-${idCounter}/480/320`,
-      });
-    });
-  });
-
-  return packages;
-}
-
-export const ALL_PACKAGES = buildMockPackages();
-export const TOTAL_CATALOG_SIZE = 156; // stand-in for a larger real catalog size
 
 /* ============================== Helpers ============================== */
 
@@ -155,7 +138,7 @@ export function filtersToSearchParams(filters: Filters): URLSearchParams {
   if (filters.priceMin !== PRICE_FLOOR) params.set('price_min', String(filters.priceMin));
   if (filters.priceMax !== PRICE_CEIL) params.set('price_max', String(filters.priceMax));
   if (filters.duration !== 'any') params.set('duration', filters.duration);
-  if (filters.sort !== 'popular') params.set('sort', filters.sort);
+  if (filters.sort !== DEFAULT_FILTERS.sort) params.set('sort', filters.sort);
   return params;
 }
 
@@ -167,7 +150,7 @@ export function searchParamsToFilters(params: URLSearchParams): Filters {
     priceMin: Number(params.get('price_min') ?? PRICE_FLOOR),
     priceMax: Number(params.get('price_max') ?? PRICE_CEIL),
     duration: params.get('duration') ?? 'any',
-    sort: params.get('sort') ?? 'popular',
+    sort: params.get('sort') ?? DEFAULT_FILTERS.sort,
   };
 }
 
@@ -182,7 +165,7 @@ export function countActiveFilters(filters: Filters): number {
 }
 
 export function formatPrice(value: number): string {
-  return `$${value.toLocaleString('en-US')}`;
+  return `₹${value.toLocaleString('en-IN')}`;
 }
 
 /* =============================== Hook ================================ */
@@ -199,17 +182,35 @@ export function useDebouncedValue<T>(value: T, delayMs: number): T {
 export function usePackageFilters() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [searchInput, setSearchInput] = useState('');
-  const [loading, setLoading] = useState(true);
   const [hydrated, setHydrated] = useState(false);
-  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const debouncedSearch = useDebouncedValue(searchInput, 350);
+
+  // ---- Fetch real published packages ----
+  const { data, isPending } = useQuery({
+    queryKey: ['packages', 'published', 'list'],
+    queryFn: getPublishedPackages,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const packages = useMemo<TravelPackage[]>(
+    () => ((data ?? []) as RawListPackage[]).map(mapPackage),
+    [data],
+  );
+
+  // ---- Category options derived from the actual catalogue ----
+  const availableCategories = useMemo<CategoryOption[]>(() => {
+    const names = new Set<string>();
+    packages.forEach((pkg) => pkg.categories.forEach((c) => names.add(c)));
+    return [...names].sort().map((name) => ({ value: name, label: name }));
+  }, [packages]);
 
   // ---- Hydrate filters from the URL on mount ----
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const initial = searchParamsToFilters(params);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from the URL
     setFilters(initial);
     setSearchInput(initial.search);
     setHydrated(true);
@@ -219,6 +220,7 @@ export function usePackageFilters() {
   // ---- Push debounced search text into filters ----
   useEffect(() => {
     if (!hydrated) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- push debounced search into filters
     setFilters((prev) => (prev.search === debouncedSearch ? prev : { ...prev, search: debouncedSearch }));
   }, [debouncedSearch, hydrated]);
 
@@ -231,38 +233,27 @@ export function usePackageFilters() {
     window.history.replaceState(null, '', newUrl);
   }, [filters, hydrated]);
 
-  // ---- Simulate fetch latency whenever filters change ----
-  useEffect(() => {
-    if (!hydrated) return;
-    setLoading(true);
-    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-    loadingTimeoutRef.current = setTimeout(() => setLoading(false), 350);
-    return () => {
-      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-    };
-  }, [filters, hydrated]);
-
   /* ------------------------------ Derived ------------------------------ */
 
   const filteredPackages = useMemo(() => {
     const range = DURATION_RANGES[filters.duration] ?? DURATION_RANGES.any;
     const query = filters.search.trim().toLowerCase();
 
-    return ALL_PACKAGES.filter((pkg) => {
+    return packages.filter((pkg) => {
       if (query) {
-        const haystack = `${pkg.name} ${pkg.description}`.toLowerCase();
+        const haystack = `${pkg.name} ${pkg.description} ${pkg.location}`.toLowerCase();
         if (!haystack.includes(query)) return false;
       }
-      if (filters.categories.length && !filters.categories.includes(pkg.category)) return false;
-      if (filters.difficulty.length && !filters.difficulty.includes(pkg.difficulty)) return false;
+      if (filters.categories.length && !pkg.categories.some((c) => filters.categories.includes(c))) return false;
+      if (filters.difficulty.length && (!pkg.difficulty || !filters.difficulty.includes(pkg.difficulty))) return false;
       if (pkg.price < filters.priceMin || pkg.price > filters.priceMax) return false;
       if (pkg.durationDays < range.min || pkg.durationDays > range.max) return false;
       return true;
     });
-  }, [filters]);
+  }, [packages, filters]);
 
   const sortedPackages = useMemo(() => {
-    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS.popular;
+    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS.newest;
     return [...filteredPackages].sort(sorter.compare);
   }, [filteredPackages, filters.sort]);
 
@@ -314,9 +305,11 @@ export function usePackageFilters() {
     setFilters,
     searchInput,
     setSearchInput,
-    loading,
+    loading: isPending || !hydrated,
     hydrated,
     sortedPackages,
+    totalCount: packages.length,
+    availableCategories,
     activeFilterCount,
     toggleCategory,
     toggleDifficulty,

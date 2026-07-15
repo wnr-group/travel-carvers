@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useCreateLead } from '@/lib/hooks/useLeads';
 import { leadSchema } from '@/lib/validations/lead.schema';
 import { z } from 'zod';
-import { User, Mail, Phone, Calendar, Users, MessageSquare, ChevronRight } from 'lucide-react';
+import { User, Mail, Phone, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
 
 interface LeadFormProps {
   packageId?: string;
@@ -29,9 +29,9 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
     source: 'website',
   });
   
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string | string[] | undefined>>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setErrors({});
     
@@ -72,9 +72,9 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
         setTimeout(() => setIsSuccess(false), 500);
       }, 3000);
 
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
-        setErrors(error.flatten().fieldErrors);
+        setErrors(z.flattenError(error).fieldErrors);
       } else {
         setErrors({ submit: 'Failed to submit inquiry. Please try again.' });
       }
@@ -95,9 +95,9 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in zoom-in duration-500">
+      <div role="status" className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in zoom-in duration-500">
         <div className="w-20 h-20 bg-brand-lightest rounded-full flex items-center justify-center mb-6 shadow-inner animate-bounce">
-          <svg className="w-10 h-10 text-brand-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg aria-hidden="true" className="w-10 h-10 text-brand-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -120,7 +120,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       </div>
 
       {errors.submit && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold">
+        <div role="alert" className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold">
           {errors.submit}
         </div>
       )}
@@ -148,63 +148,75 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className={labelClasses}>
-              <User className="w-4 h-4 text-brand-medium" /> Full Name *
+            <label htmlFor="lead-name" className={labelClasses}>
+              <User aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Full Name *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <User className="w-4 h-4 text-brand-medium/60" />
+                <User aria-hidden="true" className="w-4 h-4 text-brand-medium/60" />
               </span>
               <input
+                id="lead-name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className={inputClasses}
                 placeholder="Enter your full name"
                 required
+                aria-required="true"
+                aria-invalid={errors.name ? true : undefined}
+                aria-describedby={errors.name ? 'lead-name-error' : undefined}
               />
             </div>
-            {errors.name && <p className="text-red-500 text-xs mt-1 ml-1">{errors.name}</p>}
+            {errors.name && <p id="lead-name-error" className="text-red-500 text-xs mt-1 ml-1">{errors.name}</p>}
           </div>
 
           <div>
-            <label className={labelClasses}>
-              <Mail className="w-4 h-4 text-brand-medium" /> Email Address *
+            <label htmlFor="lead-email" className={labelClasses}>
+              <Mail aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Email Address *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <Mail className="w-4 h-4 text-brand-medium/60" />
+                <Mail aria-hidden="true" className="w-4 h-4 text-brand-medium/60" />
               </span>
               <input
+                id="lead-email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className={inputClasses}
                 placeholder="name@domain.com"
                 required
+                aria-required="true"
+                aria-invalid={errors.email ? true : undefined}
+                aria-describedby={errors.email ? 'lead-email-error' : undefined}
               />
             </div>
-            {errors.email && <p className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
+            {errors.email && <p id="lead-email-error" className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
           </div>
 
           <div>
-            <label className={labelClasses}>
-              <Phone className="w-4 h-4 text-brand-medium" /> Phone Number *
+            <label htmlFor="lead-phone" className={labelClasses}>
+              <Phone aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Phone Number *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <Phone className="w-4 h-4 text-brand-medium/60" />
+                <Phone aria-hidden="true" className="w-4 h-4 text-brand-medium/60" />
               </span>
               <input
+                id="lead-phone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className={inputClasses}
                 placeholder="+91 XXXXX XXXXX"
                 required
+                aria-required="true"
+                aria-invalid={errors.phone ? true : undefined}
+                aria-describedby={errors.phone ? 'lead-phone-error' : undefined}
               />
             </div>
-            {errors.phone && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phone}</p>}
+            {errors.phone && <p id="lead-phone-error" className="text-red-500 text-xs mt-1 ml-1">{errors.phone}</p>}
           </div>
         </div>
       </div>
@@ -217,32 +229,35 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelClasses}>
-              <Calendar className="w-4 h-4 text-brand-medium" /> Start Date *
+            <label htmlFor="lead-start-date" className={labelClasses}>
+              <Calendar aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Start Date *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <Calendar className="w-4 h-4 text-brand-medium/60" />
+                <Calendar aria-hidden="true" className="w-4 h-4 text-brand-medium/60" />
               </span>
               <input
+                id="lead-start-date"
                 type="date"
                 value={formData.travel_start_date}
                 onChange={(e) => setFormData({ ...formData, travel_start_date: e.target.value })}
                 className={inputClasses}
                 required
+                aria-required="true"
               />
             </div>
           </div>
 
           <div>
-            <label className={labelClasses}>
-              <Calendar className="w-4 h-4 text-brand-medium" /> End Date (Optional)
+            <label htmlFor="lead-end-date" className={labelClasses}>
+              <Calendar aria-hidden="true" className="w-4 h-4 text-brand-medium" /> End Date (Optional)
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <Calendar className="w-4 h-4 text-brand-medium/60" />
+                <Calendar aria-hidden="true" className="w-4 h-4 text-brand-medium/60" />
               </span>
               <input
+                id="lead-end-date"
                 type="date"
                 value={formData.travel_end_date}
                 onChange={(e) => setFormData({ ...formData, travel_end_date: e.target.value })}
@@ -267,20 +282,22 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 <p className="text-sm font-bold text-brand-darkest">Adults</p>
                 <p className="text-[10px] text-brand-medium">12+ years</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3" role="group" aria-label="Number of adults">
                 <button
                   type="button"
+                  aria-label="Decrease number of adults"
                   onClick={() => handleStepper('number_of_adults', -1)}
-                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 disabled:opacity-40"
+                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
                   disabled={formData.number_of_adults <= 1}
                 >
                   -
                 </button>
-                <span className="text-base font-bold text-brand-darkest w-4 text-center">{formData.number_of_adults}</span>
+                <span aria-live="polite" className="text-base font-bold text-brand-darkest w-4 text-center">{formData.number_of_adults}</span>
                 <button
                   type="button"
+                  aria-label="Increase number of adults"
                   onClick={() => handleStepper('number_of_adults', 1)}
-                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70"
+                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
                 >
                   +
                 </button>
@@ -293,20 +310,22 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 <p className="text-sm font-bold text-brand-darkest">Children</p>
                 <p className="text-[10px] text-brand-medium">2-12 years</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3" role="group" aria-label="Number of children">
                 <button
                   type="button"
+                  aria-label="Decrease number of children"
                   onClick={() => handleStepper('number_of_children', -1)}
-                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 disabled:opacity-40"
+                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
                   disabled={formData.number_of_children <= 0}
                 >
                   -
                 </button>
-                <span className="text-base font-bold text-brand-darkest w-4 text-center">{formData.number_of_children}</span>
+                <span aria-live="polite" className="text-base font-bold text-brand-darkest w-4 text-center">{formData.number_of_children}</span>
                 <button
                   type="button"
+                  aria-label="Increase number of children"
                   onClick={() => handleStepper('number_of_children', 1)}
-                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70"
+                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
                 >
                   +
                 </button>
@@ -319,20 +338,22 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 <p className="text-sm font-bold text-brand-darkest">Infants</p>
                 <p className="text-[10px] text-brand-medium">Under 2 years</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3" role="group" aria-label="Number of infants">
                 <button
                   type="button"
+                  aria-label="Decrease number of infants"
                   onClick={() => handleStepper('number_of_infants', -1)}
-                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 disabled:opacity-40"
+                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
                   disabled={formData.number_of_infants <= 0}
                 >
                   -
                 </button>
-                <span className="text-base font-bold text-brand-darkest w-4 text-center">{formData.number_of_infants}</span>
+                <span aria-live="polite" className="text-base font-bold text-brand-darkest w-4 text-center">{formData.number_of_infants}</span>
                 <button
                   type="button"
+                  aria-label="Increase number of infants"
                   onClick={() => handleStepper('number_of_infants', 1)}
-                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70"
+                  className="w-8 h-8 rounded-full border border-brand-medium text-brand-darkest hover:bg-brand-lightest/40 flex items-center justify-center font-bold text-lg select-none transition-colors active:bg-brand-lightest/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
                 >
                   +
                 </button>
@@ -344,10 +365,11 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
       {/* Message */}
       <div>
-        <label className={labelClasses}>
-          <MessageSquare className="w-4 h-4 text-brand-medium" /> Special Requests (Optional)
+        <label htmlFor="lead-message" className={labelClasses}>
+          <MessageSquare aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Special Requests (Optional)
         </label>
         <textarea
+          id="lead-message"
           value={formData.message}
           onChange={(e) => setFormData({ ...formData, message: e.target.value })}
           rows={3}
@@ -364,7 +386,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       >
         {createLead.isPending ? (
           <>
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -372,7 +394,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
           </>
         ) : (
           <>
-            Send Inquiry <ChevronRight className="w-5 h-5" />
+            Send Inquiry <ChevronRight aria-hidden="true" className="w-5 h-5" />
           </>
         )}
       </button>

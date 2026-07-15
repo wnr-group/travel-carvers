@@ -24,6 +24,7 @@ export function useApproveReview() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_REVIEWS_KEY });
     },
+    onError: (error) => console.error('[admin review mutation]', error),
   });
 }
 
@@ -38,6 +39,7 @@ export function useRejectReview() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_REVIEWS_KEY });
     },
+    onError: (error) => console.error('[admin review mutation]', error),
   });
 }
 
@@ -51,5 +53,6 @@ export function useDeleteReview() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_REVIEWS_KEY });
     },
+    onError: (error) => console.error('[admin review mutation]', error),
   });
 }

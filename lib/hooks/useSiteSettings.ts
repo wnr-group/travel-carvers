@@ -37,5 +37,6 @@ export function useUpdateSiteSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SITE_SETTINGS_KEY });
     },
+    onError: (error) => console.error('[site settings mutation]', error),
   });
 }

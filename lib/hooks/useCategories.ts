@@ -5,7 +5,7 @@ import {
   getActiveCategories,
   getCategoryBySlug,
   getActiveSubcategories,
-} from '@/lib/api/categories';
+} from '@/lib/api/public/categories';
 
 /**
  * Get all active categories

@@ -17,7 +17,7 @@ export function useCreateLead() {
       // Invalidate admin leads query if needed
       queryClient.invalidateQueries({ queryKey: ['leads'] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Lead submission error:', error);
       toast.error('Failed to submit. Please try again.');
     },

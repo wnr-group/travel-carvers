@@ -24,6 +24,7 @@ export function useUpdateLeadStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_LEADS_KEY });
     },
+    onError: (error) => console.error('[admin lead mutation]', error),
   });
 }
 
@@ -37,5 +38,6 @@ export function useDeleteLead() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_LEADS_KEY });
     },
+    onError: (error) => console.error('[admin lead mutation]', error),
   });
 }

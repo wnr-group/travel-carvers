@@ -12,9 +12,23 @@ const nextConfig = {
         hostname: 'picsum.photos',
         pathname: '/**',
       },
-      // Add your Supabase storage domain here when deployed
-      // Example: { protocol: 'https', hostname: 'abcdefghijklmnop.supabase.co', pathname: '/storage/**' }
+      // Supabase Storage (public buckets) — production project + local dev instance.
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '54321',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
+    // Serve modern formats when the browser supports them.
+    formats: ['image/avif', 'image/webp'],
+    //dangerouslyAllowLocalIP is enabled only for development
+    dangerouslyAllowLocalIP: process.env.NODE_ENV !== 'production',
   },
 };
 
