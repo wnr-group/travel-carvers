@@ -105,11 +105,11 @@ export default function TrustBadges() {
   }
 
   return (
-    <section className="py-10 bg-gradient-to-b from-[#FEFAE0]/40 to-white border-b border-[#A9B388]/20 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-8 md:py-12 bg-gradient-to-b from-[#FEFAE0]/40 to-white border-b border-[#A9B388]/20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div 
           ref={containerRef}
-          className={`grid grid-cols-2 md:grid-cols-4 gap-6 transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) transform ${
+          className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) transform ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
         >
@@ -118,26 +118,26 @@ export default function TrustBadges() {
             return (
               <div 
                 key={badge.id}
-                className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 bg-white/80 backdrop-blur-sm rounded-2xl border border-[#A9B388]/20 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#2D5F2D]/30 group"
+                className="flex flex-col sm:flex-row items-center sm:items-start gap-2.5 sm:gap-4 p-3.5 sm:p-5 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-[#A9B388]/20 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#2D5F2D]/30 group text-center sm:text-left"
                 style={{
                   transitionDelay: `${i * 100}ms`
                 }}
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2D5F2D] to-[#5F7A5F] text-white flex items-center justify-center shadow-md shadow-[#2D5F2D]/10 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0">
-                  {renderIcon(badge.icon, "w-6 h-6")}
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#2D5F2D] to-[#5F7A5F] text-white flex items-center justify-center shadow-md shadow-[#2D5F2D]/10 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0">
+                  {renderIcon(badge.icon, "w-5 h-5 sm:w-6 h-6")}
                 </div>
-                <div className="text-center sm:text-left flex-grow">
+                <div className="flex-grow min-w-0 w-full">
                   {number ? (
                     <>
-                      <div className="text-2xl font-extrabold text-[#1B4D1B] tracking-tight group-hover:text-[#2D5F2D] transition-colors">
+                      <div className="text-lg sm:text-2xl font-extrabold text-[#1B4D1B] tracking-tight group-hover:text-[#2D5F2D] transition-colors truncate">
                         {number}
                       </div>
-                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-0.5 leading-snug">
+                      <div className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mt-0.5 leading-snug break-words">
                         {description}
                       </div>
                     </>
                   ) : (
-                    <div className="text-sm font-bold text-[#1B4D1B] group-hover:text-[#2D5F2D] transition-colors mt-1.5 leading-snug">
+                    <div className="text-xs sm:text-sm font-bold text-[#1B4D1B] group-hover:text-[#2D5F2D] transition-colors mt-1 leading-snug break-words">
                       {description}
                     </div>
                   )}
