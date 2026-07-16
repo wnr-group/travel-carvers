@@ -22,6 +22,7 @@ export interface TravelPackage {
   image: string;
   location: string;
   createdAt: number; // epoch ms, for "newest" ordering
+  isFeatured: boolean;
 }
 
 export interface CategoryOption {
@@ -62,12 +63,28 @@ export const DURATION_RANGES: Record<string, { label: string; min: number; max: 
 };
 
 export const SORT_OPTIONS: Record<string, { label: string; compare: (a: TravelPackage, b: TravelPackage) => number }> = {
-  newest: { label: 'Newest first', compare: (a, b) => b.createdAt - a.createdAt },
-  popular: { label: 'Most popular', compare: (a, b) => b.popularity - a.popularity },
-  'price-asc': { label: 'Price: low to high', compare: (a, b) => a.price - b.price },
-  'price-desc': { label: 'Price: high to low', compare: (a, b) => b.price - a.price },
-  'duration-asc': { label: 'Duration: shortest first', compare: (a, b) => a.durationDays - b.durationDays },
-  'duration-desc': { label: 'Duration: longest first', compare: (a, b) => b.durationDays - a.durationDays },
+  'best-match': { 
+    label: 'Best Match', 
+    compare: (a, b) => {
+      if (a.isFeatured !== b.isFeatured) {
+        return a.isFeatured ? -1 : 1;
+      }
+      return b.createdAt - a.createdAt;
+    } 
+  },
+  'rating-desc': { 
+    label: 'Highest Rated', 
+    compare: (a, b) => {
+      if (b.rating !== a.rating) {
+        return b.rating - a.rating;
+      }
+      return b.createdAt - a.createdAt;
+    } 
+  },
+  'price-asc': { label: 'Price: Low to High', compare: (a, b) => a.price - b.price },
+  'price-desc': { label: 'Price: High to Low', compare: (a, b) => b.price - a.price },
+  'newest': { label: 'Newest First', compare: (a, b) => b.createdAt - a.createdAt },
+  'popular': { label: 'Most Popular', compare: (a, b) => b.popularity - a.popularity },
 };
 
 export const DEFAULT_FILTERS: Filters = {
@@ -77,7 +94,7 @@ export const DEFAULT_FILTERS: Filters = {
   priceMin: PRICE_FLOOR,
   priceMax: PRICE_CEIL,
   duration: 'any',
-  sort: 'newest',
+  sort: 'best-match',
 };
 
 /* ============================== Mapping ============================== */
@@ -93,9 +110,11 @@ interface RawListPackage {
   difficulty_level?: string | null;
   destination_name?: string | null;
   view_count?: number | null;
+  is_featured?: boolean | null;
   created_at?: string | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
   package_categories?: { categories: { name: string; slug: string } | null }[] | null;
+  reviews?: { rating: number; is_approved: boolean | null }[] | null;
 }
 
 function mapPackage(row: RawListPackage): TravelPackage {
@@ -106,6 +125,11 @@ function mapPackage(row: RawListPackage): TravelPackage {
     .filter((name): name is string => Boolean(name));
   const price = row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
 
+  // Calculate average rating
+  const approvedReviews = (row.reviews ?? []).filter((r) => r.is_approved === true);
+  const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
+  const rating = approvedReviews.length > 0 ? totalRating / approvedReviews.length : 0;
+
   return {
     id: row.id,
     name: row.title,
@@ -115,11 +139,12 @@ function mapPackage(row: RawListPackage): TravelPackage {
     price: Number.isNaN(price) ? 0 : price,
     durationDays: row.duration_days ?? 0,
     difficulty: row.difficulty_level ? DIFFICULTY_MAP[row.difficulty_level] ?? null : null,
-    rating: 0,
+    rating,
     popularity: row.view_count ?? 0,
     image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
     location: row.destination_name ?? '',
     createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+    isFeatured: !!row.is_featured,
   };
 }
 
@@ -253,7 +278,7 @@ export function usePackageFilters() {
   }, [packages, filters]);
 
   const sortedPackages = useMemo(() => {
-    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS.newest;
+    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS['best-match'];
     return [...filteredPackages].sort(sorter.compare);
   }, [filteredPackages, filters.sort]);
 

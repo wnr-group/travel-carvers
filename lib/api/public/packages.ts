@@ -22,6 +22,10 @@ export async function getPublishedPackages() {
           name,
           slug
         )
+      ),
+      reviews (
+        rating,
+        is_approved
       )
     `)
     .eq('status', 'published')
