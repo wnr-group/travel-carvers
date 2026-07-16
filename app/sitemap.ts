@@ -1,7 +1,10 @@
 import type { MetadataRoute } from 'next';
 import { absoluteUrl } from '@/lib/seo';
 import { getPublishedPackages } from '@/lib/api/public/packages';
-import { getActiveCategories } from '@/lib/api/public/categories';
+import {
+  getActiveCategories,
+  getActiveCategorySubcategoryPairs,
+} from '@/lib/api/public/categories';
 
 const STATIC_ROUTES: {
   path: string;
@@ -46,10 +49,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let packageEntries: MetadataRoute.Sitemap = [];
   let categoryEntries: MetadataRoute.Sitemap = [];
+  let subcategoryEntries: MetadataRoute.Sitemap = [];
 
-  try {
-    const packages = (await getPublishedPackages()) ?? [];
-    packageEntries = packages
+  // Independent fetches — run them in parallel; each failure only drops its own section.
+  const [packagesResult, categoriesResult, pairsResult] = await Promise.allSettled([
+    getPublishedPackages(),
+    getActiveCategories(),
+    getActiveCategorySubcategoryPairs(),
+  ]);
+
+  if (packagesResult.status === 'fulfilled') {
+    packageEntries = (packagesResult.value ?? [])
       .filter((pkg): pkg is { slug: string; updated_at?: string } => Boolean(pkg?.slug))
       .map((pkg) => ({
         url: absoluteUrl(`/packages/${pkg.slug}`),
@@ -57,25 +67,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly',
         priority: 0.8,
       }));
-  } catch (error) {
-    console.error('[sitemap] failed to load packages', error);
+  } else {
+    console.error('[sitemap] failed to load packages', packagesResult.reason);
   }
 
-  try {
-    const categories = (await getActiveCategories()) ?? [];
-    categoryEntries = categories
+  if (categoriesResult.status === 'fulfilled') {
+    categoryEntries = (categoriesResult.value ?? [])
       .filter((category): category is { slug: string; updated_at?: string } => Boolean(category?.slug))
       .map((category) => ({
-        url: absoluteUrl(`/packages?category=${category.slug}`),
+        url: absoluteUrl(`/categories/${category.slug}`),
         lastModified: category.updated_at ? new Date(category.updated_at) : now,
         changeFrequency: 'weekly',
         priority: 0.7,
       }));
-  } catch (error) {
-    console.error('[sitemap] failed to load categories', error);
+  } else {
+    console.error('[sitemap] failed to load categories', categoriesResult.reason);
   }
 
-  return [...staticEntries, ...categoryEntries, ...destinationEntries, ...packageEntries];
+  if (pairsResult.status === 'fulfilled') {
+    subcategoryEntries = (pairsResult.value ?? []).map((pair) => ({
+      url: absoluteUrl(`/categories/${pair.categorySlug}/${pair.subcategorySlug}`),
+      lastModified: pair.updatedAt ? new Date(pair.updatedAt) : now,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    }));
+  } else {
+    console.error('[sitemap] failed to load subcategories', pairsResult.reason);
+  }
+
+  return [
+    ...staticEntries,
+    ...categoryEntries,
+    ...subcategoryEntries,
+    ...destinationEntries,
+    ...packageEntries,
+  ];
 }
 
 export const revalidate = 3600;

@@ -67,6 +67,7 @@ interface RawSimilarPackage {
   title: string;
   duration_days?: number | null;
   price_adult?: number | string | null;
+  show_price?: boolean | null;
   package_gallery?: RawGalleryImage[] | null;
 }
 
@@ -245,12 +246,13 @@ export function toPackageDetail(
     pct: reviewCount ? Math.round((counts[stars - 1] / reviewCount) * 100) : 0,
   }));
 
-  // Similar packages (other published packages).
+  // Similar packages (other published packages). Each card honours that
+  // package's own show_price flag — null renders without a price.
   const similar: SimilarPackageVM[] = rawSimilar.slice(0, 3).map((pkg) => ({
     slug: pkg.slug,
     title: pkg.title,
     duration: durationLabel(pkg.duration_days, null),
-    price: toNumber(pkg.price_adult),
+    price: (pkg.show_price ?? true) ? toNumber(pkg.price_adult) : null,
     img: coverOf(pkg.package_gallery, pkg.slug, '700/500'),
   }));
 
@@ -263,7 +265,8 @@ export function toPackageDetail(
     location: raw.destination_name ?? '',
     duration: durationLabel(raw.duration_days, raw.duration_nights),
     groupSize,
-    startingPrice: priceAdult,
+    // Hidden price ⇒ null, so every "From ₹…" surface falls back to "On request".
+    startingPrice: showPrice ? priceAdult : null,
     showPrice,
     cover: coverOf(raw.package_gallery, raw.slug),
     rating,

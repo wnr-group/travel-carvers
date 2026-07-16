@@ -3,7 +3,8 @@ import type { Subcategory } from '@/lib/types/category';
 import type {
   CategoryFormOutput,
   CategoryUpdateOutput,
-  SubcategoryFormData,
+  SubcategoryFormOutput,
+  SubcategoryUpdateOutput,
 } from '@/lib/validations/category.schema';
 
 
@@ -70,25 +71,13 @@ export async function deleteCategory(id: string) {
   return data;
 }
 
-/**
- * Admin: Get all subcategories (requires server-side)
- */
-export async function getAllSubcategoriesAdmin() {
-
-  const { data, error } = await supabaseAdmin
-    .from('subcategories')
-    .select('*')
-    .order('display_order', { ascending: true});
-
-  if (error) throw error;
-  return data;
-}
-
-
 interface SubcategoryRow {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
+  cover_image_url: string | null;
+  icon_name: string | null;
   display_order: number | null;
   is_active: boolean | null;
   category_subcategory: { category_id: string }[] | null;
@@ -104,6 +93,9 @@ export async function getSubcategoriesAdmin(): Promise<Subcategory[]> {
       id,
       name,
       slug,
+      description,
+      cover_image_url,
+      icon_name,
       display_order,
       is_active,
       category_subcategory (
@@ -119,6 +111,9 @@ export async function getSubcategoriesAdmin(): Promise<Subcategory[]> {
     id: row.id,
     name: row.name,
     slug: row.slug,
+    description: row.description,
+    cover_image_url: row.cover_image_url,
+    icon_name: row.icon_name,
     display_order: row.display_order ?? 0,
     is_active: row.is_active ?? true,
     category_ids: (row.category_subcategory ?? []).map((join) => join.category_id),
@@ -126,9 +121,30 @@ export async function getSubcategoriesAdmin(): Promise<Subcategory[]> {
 }
 
 /**
- * Admin: Create subcategory (requires server-side)
+ * Replace a subcategory's parent-category links with exactly `categoryIds`.
  */
-export async function createSubcategory(subcategoryData: SubcategoryFormData) {
+async function replaceSubcategoryLinks(subcategoryId: string, categoryIds: string[]) {
+  const { error: deleteError } = await supabaseAdmin
+    .from('category_subcategory')
+    .delete()
+    .eq('subcategory_id', subcategoryId);
+
+  if (deleteError) throw deleteError;
+
+  if (categoryIds.length === 0) return;
+
+  const { error: insertError } = await supabaseAdmin
+    .from('category_subcategory')
+    .insert(categoryIds.map((category_id) => ({ category_id, subcategory_id: subcategoryId })));
+
+  if (insertError) throw insertError;
+}
+
+/**
+ * Admin: Create subcategory together with its parent-category links.
+ */
+export async function createSubcategory(input: SubcategoryFormOutput): Promise<Subcategory> {
+  const { category_ids, ...subcategoryData } = input;
 
   const { data, error } = await supabaseAdmin
     .from('subcategories')
@@ -137,34 +153,74 @@ export async function createSubcategory(subcategoryData: SubcategoryFormData) {
     .single();
 
   if (error) throw error;
-  return data;
+
+  try {
+    await replaceSubcategoryLinks(data.id, category_ids);
+  } catch (linkError) {
+    await supabaseAdmin.from('subcategories').delete().eq('id', data.id);
+    throw linkError;
+  }
+
+  return { ...data, category_ids };
 }
 
 /**
- * Admin: Update subcategory (requires server-side)
+ * Admin: Update subcategory and replace its parent-category links.
+ *
+ * Returns null when no subcategory has that id.
  */
-export async function updateSubcategory(id: string, subcategoryData: SubcategoryFormData) {
+export async function updateSubcategory(
+  id: string,
+  input: SubcategoryUpdateOutput
+): Promise<Subcategory | null> {
+  const { category_ids, ...subcategoryData } = input;
+
+  const { data: existingLinks, error: linksError } = await supabaseAdmin
+    .from('category_subcategory')
+    .select('category_id')
+    .eq('subcategory_id', id);
+
+  if (linksError) throw linksError;
 
   const { data, error } = await supabaseAdmin
     .from('subcategories')
     .update(subcategoryData)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
-  return data;
+  if (!data) return null;
+
+  try {
+    await replaceSubcategoryLinks(id, category_ids);
+  } catch (linkError) {
+    await supabaseAdmin
+      .from('category_subcategory')
+      .upsert(
+        (existingLinks ?? []).map((link) => ({
+          category_id: link.category_id,
+          subcategory_id: id,
+        })),
+        { onConflict: 'category_id,subcategory_id', ignoreDuplicates: true }
+      );
+    throw linkError;
+  }
+
+  return { ...data, category_ids };
 }
 
 /**
  * Admin: Delete subcategory (requires server-side)
  */
 export async function deleteSubcategory(id: string) {
-
-  const { error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('subcategories')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  return data;
 }

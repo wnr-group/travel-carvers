@@ -1,12 +1,9 @@
-'use server';
-
 import { getAdminUser } from '@/lib/supabase/auth';
 import { redirect } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { Package, Mail, MessageSquare, FolderTree } from 'lucide-react';
 
 async function getDashboardStats() {
-  // Use Promise.all to fetch them in parallel
   const [packages, leads, reviews, categories] = await Promise.all([
     supabaseAdmin.from('packages').select('id', { count: 'exact', head: true }),
     supabaseAdmin.from('leads').select('id', { count: 'exact', head: true }),

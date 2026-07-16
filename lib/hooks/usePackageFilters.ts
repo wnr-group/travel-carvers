@@ -1,28 +1,21 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getPublishedPackages } from '@/lib/api/public/packages';
+import {
+  mapPackage,
+  formatPrice,
+  type Difficulty,
+  type TravelPackage,
+  type RawListPackage,
+} from '@/lib/packageList';
 
 /* ============================== Types ============================== */
 
-export type Difficulty = 'Easy' | 'Moderate' | 'Challenging';
-
-export interface TravelPackage {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  categories: string[];
-  price: number; // 0 = "on request"
-  durationDays: number;
-  difficulty: Difficulty | null;
-  rating: number; // 0 = no reviews yet
-  popularity: number;
-  image: string;
-  location: string;
-  createdAt: number; // epoch ms, for "newest" ordering
-}
+export { mapPackage, formatPrice };
+export type { Difficulty, TravelPackage, RawListPackage };
 
 export interface CategoryOption {
   value: string;
@@ -42,16 +35,9 @@ export interface Filters {
 /* ============================ Constants ============================= */
 
 export const PRICE_FLOOR = 0;
-// INR ceiling that comfortably covers the catalogue; the slider filters within this range.
 export const PRICE_CEIL = 500000;
 
 export const DIFFICULTIES: Difficulty[] = ['Easy', 'Moderate', 'Challenging'];
-
-const DIFFICULTY_MAP: Record<string, Difficulty> = {
-  easy: 'Easy',
-  moderate: 'Moderate',
-  hard: 'Challenging',
-};
 
 export const DURATION_RANGES: Record<string, { label: string; min: number; max: number }> = {
   any: { label: 'Any duration', min: 0, max: Infinity },
@@ -79,49 +65,6 @@ export const DEFAULT_FILTERS: Filters = {
   duration: 'any',
   sort: 'newest',
 };
-
-/* ============================== Mapping ============================== */
-
-/** Loosely-typed shape of a published-package row (the Supabase client is untyped). */
-interface RawListPackage {
-  id: string;
-  title: string;
-  slug: string;
-  short_description?: string | null;
-  price_adult?: number | string | null;
-  duration_days?: number | null;
-  difficulty_level?: string | null;
-  destination_name?: string | null;
-  view_count?: number | null;
-  created_at?: string | null;
-  package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
-  package_categories?: { categories: { name: string; slug: string } | null }[] | null;
-}
-
-function mapPackage(row: RawListPackage): TravelPackage {
-  const gallery = row.package_gallery ?? [];
-  const cover = gallery.find((g) => g.is_cover) ?? gallery[0];
-  const categories = (row.package_categories ?? [])
-    .map((pc) => pc.categories?.name)
-    .filter((name): name is string => Boolean(name));
-  const price = row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
-
-  return {
-    id: row.id,
-    name: row.title,
-    slug: row.slug,
-    description: row.short_description ?? '',
-    categories,
-    price: Number.isNaN(price) ? 0 : price,
-    durationDays: row.duration_days ?? 0,
-    difficulty: row.difficulty_level ? DIFFICULTY_MAP[row.difficulty_level] ?? null : null,
-    rating: 0,
-    popularity: row.view_count ?? 0,
-    image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
-    location: row.destination_name ?? '',
-    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
-  };
-}
 
 /* ============================== Helpers ============================== */
 
@@ -164,10 +107,6 @@ export function countActiveFilters(filters: Filters): number {
   return count;
 }
 
-export function formatPrice(value: number): string {
-  return `₹${value.toLocaleString('en-IN')}`;
-}
-
 /* =============================== Hook ================================ */
 
 export function useDebouncedValue<T>(value: T, delayMs: number): T {
@@ -205,22 +144,19 @@ export function usePackageFilters() {
     return [...names].sort().map((name) => ({ value: name, label: name }));
   }, [packages]);
 
-  // ---- Hydrate filters from the URL on mount ----
+
+  const searchParams = useSearchParams();
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const initial = searchParamsToFilters(params);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from the URL
+    const initial = searchParamsToFilters(new URLSearchParams(searchParams.toString()));
     setFilters(initial);
     setSearchInput(initial.search);
     setHydrated(true);
     window.scrollTo(0, 0);
-  }, []);
+  }, [searchParams]);
 
   // ---- Push debounced search text into filters ----
   useEffect(() => {
     if (!hydrated) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- push debounced search into filters
     setFilters((prev) => (prev.search === debouncedSearch ? prev : { ...prev, search: debouncedSearch }));
   }, [debouncedSearch, hydrated]);
 

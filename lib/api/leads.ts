@@ -3,8 +3,9 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { leadSchema, type LeadFormData } from '@/lib/validations/lead.schema';
 
+
 /**
- * Public: Submit a lead form.
+ * Public: Submit a lead form
  */
 export async function createLead(input: LeadFormData) {
   const leadData = leadSchema.parse(input);
@@ -51,58 +52,4 @@ export async function createLead(input: LeadFormData) {
   if (error) throw error;
 
   return data;
-}
-
-/**
- * Admin: Get all leads
- */
-export async function getAllLeads() {
-  const { data, error } = await supabaseAdmin
-    .from('leads')
-    .select(`
-      *,
-      packages (
-        title,
-        slug
-      )
-    `)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  return data;
-}
-
-/**
- * Admin: Update lead status
- */
-export async function updateLeadStatus(leadId: string, status: string) {
-  const { data, error } = await supabaseAdmin
-    .from('leads')
-    .update({ status })
-    .eq('id', leadId)
-    .select(`
-      *,
-      packages (
-        title,
-        slug
-      )
-    `)
-    .single();
-
-  if (error) throw error;
-
-  return data;
-}
-
-/**
- * Admin: Delete lead
- */
-export async function deleteLead(leadId: string) {
-  const { error } = await supabaseAdmin
-    .from('leads')
-    .delete()
-    .eq('id', leadId);
-
-  if (error) throw error;
 }

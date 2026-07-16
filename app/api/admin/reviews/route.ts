@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
-import { getAllReviews } from '@/lib/api/reviews';
+import { getAllReviews } from '@/lib/api/admin/reviews';
 import { toApiError } from '@/lib/api/errors';
 
 export async function GET() {

@@ -1,6 +1,6 @@
 'use client'
 
-import { signOut } from '@/lib/supabase/auth'
+import { logoutAction } from './actions'
 import { useState } from 'react'
 import { LogOut } from 'lucide-react'
 
@@ -10,7 +10,7 @@ export default function LogoutButton({ isCollapsed }: { isCollapsed?: boolean })
   async function handleLogout() {
     setIsLoading(true)
     try {
-      await signOut()
+      await logoutAction()
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Logout error:', error)

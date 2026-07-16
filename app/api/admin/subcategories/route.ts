@@ -1,14 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
-import { getSubcategoriesAdmin } from '@/lib/api/categories';
+import { createSubcategory, getSubcategoriesAdmin } from '@/lib/api/categories';
 import { toApiError } from '@/lib/api/errors';
+import { firstZodIssue } from '@/lib/utils';
+import { subcategorySchema } from '@/lib/validations/category.schema';
 
 /**
  * Lists every subcategory with the categories it belongs to.
- *
- * `getSubcategoriesAdmin` already existed as a data function but was never exposed over
- * HTTP, so nothing in the browser could reach it. Same shape as the categories route:
- * requireAdmin, then `{ data }` / `{ error }`.
  */
 export async function GET() {
   const denied = await requireAdmin();
@@ -19,6 +17,29 @@ export async function GET() {
     return NextResponse.json({ data });
   } catch (error: unknown) {
     const { message, status } = toApiError(error);
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+/**
+ * Create a subcategory together with its parent-category links..
+ */
+export async function POST(req: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  try {
+    const body: unknown = await req.json().catch(() => null);
+    const validated = subcategorySchema.safeParse(body);
+
+    if (!validated.success) {
+      return NextResponse.json({ error: firstZodIssue(validated.error) }, { status: 400 });
+    }
+
+    const data = await createSubcategory(validated.data);
+    return NextResponse.json({ data }, { status: 201 });
+  } catch (error: unknown) {
+    const { message, status } = toApiError(error, 'subcategory');
     return NextResponse.json({ error: message }, { status });
   }
 }

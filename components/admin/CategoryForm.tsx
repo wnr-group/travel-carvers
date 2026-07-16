@@ -36,6 +36,7 @@ export default function CategoryForm({ category, onClose }: CategoryFormProps) {
       icon_name: category?.icon_name ?? "",
       display_order: category?.display_order ?? 0,
       is_active: category?.is_active ?? true,
+      show_in_nav: category?.show_in_nav ?? false,
     },
   });
 
@@ -142,6 +143,11 @@ export default function CategoryForm({ category, onClose }: CategoryFormProps) {
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" {...form.register('is_active')} />
             <span className="text-sm">Active</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" {...form.register('show_in_nav')} />
+            <span className="text-sm">Show in navigation menu</span>
           </label>
 
           <button

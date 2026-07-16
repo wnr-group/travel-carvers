@@ -4,18 +4,32 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { Search } from 'lucide-react'
+import SearchModal from './SearchModal'
+import { useNavCategories } from '@/lib/hooks/useNavCategories'
 
 const NAV_ITEMS = [
   { label: 'Home', href: '/' },
   { label: 'Packages', href: '/packages' },
-  { label: 'Countries', href: '/countries' },
-  { label: 'India', href: '/india' },
+  // { label: 'Countries', href: '/countries' },
+  // { label: 'India', href: '/india' },
   { label: 'About Us', href: '/about' },
 ];
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const pathname = usePathname()
+
+  // Categories the admin flagged with "Show in navigation menu"
+  const { data: navCategories } = useNavCategories()
+  const categoryItems = (navCategories ?? []).map((category) => ({
+    label: category.name,
+    href: `/categories/${category.slug}`,
+  }))
+  const packagesIndex = NAV_ITEMS.findIndex((item) => item.href === '/packages')
+  const insertAt = packagesIndex === -1 ? NAV_ITEMS.length : packagesIndex + 1
+  const navItems = [...NAV_ITEMS.slice(0, insertAt), ...categoryItems, ...NAV_ITEMS.slice(insertAt)]
 
   return (
     <nav className="bg-gradient-brand-navbar shadow-lg sticky top-0 z-[100]">
@@ -38,7 +52,7 @@ export default function Navbar() {
 
           {/* Desktop Navigation - Right Side */}
           <div className="hidden md:flex items-center gap-2">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = pathname === item.href
               return (
                 <Link
@@ -55,6 +69,15 @@ export default function Navbar() {
                 </Link>
               )
             })}
+
+            {/* Search */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2.5 text-white rounded-lg hover:bg-white/10 hover:scale-110 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Search packages, categories and destinations"
+            >
+              <Search aria-hidden="true" className="w-5 h-5" />
+            </button>
 
             {/* Contact Us Button */}
             <Link
@@ -75,10 +98,18 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile: search + menu buttons */}
+          <div className="md:hidden flex items-center gap-1">
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label="Search packages, categories and destinations"
+          >
+            <Search aria-hidden="true" className="w-6 h-6" />
+          </button>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-menu"
@@ -93,13 +124,14 @@ export default function Navbar() {
               </svg>
             )}
           </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div id="mobile-menu" className="md:hidden pb-4 border-t border-white/20 mt-2 pt-4">
             <div className="flex flex-col gap-3">
-              {NAV_ITEMS.map((item) => {
+              {navItems.map((item) => {
                 const active = pathname === item.href
                 return (
                   <Link
@@ -135,6 +167,8 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </nav>
   )
 }
