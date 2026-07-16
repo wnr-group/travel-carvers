@@ -4,7 +4,7 @@
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
+SET search_path TO public, extensions;
 
 -- =====================================================
 -- 1. CATEGORIES & SUBCATEGORIES

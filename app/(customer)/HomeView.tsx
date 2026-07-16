@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import HeroSection from '@/components/customer/HeroSection';
+import TrustBadges from '@/components/customer/TrustBadges';
 import {
   HomePackageCard,
   HomePackageCardSkeleton,
@@ -159,6 +160,9 @@ export default function Home() {
     <div className="w-full overflow-y-auto">
       {/* Hero Section with Carousel and Map */}
       <HeroSection />
+
+      {/* Trust Badges Section */}
+      <TrustBadges />
 
       {/* Featured Packages Section */}
       <section id="featured" className="py-20 bg-[#FEFAE0]">
