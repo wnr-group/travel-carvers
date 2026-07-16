@@ -1,597 +1,343 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  Shield,
+  Database,
+  Eye,
+  Cookie,
+  Lock,
+  Server,
+  UserCheck,
+  Baby,
+  RefreshCw,
+  Mail,
+  ChevronRight
+} from 'lucide-react';
 
-type Clause = {
-  label: string;
-  body: string;
-};
-
-type Section = {
-  id: string;
-  waypoint: string; // short label for the trail marker
-  title: string;
-  intro?: string;
-  clauses: Clause[];
-  notice?: { kind: "info" | "warning"; text: string };
-};
-
-const SECTIONS: Section[] = [
+const SECTIONS = [
   {
-    id: "introduction",
-    waypoint: "Introduction",
-    title: "1. Introduction",
-    intro:
-      "Travel Carvers is committed to protecting your personal data and respecting your privacy.",
-    clauses: [
-      {
-        label: "1.1",
-        body: "This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website (travelcarvers.com) or book travel services with us.",
-      },
-      {
-        label: "1.2",
-        body: "By using our website and services, you consent to the data practices described in this policy. If you do not agree with these practices, please discontinue use of our site.",
-      },
-    ],
+    id: 'introduction',
+    icon: <Shield className="w-5 h-5" />,
+    title: '1. Introduction',
+    content: (
+      <>
+        <p className="mb-4">
+          At <strong>Travel Carvers</strong>, we are committed to protecting your privacy and ensuring that your personal information is handled in a safe and responsible manner.
+        </p>
+        <p>
+          This Privacy Policy outlines how we collect, use, disclose, and safeguard your information when you visit our website, use our mobile application, or book travel packages through our platform. Please read this policy carefully to understand our practices regarding your personal data.
+        </p>
+      </>
+    ),
   },
   {
-    id: "collection",
-    waypoint: "Data Collection",
-    title: "2. Information We Collect",
-    clauses: [
-      {
-        label: "2.1",
-        body: "Personal Identification Info: We collect your name, email address, phone number, and billing/shipping details when you submit an inquiry, book a package, or subscribe to our newsletter.",
-      },
-      {
-        label: "2.2",
-        body: "Travel Details: We collect passport information, dietary requirements, health/medical conditions (only as necessary for safety), and special requests related to your tour bookings.",
-      },
-      {
-        label: "2.3",
-        body: "Automatically Collected Data: Our servers automatically capture technical info including your IP address, browser type, device information, operating system, and details about your browsing behavior on our website.",
-      },
-    ],
+    id: 'information-we-collect',
+    icon: <Database className="w-5 h-5" />,
+    title: '2. Information We Collect',
+    content: (
+      <>
+        <p className="mb-4">
+          We collect information that you voluntarily provide to us when you register on the website, express an interest in obtaining information about our travel packages, or otherwise contact us.
+        </p>
+        <ul className="list-disc pl-5 space-y-2 text-slate-700">
+          <li><strong>Personal Information:</strong> Name, email address, phone number, billing address, and payment information.</li>
+          <li><strong>Traveler Details:</strong> Passport information, dietary requirements, and medical conditions (only when necessary for booking specific tours).</li>
+          <li><strong>Automatically Collected Data:</strong> IP address, browser characteristics, device IDs, operating system, and data about how and when you use our platform.</li>
+        </ul>
+      </>
+    ),
   },
   {
-    id: "usage",
-    waypoint: "Data Usage",
-    title: "3. How We Use Your Information",
-    clauses: [
-      {
-        label: "3.1",
-        body: "To fulfill bookings and arrange travel itineraries with airlines, hotels, transport providers, and local guides.",
-      },
-      {
-        label: "3.2",
-        body: "To communicate with you regarding booking confirmations, updates, customer support requests, and promotional offers (where opted in).",
-      },
-      {
-        label: "3.3",
-        body: "To improve our website functionality, analyze user trends, optimize user interface, and ensure website security.",
-      },
-    ],
+    id: 'how-we-use-information',
+    icon: <Eye className="w-5 h-5" />,
+    title: '3. How We Use Your Information',
+    content: (
+      <>
+        <p className="mb-4">
+          We process your personal information for a variety of legitimate business purposes, including:
+        </p>
+        <ul className="list-disc pl-5 space-y-2 text-slate-700">
+          <li><strong>Booking Fulfillment:</strong> To process your travel reservations, issue tickets, and coordinate with local guides and hotels.</li>
+          <li><strong>Communication:</strong> To send you booking confirmations, itinerary updates, and respond to customer service inquiries.</li>
+          <li><strong>Marketing (with consent):</strong> To send you promotional emails about new tour packages, exclusive offers, and travel inspiration.</li>
+          <li><strong>Service Improvement:</strong> To analyze user trends and improve the functionality and user experience of our website.</li>
+        </ul>
+      </>
+    ),
   },
   {
-    id: "cookies",
-    waypoint: "Cookies",
-    title: "4. Cookies and Tracking",
-    notice: {
-      kind: "info",
-      text: "You can adjust your browser settings to refuse cookies, but some parts of our website may not function correctly as a result.",
-    },
-    clauses: [
-      {
-        label: "4.1",
-        body: "We use cookies to analyze web traffic, remember user choices, and track site performance. This helps us customize your browsing experience.",
-      },
-      {
-        label: "4.2",
-        body: "Third-party analytics tools (e.g. Google Analytics) may set tracking cookies on your device to gather aggregated behavior reports.",
-      },
-    ],
+    id: 'cookies-and-tracking',
+    icon: <Cookie className="w-5 h-5" />,
+    title: '4. Cookies and Tracking',
+    content: (
+      <>
+        <p>
+          We use cookies and similar tracking technologies (like web beacons and pixels) to access or store information. Cookies help us remember your preferences, keep you logged in, and understand how you interact with our platform so we can optimize your experience.
+        </p>
+        <p className="mt-4">
+          You can set your browser to refuse all or some browser cookies, or to alert you when websites set or access cookies. However, if you disable or refuse cookies, please note that some parts of our website may become inaccessible or not function properly.
+        </p>
+      </>
+    ),
   },
   {
-    id: "security",
-    waypoint: "Data Security",
-    title: "5. Data Security",
-    clauses: [
-      {
-        label: "5.1",
-        body: "We implement industry-standard encryption protocols (SSL/TLS) to secure data transmissions across our platform.",
-      },
-      {
-        label: "5.2",
-        body: "Access to your personal information is restricted to authorized employees and verified partners who require the details to execute tour bookings.",
-      },
-      {
-        label: "5.3",
-        body: "While we take rigorous precautions, no transmission method over the internet is 100% secure. We cannot guarantee absolute security.",
-      },
-    ],
+    id: 'data-security',
+    icon: <Lock className="w-5 h-5" />,
+    title: '5. Data Security',
+    content: (
+      <>
+        <p>
+          We have implemented appropriate technical and organizational security measures designed to protect the security of any personal information we process. This includes using SSL/TLS encryption for data transmission and secure server infrastructure for storage.
+        </p>
+        <p className="mt-4 text-sm text-slate-500 italic">
+          However, please also remember that we cannot guarantee that the internet itself is 100% secure. Although we will do our best to protect your personal information, transmission of personal information to and from our website is at your own risk.
+        </p>
+      </>
+    ),
   },
   {
-    id: "third-parties",
-    waypoint: "Third Parties",
-    title: "6. Third-Party Services",
-    clauses: [
-      {
-        label: "6.1",
-        body: "Database & Backend: We use Supabase to securely host our databases. Your personal and travel details are encrypted and securely stored in their environments.",
-      },
-      {
-        label: "6.2",
-        body: "Email & Notifications: We use Mailgun (or equivalent email provider) to dispatch transactional receipts, newsletters, and confirmation messages. They handle your email address in accordance with their strict privacy terms.",
-      },
-      {
-        label: "6.3",
-        body: "Third-party service providers are prohibited from using your personal data for any purpose other than facilitating confirmed bookings.",
-      },
-    ],
+    id: 'third-party-services',
+    icon: <Server className="w-5 h-5" />,
+    title: '6. Third-Party Services',
+    content: (
+      <>
+        <p className="mb-4">
+          To provide our services efficiently, we share certain information with trusted third-party service providers. We only share the minimum data necessary for these services to function:
+        </p>
+        <ul className="list-disc pl-5 space-y-3 text-slate-700">
+          <li>
+            <strong>Supabase:</strong> We use Supabase as our primary backend infrastructure and database provider. Your user credentials, booking history, and profile data are securely stored in Supabase databases, which comply with strict international security standards.
+          </li>
+          <li>
+            <strong>Mailgun:</strong> We use Mailgun to manage and deliver our transactional emails (like booking confirmations and password resets) as well as marketing newsletters. Your email address and name are shared with Mailgun solely for the purpose of email delivery.
+          </li>
+          <li>
+            <strong>Travel Partners:</strong> Airlines, hotels, and local tour operators require your details to fulfill your actual travel itinerary.
+          </li>
+        </ul>
+      </>
+    ),
   },
   {
-    id: "rights",
-    waypoint: "Your Rights",
-    title: "7. Your Rights",
-    clauses: [
-      {
-        label: "7.1",
-        body: "You have the right to request access to the personal data we hold about you and receive a copy of it.",
-      },
-      {
-        label: "7.2",
-        body: "You have the right to request that we correct inaccurate information, restrict data processing, or delete your personal details (subject to legal record-keeping requirements).",
-      },
-      {
-        label: "7.3",
-        body: "You may opt out of marketing communications at any time by clicking the 'unsubscribe' link in our newsletters or contacting us directly.",
-      },
-    ],
+    id: 'your-rights',
+    icon: <UserCheck className="w-5 h-5" />,
+    title: '7. Your Rights',
+    content: (
+      <>
+        <p className="mb-4">
+          Depending on your location, you may have specific rights regarding your personal data:
+        </p>
+        <ul className="list-disc pl-5 space-y-2 text-slate-700">
+          <li>The right to request access to the data we have collected about you.</li>
+          <li>The right to request that we correct any inaccurate or incomplete personal information.</li>
+          <li>The right to request the deletion of your personal data ("Right to be Forgotten").</li>
+          <li>The right to opt-out of marketing communications at any time by clicking the "unsubscribe" link in our emails.</li>
+        </ul>
+      </>
+    ),
   },
   {
-    id: "children",
-    waypoint: "Children's Privacy",
-    title: "8. Children's Privacy",
-    clauses: [
-      {
-        label: "8.1",
-        body: "Our website is not intended for users under the age of 18. We do not knowingly collect personal data directly from minors.",
-      },
-      {
-        label: "8.2",
-        body: "Any information regarding minors (e.g. child passenger lists) must be provided exclusively by a parent or legal guardian during the booking process.",
-      },
-    ],
+    id: 'childrens-privacy',
+    icon: <Baby className="w-5 h-5" />,
+    title: '8. Children\'s Privacy',
+    content: (
+      <>
+        <p>
+          Our services are not directed to, and we do not knowingly collect personal information from, children under the age of 13 (or 18 in certain jurisdictions) without verifiable parental consent. If we become aware that we have collected personal information from a minor without such consent, we will take immediate steps to delete that information from our servers.
+        </p>
+      </>
+    ),
   },
   {
-    id: "changes",
-    waypoint: "Updates",
-    title: "9. Changes to Privacy Policy",
-    clauses: [
-      {
-        label: "9.1",
-        body: "We reserve the right to update this policy as regulations or website functionalities evolve. Revised versions will be posted here immediately.",
-      },
-      {
-        label: "9.2",
-        body: "We recommend checking this page periodically to remain informed about how we safeguard your data.",
-      },
-    ],
+    id: 'changes-to-policy',
+    icon: <RefreshCw className="w-5 h-5" />,
+    title: '9. Changes to Privacy Policy',
+    content: (
+      <>
+        <p>
+          We may update this privacy notice from time to time. The updated version will be indicated by an updated "Revised" date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.
+        </p>
+      </>
+    ),
   },
   {
-    id: "contact",
-    waypoint: "Contact Us",
-    title: "10. Contact Us",
-    clauses: [
-      {
-        label: "10.1",
-        body: "For questions about this Privacy Policy or requests regarding your personal information, email us at privacy@travelcarvers.com.",
-      },
-      {
-        label: "10.2",
-        body: "Alternatively, you can call us at +91 98765 43210 or write to us at MG Road, Bengaluru, Karnataka 560001, India.",
-      },
-    ],
+    id: 'contact-us',
+    icon: <Mail className="w-5 h-5" />,
+    title: '10. Contact Us',
+    content: (
+      <>
+        <p className="mb-4">
+          If you have questions or comments about this policy, or wish to exercise your data rights, you may contact our Data Protection Officer at:
+        </p>
+        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <p className="font-medium text-slate-800">Travel Carvers Privacy Team</p>
+          <p className="text-slate-600 mt-1">Email: <a href="mailto:privacy@travelcarvers.com" className="text-[#5F7A5F] hover:underline">privacy@travelcarvers.com</a></p>
+          <p className="text-slate-600">Address: 123 Explorer Way, Wanderlust City, WL 45678</p>
+        </div>
+      </>
+    ),
   },
 ];
 
-export default function PrivacyClient() {
-  const [activeId, setActiveId] = useState(SECTIONS[0].id);
-  const [openIds, setOpenIds] = useState<Set<string>>(new Set([SECTIONS[0].id]));
-  const [progress, setProgress] = useState(0);
-  const [navOpen, setNavOpen] = useState(false);
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-  const articleRef = useRef<HTMLDivElement | null>(null);
+export default function PrivacyPolicyPage() {
+  const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
 
-  // Scroll-spy + reading progress
+  // ScrollSpy functionality
   useEffect(() => {
     const handleScroll = () => {
-      const article = articleRef.current;
-      if (!article) return;
-      const rect = article.getBoundingClientRect();
-      const total = article.scrollHeight - window.innerHeight;
-      const scrolled = Math.min(
-        Math.max(-rect.top, 0),
-        Math.max(total, 1)
-      );
-      setProgress(Math.min(100, Math.round((scrolled / Math.max(total, 1)) * 100)));
-    };
+      let currentActiveId = activeSection;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id);
+      for (const section of SECTIONS) {
+        const el = document.getElementById(section.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // If the section is near the top of the viewport
+          if (rect.top <= 150 && rect.bottom >= 150) {
+            currentActiveId = section.id;
           }
-        });
-      },
-      { rootMargin: "-15% 0px -70% 0px", threshold: 0 }
-    );
+        }
+      }
 
-    SECTIONS.forEach((s) => {
-      const el = sectionRefs.current[s.id];
-      if (el) observer.observe(el);
-    });
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      observer.disconnect();
+      if (currentActiveId !== activeSection) {
+        setActiveSection(currentActiveId);
+      }
     };
-  }, []);
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeSection]);
 
   const scrollToSection = (id: string) => {
-    setOpenIds((prev) => new Set(prev).add(id));
-    setNavOpen(false);
-    requestAnimationFrame(() => {
-      sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    const el = document.getElementById(id);
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
   };
-
-  const toggleSection = (id: string) => {
-    setOpenIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const expandAll = () => setOpenIds(new Set(SECTIONS.map((s) => s.id)));
-  const collapseAll = () => setOpenIds(new Set());
 
   return (
-    <div className="min-h-screen bg-white text-brand-darkest font-sans">
-      {/* Reading progress rail */}
-      <div className="fixed top-0 left-0 right-0 h-1 z-50 bg-brand-lightest/40">
-        <div
-          className="h-full bg-gradient-to-r from-brand-darkest via-brand-dark to-brand-medium transition-all duration-150"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+    <div className="min-h-screen bg-[#F4F1EA] font-body text-slate-800">
 
-      {/* Floating mobile trail button */}
-      <button
-        onClick={() => setNavOpen(true)}
-        className="lg:hidden fixed bottom-6 right-6 z-[150] flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-brand-dark text-white shadow-lg active:scale-[0.98] transition-all"
-      >
-        <MapIcon className="w-4 h-4" />
-        <span className="text-xs font-semibold">Route map</span>
-      </button>
+      {/* Hero Header */}
+      <header className="bg-[#1A3C34] relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#A9B388] via-transparent to-transparent pointer-events-none" />
 
-      {/* Mobile trail drawer */}
-      {navOpen && (
-        <div className="lg:hidden fixed inset-0 z-[150] bg-brand-darkest/40" onClick={() => setNavOpen(false)}>
-          <div
-            className="absolute top-0 right-0 h-full w-72 max-w-[85%] bg-white shadow-2xl p-5 overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-lg font-semibold mb-4">The route</p>
-            <TrailNav
-              activeId={activeId}
-              onSelect={scrollToSection}
-              progress={progress}
-              compact
-            />
-          </div>
-        </div>
-      )}
+        {/* Breadcrumb Navigation */}
+        <nav aria-label="Breadcrumb" className="relative z-10 mx-auto max-w-7xl px-5 pt-6 sm:px-8 text-xs text-white/70">
+          <ol className="flex items-center gap-1.5">
+            <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
+            <ChevronRight className="h-3 w-3" />
+            <li className="font-medium text-white">Privacy Policy</li>
+          </ol>
+        </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-brand-primary text-white">
-        <div className="absolute inset-0 opacity-15 pointer-events-none">
-          <MountainSkyline className="w-full h-full object-cover" />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-12 pb-20 sm:pt-16 sm:pb-28">
-          {/* Breadcrumb Navigation */}
-          <nav className="flex items-center gap-2 text-xs sm:text-sm text-brand-lightest/80 mb-6" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-white transition-colors">
-              Home
-            </Link>
-            <svg viewBox="0 0 24 24" className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="font-semibold text-white">Privacy Policy</span>
-          </nav>
-
-          <p className="font-mono text-xs tracking-[0.2em] uppercase text-brand-lightest mb-4">
-            Ref. TC-PP-2026 &middot; Effective 16 July 2026
-          </p>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.05] max-w-2xl">
-            Our commitment to safeguarding your travel data.
+        <div className="max-w-5xl mx-auto relative z-10 text-center py-12 sm:py-16">
+          <p className="text-[#A9B388] text-sm font-bold tracking-widest uppercase mb-3">Legal Information</p>
+          <h1 className="text-3xl sm:text-5xl font-display font-semibold text-white mb-4">
+            Privacy Policy
           </h1>
-          <p className="mt-5 max-w-xl text-brand-lightest text-base sm:text-lg">
-            Understand how we collect, handle, and secure your email, phone, and booking info. Ten sections mapping out your privacy rights.
+          <p className="text-white/80 max-w-2xl mx-auto text-sm sm:text-base">
+            How we collect, use, and protect your personal information at Travel Carvers. Last updated: July 2026.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3 text-sm">
-            <Pill label="10 sections" />
-            <Pill label="~5 min read" />
-            <Pill label="GDPR & Data Protection Compliant" />
-          </div>
         </div>
-        <svg
-          className="absolute bottom-0 left-0 w-full h-10 sm:h-14"
-          viewBox="0 0 1440 60"
-          preserveAspectRatio="none"
-        >
-          <path d="M0,32 C240,60 480,0 720,20 C960,40 1200,10 1440,30 L1440,60 L0,60 Z" fill="#ffffff" />
-        </svg>
-      </section>
+      </header>
 
-      {/* Body */}
-      <main className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-16 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-10 lg:gap-14">
-        {/* Desktop trail sidebar */}
-        <aside className="hidden lg:block">
-          <div className="sticky top-24">
-            <p className="text-lg font-semibold mb-1">The route</p>
-            <p className="text-sm text-secondary-sage mb-5">
-              Trace your way through the policy.
-            </p>
-            <TrailNav activeId={activeId} onSelect={scrollToSection} progress={progress} />
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-12 flex flex-col lg:flex-row gap-10">
 
-            <div className="mt-8 rounded-xl border border-brand-light/50 p-4 bg-brand-tint-subtle">
-              <p className="text-xs uppercase tracking-wide text-secondary-sage mb-1">Need help?</p>
-              <p className="text-sm text-brand-dark font-medium">privacy@travelcarvers.com</p>
-              <p className="text-sm text-secondary-sage">+91 98765 43210</p>
-            </div>
+        {/* Interactive Sidebar (Desktop) */}
+        <aside className="hidden lg:block w-72 shrink-0">
+          <div className="sticky top-28 bg-white rounded-2xl border border-[#A9B388]/30 shadow-sm p-5">
+            <h3 className="text-sm font-bold text-[#1A3C34] uppercase tracking-wider mb-4 pb-4 border-b border-slate-100">
+              Table of Contents
+            </h3>
+            <nav className="flex flex-col gap-1">
+              {SECTIONS.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => scrollToSection(section.id)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-all ${activeSection === section.id
+                      ? 'bg-[#1A3C34]/5 text-[#1A3C34] font-semibold'
+                      : 'text-slate-500 hover:text-[#1A3C34] hover:bg-slate-50'
+                    }`}
+                >
+                  <span className={activeSection === section.id ? 'text-[#5F7A5F]' : 'text-slate-400'}>
+                    {section.icon}
+                  </span>
+                  {section.title}
+                  {activeSection === section.id && (
+                    <ChevronRight className="w-4 h-4 ml-auto text-[#5F7A5F]" />
+                  )}
+                </button>
+              ))}
+            </nav>
           </div>
         </aside>
 
-        {/* Articles */}
-        <div ref={articleRef}>
-          <div className="flex items-center justify-between mb-6 text-sm">
-            <p className="text-secondary-sage">
-              Reading{" "}
-              <span className="font-semibold text-brand-dark">{progress}%</span>
-            </p>
-            <div className="flex gap-3">
-              <button onClick={expandAll} className="text-brand-dark hover:underline underline-offset-4">
-                Expand all
-              </button>
-              <span className="text-brand-light">/</span>
-              <button onClick={collapseAll} className="text-brand-dark hover:underline underline-offset-4">
-                Collapse all
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-5">
-            {SECTIONS.map((section, idx) => {
-              const isOpen = openIds.has(section.id);
-              return (
-                <article
-                  key={section.id}
-                  id={section.id}
-                  ref={(el) => {
-                    sectionRefs.current[section.id] = el;
-                  }}
-                  className="scroll-mt-24 rounded-2xl border border-brand-light/40 bg-white shadow-[0_1px_2px_rgba(27,77,27,0.05)] overflow-hidden"
-                >
-                  <button
-                    onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-start sm:items-center justify-between gap-4 text-left px-5 sm:px-7 py-5"
-                  >
-                    <div className="flex items-start sm:items-center gap-4">
-                      <span className="flex-none w-9 h-9 rounded-full bg-brand-lightest text-brand-darkest font-semibold text-sm flex items-center justify-center">
-                        {String(idx + 1).padStart(2, "0")}
-                      </span>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-bold">{section.title.replace(/^\d+\.\s/, "")}</h2>
-                        <p className="text-xs uppercase tracking-[0.14em] text-secondary-sage mt-0.5">
-                          {section.waypoint}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronIcon
-                      className={`flex-none w-5 h-5 text-secondary-sage transition-transform duration-300 ${isOpen ? "rotate-180" : ""
-                        }`}
-                    />
-                  </button>
-
-                  <div
-                    className={`grid transition-all duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                      }`}
-                  >
-                    <div className="overflow-hidden">
-                      <div className="px-5 sm:px-7 pb-6 sm:pb-8">
-                        {section.intro && (
-                          <p className="text-brand-dark mb-4 leading-relaxed">{section.intro}</p>
-                        )}
-
-                        {section.notice && (
-                          <div
-                            className={`mb-5 rounded-lg px-4 py-3 text-sm flex gap-3 ${section.notice.kind === "warning"
-                              ? "bg-brand-darkest text-white"
-                              : "bg-brand-lightest/50 text-brand-darkest"
-                              }`}
-                          >
-                            <span className="flex-none mt-0.5">
-                              {section.notice.kind === "warning" ? (
-                                <FlagIcon className="w-4 h-4" />
-                              ) : (
-                                <InfoIcon className="w-4 h-4" />
-                              )}
-                            </span>
-                            <p>{section.notice.text}</p>
-                          </div>
-                        )}
-
-                        <dl className="space-y-3">
-                          {section.clauses.map((c) => (
-                            <div key={c.label} className="flex gap-3">
-                              <dt className="flex-none font-mono text-xs text-accent-light pt-0.5 w-9">
-                                {c.label}
-                              </dt>
-                              <dd className="text-[15px] leading-relaxed text-brand-darkest/90">
-                                {c.body}
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-
-          {/* Acceptance */}
-          <div className="mt-10 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 px-6 sm:px-8 py-7 sm:py-8">
-            <p className="text-xl sm:text-2xl font-bold mb-2 text-brand-darkest">Confirm Your Privacy Choices</p>
-            <p className="text-slate-600 text-sm mb-5 max-w-xl">
-              By continuing to use our booking services, you acknowledge that your information is handled in accordance with this Privacy Policy.
-            </p>
-            <div className="text-sm font-semibold text-brand-dark">
-              Travel Carvers &mdash; Grooving Your Journey Safely.
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-/* ---------------- Trail navigation (signature element) ---------------- */
-
-function TrailNav({
-  activeId,
-  onSelect,
-  progress,
-  compact,
-}: {
-  activeId: string;
-  onSelect: (id: string) => void;
-  progress: number;
-  compact?: boolean;
-}) {
-  return (
-    <nav className="relative pl-6">
-      <div className="absolute left-[7px] top-1 bottom-1 w-[2px] bg-brand-lightest rounded-full" />
-      <div
-        className="absolute left-[7px] top-1 w-[2px] bg-gradient-to-b from-brand-darkest to-brand-medium rounded-full transition-all duration-300"
-        style={{ height: `${progress}%` }}
-      />
-      <ul className={compact ? "space-y-4" : "space-y-3.5"}>
-        {SECTIONS.map((s) => {
-          const active = s.id === activeId;
-          return (
-            <li key={s.id} className="relative">
-              <span
-                className={`absolute -left-6 top-1.5 w-3 h-3 rounded-full border-2 transition-colors ${active
-                  ? "bg-brand-darkest border-brand-darkest"
-                  : "bg-white border-brand-light"
-                  }`}
-              />
+        {/* Mobile TOC (Dropdown style fallback) */}
+        <div className="lg:hidden bg-white p-4 rounded-xl border border-[#A9B388]/30 shadow-sm mb-4">
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Jump to section:</h3>
+          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+            {SECTIONS.map((section) => (
               <button
-                onClick={() => onSelect(s.id)}
-                className={`text-left text-sm leading-snug transition-colors ${active ? "text-brand-darkest font-semibold" : "text-secondary-sage hover:text-brand-dark"
+                key={section.id}
+                onClick={() => scrollToSection(section.id)}
+                className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-medium border transition-colors ${activeSection === section.id
+                    ? 'bg-[#1A3C34] border-[#1A3C34] text-white'
+                    : 'bg-white border-slate-200 text-slate-600'
                   }`}
               >
-                {s.title.replace(/^\d+\.\s/, "")}
-                <span className="block text-[11px] uppercase tracking-[0.12em] text-brand-light">
-                  {s.waypoint}
-                </span>
+                {section.title}
               </button>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
-  );
-}
+            ))}
+          </div>
+        </div>
 
-/* ---------------- Small presentational pieces ---------------- */
+        {/* Privacy Content */}
+        <main className="flex-1 max-w-4xl bg-white rounded-2xl border border-[#A9B388]/30 shadow-sm p-6 sm:p-10">
+          <div className="space-y-12">
+            {SECTIONS.map((section) => (
+              <section
+                key={section.id}
+                id={section.id}
+                className="scroll-mt-28"
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1A3C34]/5 text-[#1A3C34]">
+                    {section.icon}
+                  </div>
+                  <h2 className="text-2xl font-display font-semibold text-[#1A3C34]">
+                    {section.title}
+                  </h2>
+                </div>
+                <div className="text-slate-600 leading-relaxed space-y-4">
+                  {section.content}
+                </div>
 
-function Pill({ label }: { label: string }) {
-  return (
-    <span className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-white/10 border border-white/25 text-white/90">
-      {label}
-    </span>
-  );
-}
+                {/* Divider */}
+                {section.id !== SECTIONS[SECTIONS.length - 1].id && (
+                  <hr className="mt-12 border-slate-100" />
+                )}
+              </section>
+            ))}
+          </div>
 
-/* ---------------- Inline icons (no external deps) ---------------- */
-
-function TrailMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" className={className} fill="none">
-      <circle cx="20" cy="20" r="19" stroke="var(--logo-forest)" strokeWidth="1.5" />
-      <path
-        d="M9 26c3-6 6-3 9-9s6-3 9 3"
-        stroke="var(--logo-sage)"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <circle cx="9" cy="26" r="1.6" fill="var(--logo-forest-dark)" />
-      <circle cx="27" cy="20" r="1.6" fill="var(--logo-forest-dark)" />
-    </svg>
-  );
-}
-
-function MountainSkyline({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 800 300" className={className} preserveAspectRatio="xMidYMax slice">
-      <path d="M0,300 L120,140 L220,230 L340,90 L470,230 L600,120 L720,220 L800,180 L800,300 Z" fill="var(--logo-pastel)" />
-      <path d="M0,300 L180,210 L300,260 L420,170 L560,260 L680,190 L800,240 L800,300 Z" fill="var(--logo-sage-light)" />
-    </svg>
-  );
-}
-
-function ChevronIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function InfoIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 11v5" strokeLinecap="round" />
-      <circle cx="12" cy="8" r="0.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function FlagIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M5 3v18" strokeLinecap="round" />
-      <path d="M5 4h11l-2 3 2 3H5" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function MapIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M9 4l-6 2v14l6-2 6 2 6-2V4l-6 2-6-2z" strokeLinejoin="round" />
-      <path d="M9 4v14M15 6v14" />
-    </svg>
+          <div className="mt-12 p-6 bg-[#F4F1EA] rounded-xl border border-[#A9B388]/30 text-center">
+            <h4 className="font-semibold text-[#1A3C34] mb-2">Have concerns about your data?</h4>
+            <p className="text-sm text-slate-600 mb-4">
+              Our privacy team is available to help you exercise your data rights or answer any questions.
+            </p>
+            <a
+              href="mailto:privacy@travelcarvers.com"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#5F7A5F] hover:bg-[#1A3C34] text-white text-sm font-semibold transition-colors"
+            >
+              Contact Privacy Team
+            </a>
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }
