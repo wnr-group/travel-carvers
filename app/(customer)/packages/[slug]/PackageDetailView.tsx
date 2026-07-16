@@ -298,7 +298,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
           </main>
 
           {/* Booking sidebar */}
-          <aside className="hidden lg:block">
+          <aside className="hidden lg:block sticky top-28 self-start">
             <BookingCard startingPrice={detail.startingPrice} guests={guests} setGuests={setGuests} total={total} onBookNow={() => setIsLeadFormOpen(true)} />
           </aside>
         </div>
@@ -708,7 +708,7 @@ function SimilarPackages({ similar }: { similar: SimilarPackageVM[] }) {
 
 function BookingCard({ startingPrice, guests, setGuests, total, onBookNow }: { startingPrice: number | null; guests: number; setGuests: (n: number) => void; total: number; onBookNow: () => void }) {
   return (
-    <div className="ticket sticky top-24 rounded-2xl border border-brand-light bg-white p-6 shadow-[0_20px_50px_-20px_rgba(27,77,27,0.3)]">
+    <div className="ticket rounded-2xl border border-brand-light bg-white p-6 shadow-[0_20px_50px_-20px_rgba(27,77,27,0.3)]">
       <p className="text-xs uppercase tracking-wide text-slate-600">Starting from</p>
       <p className="mt-1 font-mono text-3xl font-semibold text-brand-darkest">
         {startingPrice != null ? money(startingPrice) : "On request"}
