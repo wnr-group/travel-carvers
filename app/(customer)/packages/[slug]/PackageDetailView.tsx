@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LeadFormModal } from "@/components/customer/LeadFormModal";
+import ShareButtons from "@/components/customer/ShareButtons";
 import type {
   PackageDetail,
   ItineraryDayVM,
@@ -280,6 +281,9 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
 
       {/* Body: content + sidebar */}
       <div ref={sectionRef} className="mx-auto max-w-7xl scroll-mt-24 px-5 py-10 sm:px-8">
+        <div className="lg:hidden mb-2">
+          <ShareButtons title={detail.title} slug={detail.slug} />
+        </div>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_340px]">
           <main className="min-w-0">
             {activeTab === "overview" && (
@@ -299,7 +303,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
 
           {/* Booking sidebar */}
           <aside className="hidden lg:block sticky top-28 self-start">
-            <BookingCard startingPrice={detail.startingPrice} guests={guests} setGuests={setGuests} total={total} onBookNow={() => setIsLeadFormOpen(true)} />
+            <BookingCard startingPrice={detail.startingPrice} guests={guests} setGuests={setGuests} total={total} onBookNow={() => setIsLeadFormOpen(true)} title={detail.title} slug={detail.slug} />
           </aside>
         </div>
       </div>
@@ -706,7 +710,7 @@ function SimilarPackages({ similar }: { similar: SimilarPackageVM[] }) {
 
 /* --------------------------- Booking sidebar -------------------------- */
 
-function BookingCard({ startingPrice, guests, setGuests, total, onBookNow }: { startingPrice: number | null; guests: number; setGuests: (n: number) => void; total: number; onBookNow: () => void }) {
+function BookingCard({ startingPrice, guests, setGuests, total, onBookNow, title, slug }: { startingPrice: number | null; guests: number; setGuests: (n: number) => void; total: number; onBookNow: () => void; title: string; slug: string }) {
   return (
     <div className="ticket rounded-2xl border border-brand-light bg-white p-6 shadow-[0_20px_50px_-20px_rgba(27,77,27,0.3)]">
       <p className="text-xs uppercase tracking-wide text-slate-600">Starting from</p>
@@ -760,6 +764,8 @@ function BookingCard({ startingPrice, guests, setGuests, total, onBookNow }: { s
           <Icon.plane className="h-3.5 w-3.5 text-brand-medium" /> Reserve now, pay later available
         </p>
       </div>
+
+      <ShareButtons title={title} slug={slug} />
     </div>
   );
 }
