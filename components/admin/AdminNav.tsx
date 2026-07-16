@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Package, FolderTree, Mail, 
   Settings, Home, MessageSquare, X,
-  Award
+  Award, Quote
 } from 'lucide-react';
 import LogoutButton from '@/app/(admin)/admin/dashboard/LogoutButton';
 
@@ -15,6 +15,7 @@ const navItems = [
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
   { href: '/admin/leads', label: 'Leads', icon: Mail },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare },
+  { href: '/admin/testimonials', label: 'Testimonials', icon: Quote },
   { href: '/admin/trust-badges', label: 'Trust Badges', icon: Award },
   { href: '/admin/homepage', label: 'Homepage', icon: Home },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
