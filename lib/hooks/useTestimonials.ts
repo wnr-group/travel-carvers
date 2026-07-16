@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from '@/lib/api/fetchJson';
+import { supabase } from '@/lib/supabase/client';
 
 export const TESTIMONIALS_KEY = ['testimonials'] as const;
 
@@ -66,5 +67,22 @@ export function useDeleteTestimonial() {
       queryClient.invalidateQueries({ queryKey: TESTIMONIALS_KEY });
     },
     onError: (error) => console.error('[testimonial deletion mutation]', error),
+  });
+}
+
+export function usePublicTestimonials() {
+  return useQuery({
+    queryKey: ['testimonials', 'public'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Testimonial[];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

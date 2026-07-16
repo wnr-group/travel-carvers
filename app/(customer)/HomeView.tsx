@@ -16,6 +16,7 @@ import {
 } from '@/components/customer/HomeCategoryCard';
 import { useFeaturedPackages, useTrendingPackages } from '@/lib/hooks/usePackages';
 import { useCategories } from '@/lib/hooks/useCategories';
+import TestimonialsCarousel from '@/components/customer/TestimonialsCarousel';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import EmptyState from '@/components/ui/EmptyState';
 import { Globe, Package, HeartHandshake, Smile, Compass, MapPin } from 'lucide-react';
@@ -156,6 +157,8 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+
+
   return (
     <div className="w-full overflow-y-auto">
       {/* Hero Section with Carousel and Map */}
@@ -265,11 +268,10 @@ export default function Home() {
             ].map((stat, i) => (
               <div
                 key={i}
-                className={`${stat.bgColor} rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer border-2 ${stat.borderColor} ${
-                  activeCard === i
+                className={`${stat.bgColor} rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer border-2 ${stat.borderColor} ${activeCard === i
                     ? 'scale-110 -translate-y-2 shadow-2xl ring-4 ring-offset-2'
                     : ''
-                }`}
+                  }`}
                 style={{
                   animation: `float 3s ease-in-out infinite`,
                   animationDelay: `${i * 0.3}s`,
@@ -279,9 +281,8 @@ export default function Home() {
                 }}
               >
                 <div className="flex flex-col items-center text-center">
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${stat.iconGradient} flex items-center justify-center mb-4 transition-transform duration-500 hover:rotate-12 hover:scale-125 ${
-                    activeCard === i ? 'rotate-12 scale-125' : ''
-                  }`}>
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${stat.iconGradient} flex items-center justify-center mb-4 transition-transform duration-500 hover:rotate-12 hover:scale-125 ${activeCard === i ? 'rotate-12 scale-125' : ''
+                    }`}>
                     <stat.icon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className={`text-3xl font-bold ${stat.textColor} mb-2`}>{stat.val}</h3>
@@ -302,238 +303,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section - Auto Scrolling */}
+      {/* Testimonials Section */}
       <section className="py-20 bg-[#FEFAE0] overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16 scroll-animate opacity-0 translate-y-10">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#1A3C34] mb-4">
-              What Our Travelers Say
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Real experiences from real adventurers
-            </p>
-          </div>
-        </div>
-
-        {/* Infinite Scrolling Container */}
-        <div className="relative">
-          <div className="flex overflow-hidden">
-            <div className="flex animate-scroll hover:pause-animation">
-              {/* Testimonials Set 1 */}
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">S</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-[#5F6F52] text-lg">Sarah Johnson</h4>
-                      <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">&quot;The Taj Mahal tour was absolutely breathtaking! Travel Carvers made everything seamless.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-[#A9B388]/20">
-                    <span className="text-xs text-[#A9B388] font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">R</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-white text-lg">Rajesh Kumar</h4>
-                      <div className="text-yellow-300 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-white/95 text-sm leading-relaxed">&quot;Best travel experience ever! The Kerala backwaters trip was magical. Professional guides!&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-white/30">
-                    <span className="text-xs text-white/80 font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">E</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-[#5F6F52] text-lg">Emily Chen</h4>
-                      <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">&quot;Tokyo and Bali in one trip - dream come true! Such attention to detail and care!&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-[#A9B388]/20">
-                    <span className="text-xs text-[#A9B388] font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-[#A9B388] to-[#5F6F52] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#5F6F52] text-xl font-bold shadow-lg">M</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-white text-lg">Michael Brown</h4>
-                      <div className="text-yellow-300 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-white/95 text-sm leading-relaxed">&quot;Dubai luxury package exceeded expectations! Everything was first class from start to finish.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-white/30">
-                    <span className="text-xs text-white/80 font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">P</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-[#5F6F52] text-lg">Priya Sharma</h4>
-                      <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">&quot;Honeymoon in Maldives was perfect! Romantic setup and amazing service throughout.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-[#A9B388]/20">
-                    <span className="text-xs text-[#A9B388] font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">A</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-white text-lg">Alex Martinez</h4>
-                      <div className="text-yellow-300 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-white/95 text-sm leading-relaxed">&quot;Switzerland Alps tour was stunning! Beautiful scenery and excellent accommodation.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-white/30">
-                    <span className="text-xs text-white/80 font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">L</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-[#5F6F52] text-lg">Lisa Wang</h4>
-                      <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">&quot;Goa beach escape was so much fun! Great party scene and relaxing beaches.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-[#A9B388]/20">
-                    <span className="text-xs text-[#A9B388] font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-[#A9B388] to-[#5F6F52] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#5F6F52] text-xl font-bold shadow-lg">D</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-white text-lg">David Lee</h4>
-                      <div className="text-yellow-300 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-white/95 text-sm leading-relaxed">&quot;Group tour to Europe was fantastic! Made so many friends and memories.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-white/30">
-                    <span className="text-xs text-white/80 font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">N</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-[#5F6F52] text-lg">Nina Patel</h4>
-                      <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">&quot;Bali was paradise! Beautiful temples, beaches, and incredible food experiences.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-[#A9B388]/20">
-                    <span className="text-xs text-[#A9B388] font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">J</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-white text-lg">James Wilson</h4>
-                      <div className="text-yellow-300 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-white/95 text-sm leading-relaxed">&quot;Stranger trip to Thailand was amazing! Met wonderful people and had incredible adventures.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-white/30">
-                    <span className="text-xs text-white/80 font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Duplicate Set for Seamless Loop */}
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">S</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-[#5F6F52] text-lg">Sarah Johnson</h4>
-                      <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">&quot;The Taj Mahal tour was absolutely breathtaking! Travel Carvers made everything seamless.&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-[#A9B388]/20">
-                    <span className="text-xs text-[#A9B388] font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-[#A9B388] to-[#A9B388] rounded-2xl shadow-xl p-6 h-full hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center text-[#A9B388] text-xl font-bold shadow-lg">R</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-white text-lg">Rajesh Kumar</h4>
-                      <div className="text-yellow-300 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-white/95 text-sm leading-relaxed">&quot;Best travel experience ever! The Kerala backwaters trip was magical. Professional guides!&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-white/30">
-                    <span className="text-xs text-white/80 font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 w-96 mx-4">
-                <div className="relative bg-gradient-to-br from-white to-[#FEFAE0] rounded-2xl shadow-xl p-6 h-full border-2 border-[#A9B388]/20 hover:shadow-2xl transition-all">
-                  <div className="flex items-center mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">E</div>
-                    <div className="ml-3">
-                      <h4 className="font-bold text-[#5F6F52] text-lg">Emily Chen</h4>
-                      <div className="text-yellow-500 text-base">⭐⭐⭐⭐⭐</div>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">&quot;Tokyo and Bali in one trip - dream come true! Such attention to detail and care!&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-[#A9B388]/20">
-                    <span className="text-xs text-[#A9B388] font-semibold">VERIFIED TRAVELER</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Gradient Overlays */}
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#FEFAE0] to-transparent pointer-events-none"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#FEFAE0] to-transparent pointer-events-none"></div>
+          <TestimonialsCarousel />
         </div>
       </section>
 
