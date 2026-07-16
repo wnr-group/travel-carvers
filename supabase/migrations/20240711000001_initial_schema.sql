@@ -332,6 +332,41 @@ CREATE TRIGGER update_leads_updated_at BEFORE UPDATE ON leads
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
+-- 12. TESTIMONIALS
+-- =====================================================
+
+CREATE TABLE testimonials (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  customer_name VARCHAR(255) NOT NULL,
+  customer_role VARCHAR(255),
+  review_text TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  photo_url TEXT,
+  is_featured BOOLEAN DEFAULT false,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
+
+-- service_role policy
+CREATE POLICY "Enable all operations for service_role on testimonials"
+ON testimonials FOR ALL
+TO service_role
+USING (true);
+
+-- public read policy
+CREATE POLICY "Public can read testimonials"
+ON testimonials FOR SELECT
+TO anon, authenticated
+USING (true);
+
+CREATE TRIGGER update_testimonials_updated_at BEFORE UPDATE ON testimonials
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
 -- MIGRATION COMPLETE
 -- =====================================================
 
