@@ -11,3 +11,4 @@ export const metadata: Metadata = createMetadata({
 export default function TermsPage() {
   return <TermsClient />;
 }
+
