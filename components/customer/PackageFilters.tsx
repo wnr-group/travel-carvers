@@ -132,8 +132,8 @@ export function PackageFilters({
           <div
             className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-brand-medium"
             style={{
-              left: `${(filters.priceMin / PRICE_CEIL) * 100}%`,
-              right: `${100 - (filters.priceMax / PRICE_CEIL) * 100}%`,
+              left: `${((filters.priceMin - PRICE_FLOOR) / (PRICE_CEIL - PRICE_FLOOR)) * 100}%`,
+              right: `${100 - ((filters.priceMax - PRICE_FLOOR) / (PRICE_CEIL - PRICE_FLOOR)) * 100}%`,
             }}
           />
           <input

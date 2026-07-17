@@ -12,6 +12,11 @@ const nextConfig = {
         hostname: 'picsum.photos',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
+        pathname: '/**',
+      },
       // Supabase Storage (public buckets) — production project + local dev instance.
       {
         protocol: 'https',

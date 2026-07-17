@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPublishedPackages } from '@/lib/api/public/packages';
+import { getActiveCategories } from '@/lib/api/public/categories';
 
 /* ============================== Types ============================== */
 
@@ -22,6 +23,7 @@ export interface TravelPackage {
   image: string;
   location: string;
   createdAt: number; // epoch ms, for "newest" ordering
+  isFeatured: boolean;
 }
 
 export interface CategoryOption {
@@ -41,9 +43,9 @@ export interface Filters {
 
 /* ============================ Constants ============================= */
 
-export const PRICE_FLOOR = 0;
+export const PRICE_FLOOR = 5000;
 // INR ceiling that comfortably covers the catalogue; the slider filters within this range.
-export const PRICE_CEIL = 500000;
+export const PRICE_CEIL = 100000;
 
 export const DIFFICULTIES: Difficulty[] = ['Easy', 'Moderate', 'Challenging'];
 
@@ -54,20 +56,35 @@ const DIFFICULTY_MAP: Record<string, Difficulty> = {
 };
 
 export const DURATION_RANGES: Record<string, { label: string; min: number; max: number }> = {
-  any: { label: 'Any duration', min: 0, max: Infinity },
-  '1-3': { label: '1 - 3 days', min: 1, max: 3 },
-  '4-7': { label: '4 - 7 days', min: 4, max: 7 },
-  '8-14': { label: '8 - 14 days', min: 8, max: 14 },
-  '15+': { label: '15+ days', min: 15, max: Infinity },
+  any: { label: 'Any', min: 0, max: Infinity },
+  '1-3': { label: '1-3 days', min: 1, max: 3 },
+  '4-7': { label: '4-7 days', min: 4, max: 7 },
+  '8+': { label: '8+ days', min: 8, max: Infinity },
 };
 
 export const SORT_OPTIONS: Record<string, { label: string; compare: (a: TravelPackage, b: TravelPackage) => number }> = {
-  newest: { label: 'Newest first', compare: (a, b) => b.createdAt - a.createdAt },
-  popular: { label: 'Most popular', compare: (a, b) => b.popularity - a.popularity },
-  'price-asc': { label: 'Price: low to high', compare: (a, b) => a.price - b.price },
-  'price-desc': { label: 'Price: high to low', compare: (a, b) => b.price - a.price },
-  'duration-asc': { label: 'Duration: shortest first', compare: (a, b) => a.durationDays - b.durationDays },
-  'duration-desc': { label: 'Duration: longest first', compare: (a, b) => b.durationDays - a.durationDays },
+  'best-match': { 
+    label: 'Best Match', 
+    compare: (a, b) => {
+      if (a.isFeatured !== b.isFeatured) {
+        return a.isFeatured ? -1 : 1;
+      }
+      return b.createdAt - a.createdAt;
+    } 
+  },
+  'rating-desc': { 
+    label: 'Highest Rated', 
+    compare: (a, b) => {
+      if (b.rating !== a.rating) {
+        return b.rating - a.rating;
+      }
+      return b.createdAt - a.createdAt;
+    } 
+  },
+  'price-asc': { label: 'Price: Low to High', compare: (a, b) => a.price - b.price },
+  'price-desc': { label: 'Price: High to Low', compare: (a, b) => b.price - a.price },
+  'newest': { label: 'Newest First', compare: (a, b) => b.createdAt - a.createdAt },
+  'popular': { label: 'Most Popular', compare: (a, b) => b.popularity - a.popularity },
 };
 
 export const DEFAULT_FILTERS: Filters = {
@@ -77,7 +94,7 @@ export const DEFAULT_FILTERS: Filters = {
   priceMin: PRICE_FLOOR,
   priceMax: PRICE_CEIL,
   duration: 'any',
-  sort: 'newest',
+  sort: 'best-match',
 };
 
 /* ============================== Mapping ============================== */
@@ -93,9 +110,11 @@ interface RawListPackage {
   difficulty_level?: string | null;
   destination_name?: string | null;
   view_count?: number | null;
+  is_featured?: boolean | null;
   created_at?: string | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
   package_categories?: { categories: { name: string; slug: string } | null }[] | null;
+  reviews?: { rating: number; is_approved: boolean | null }[] | null;
 }
 
 function mapPackage(row: RawListPackage): TravelPackage {
@@ -106,6 +125,11 @@ function mapPackage(row: RawListPackage): TravelPackage {
     .filter((name): name is string => Boolean(name));
   const price = row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
 
+  // Calculate average rating
+  const approvedReviews = (row.reviews ?? []).filter((r) => r.is_approved === true);
+  const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
+  const rating = approvedReviews.length > 0 ? totalRating / approvedReviews.length : 0;
+
   return {
     id: row.id,
     name: row.title,
@@ -115,11 +139,12 @@ function mapPackage(row: RawListPackage): TravelPackage {
     price: Number.isNaN(price) ? 0 : price,
     durationDays: row.duration_days ?? 0,
     difficulty: row.difficulty_level ? DIFFICULTY_MAP[row.difficulty_level] ?? null : null,
-    rating: 0,
+    rating,
     popularity: row.view_count ?? 0,
     image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
     location: row.destination_name ?? '',
     createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+    isFeatured: !!row.is_featured,
   };
 }
 
@@ -189,7 +214,7 @@ export function usePackageFilters() {
   // ---- Fetch real published packages ----
   const { data, isPending } = useQuery({
     queryKey: ['packages', 'published', 'list'],
-    queryFn: getPublishedPackages,
+    queryFn: () => getPublishedPackages(),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -198,12 +223,21 @@ export function usePackageFilters() {
     [data],
   );
 
-  // ---- Category options derived from the actual catalogue ----
+  // ---- Fetch categories from DB (independent of the package list) ----
+  const { data: dbCategoriesData, isError: categoriesError } = useQuery({
+    queryKey: ['categories', 'active', 'list'],
+    queryFn: getActiveCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const availableCategories = useMemo<CategoryOption[]>(() => {
-    const names = new Set<string>();
-    packages.forEach((pkg) => pkg.categories.forEach((c) => names.add(c)));
-    return [...names].sort().map((name) => ({ value: name, label: name }));
-  }, [packages]);
+    // On error or empty result we simply render no category checkboxes; packages are never blocked on this.
+    if (categoriesError || !dbCategoriesData) return [];
+    return dbCategoriesData.map((c) => ({
+      value: c.name,
+      label: c.name,
+    }));
+  }, [dbCategoriesData, categoriesError]);
 
   // ---- Hydrate filters from the URL on mount ----
   useEffect(() => {
@@ -246,14 +280,15 @@ export function usePackageFilters() {
       }
       if (filters.categories.length && !pkg.categories.some((c) => filters.categories.includes(c))) return false;
       if (filters.difficulty.length && (!pkg.difficulty || !filters.difficulty.includes(pkg.difficulty))) return false;
-      if (pkg.price < filters.priceMin || pkg.price > filters.priceMax) return false;
+      // "On request" packages (price 0) are exempt from the price-range filter so they always surface.
+      if (pkg.price !== 0 && (pkg.price < filters.priceMin || pkg.price > filters.priceMax)) return false;
       if (pkg.durationDays < range.min || pkg.durationDays > range.max) return false;
       return true;
     });
   }, [packages, filters]);
 
   const sortedPackages = useMemo(() => {
-    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS.newest;
+    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS['best-match'];
     return [...filteredPackages].sort(sorter.compare);
   }, [filteredPackages, filters.sort]);
 
@@ -296,7 +331,8 @@ export function usePackageFilters() {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
+    // Sort is not a filter (it isn't counted in countActiveFilters), so preserve the current selection.
+    setFilters((prev) => ({ ...DEFAULT_FILTERS, sort: prev.sort }));
     setSearchInput('');
   }, []);
 

@@ -4,9 +4,6 @@ import { supabase } from '@/lib/supabase/client';
  * Public, client-safe package reads.
  */
 
-/**
- * Get all published packages (Public)
- */
 export async function getPublishedPackages() {
   const { data, error } = await supabase
     .from('packages')
@@ -22,6 +19,10 @@ export async function getPublishedPackages() {
           name,
           slug
         )
+      ),
+      reviews (
+        rating,
+        is_approved
       )
     `)
     .eq('status', 'published')

@@ -1,20 +1,8 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPackageReviews, createReview } from '@/lib/api/reviews';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createReview } from '@/lib/api/reviews';
 import { toast } from 'sonner';
-
-/**
- * Get reviews for a package
- */
-export function usePackageReviews(packageId: string) {
-  return useQuery({
-    queryKey: ['reviews', 'package', packageId],
-    queryFn: () => getPackageReviews(packageId),
-    enabled: !!packageId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
 
 /**
  * Submit review (mutation hook)
@@ -23,13 +11,21 @@ export function useCreateReview(packageId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createReview,
-    onSuccess: (data) => {
-      if (data.is_approved) {
-        toast.success('Thank you! Your review is live.');
-      } else {
-        toast.success('Thank you! Your review is under review and will be published soon.');
-      }
+    mutationFn: ({
+      reviewData,
+      photoUrls,
+    }: {
+      reviewData: {
+        package_id: string;
+        reviewer_name: string;
+        reviewer_email: string;
+        rating: number;
+        review_text: string;
+      };
+      photoUrls?: string[];
+    }) => createReview(reviewData, photoUrls),
+    onSuccess: () => {
+      toast.success('Thank you! Your review is under moderation and will be published once approved.');
       // Invalidate package reviews query
       queryClient.invalidateQueries({ queryKey: ['reviews', 'package', packageId] });
     },

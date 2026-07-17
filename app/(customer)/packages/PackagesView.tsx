@@ -5,12 +5,10 @@ import {
   Search,
   SlidersHorizontal,
   X,
-  ChevronDown,
   Compass,
 } from 'lucide-react';
 import {
   usePackageFilters,
-  SORT_OPTIONS,
   PRICE_FLOOR,
   PRICE_CEIL,
   DURATION_RANGES,
@@ -18,6 +16,7 @@ import {
 } from '@/lib/hooks/usePackageFilters';
 import { PackageCard } from '@/components/customer/PackageCard';
 import { PackageFilters, Chip } from '@/components/customer/PackageFilters';
+import { PackageSorting } from '@/components/customer/PackageSorting';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
 
@@ -114,26 +113,7 @@ export default function PackageSearchFilter() {
               )}
             </p>
 
-            <div className="flex items-center gap-2">
-              <label htmlFor="sort" className="text-sm text-brand-medium">
-                Sort by
-              </label>
-              <div className="relative">
-                <select
-                  id="sort"
-                  value={filters.sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="appearance-none rounded-full border border-brand-light bg-[var(--background)] py-2 pl-4 pr-9 text-sm font-medium text-brand-darkest outline-none transition focus:border-brand-medium focus:ring-2 focus:ring-brand-light/60"
-                >
-                  {Object.entries(SORT_OPTIONS).map(([key, opt]) => (
-                    <option key={key} value={key}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-medium" />
-              </div>
-            </div>
+            <PackageSorting value={filters.sort} onChange={setSort} />
           </div>
 
           {/* Active filter chips */}
@@ -155,7 +135,7 @@ export default function PackageSearchFilter() {
                 />
               )}
               {filters.duration !== 'any' && (
-                <Chip label={DURATION_RANGES[filters.duration].label} onRemove={() => setDuration('any')} />
+                <Chip label={(DURATION_RANGES[filters.duration] ?? DURATION_RANGES.any).label} onRemove={() => setDuration('any')} />
               )}
               <button
                 type="button"
