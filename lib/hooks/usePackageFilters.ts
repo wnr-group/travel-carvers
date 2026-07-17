@@ -214,7 +214,7 @@ export function usePackageFilters() {
   // ---- Fetch real published packages ----
   const { data, isPending } = useQuery({
     queryKey: ['packages', 'published', 'list'],
-    queryFn: getPublishedPackages,
+    queryFn: () => getPublishedPackages(),
     staleTime: 5 * 60 * 1000,
   });
 

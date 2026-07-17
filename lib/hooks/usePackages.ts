@@ -15,7 +15,7 @@ import {
 export function usePackages() {
   return useQuery({
     queryKey: ['packages', 'published'],
-    queryFn: getPublishedPackages,
+    queryFn: () => getPublishedPackages(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
