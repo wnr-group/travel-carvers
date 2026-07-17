@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPublishedPackages } from '@/lib/api/public/packages';
+import { getActiveCategories } from '@/lib/api/public/categories';
 
 /* ============================== Types ============================== */
 
@@ -42,9 +43,9 @@ export interface Filters {
 
 /* ============================ Constants ============================= */
 
-export const PRICE_FLOOR = 0;
+export const PRICE_FLOOR = 5000;
 // INR ceiling that comfortably covers the catalogue; the slider filters within this range.
-export const PRICE_CEIL = 500000;
+export const PRICE_CEIL = 100000;
 
 export const DIFFICULTIES: Difficulty[] = ['Easy', 'Moderate', 'Challenging'];
 
@@ -55,11 +56,10 @@ const DIFFICULTY_MAP: Record<string, Difficulty> = {
 };
 
 export const DURATION_RANGES: Record<string, { label: string; min: number; max: number }> = {
-  any: { label: 'Any duration', min: 0, max: Infinity },
-  '1-3': { label: '1 - 3 days', min: 1, max: 3 },
-  '4-7': { label: '4 - 7 days', min: 4, max: 7 },
-  '8-14': { label: '8 - 14 days', min: 8, max: 14 },
-  '15+': { label: '15+ days', min: 15, max: Infinity },
+  any: { label: 'Any', min: 0, max: Infinity },
+  '1-3': { label: '1-3 days', min: 1, max: 3 },
+  '4-7': { label: '4-7 days', min: 4, max: 7 },
+  '8+': { label: '8+ days', min: 8, max: Infinity },
 };
 
 export const SORT_OPTIONS: Record<string, { label: string; compare: (a: TravelPackage, b: TravelPackage) => number }> = {
@@ -223,12 +223,20 @@ export function usePackageFilters() {
     [data],
   );
 
-  // ---- Category options derived from the actual catalogue ----
+  // ---- Fetch categories from DB ----
+  const { data: dbCategoriesData } = useQuery({
+    queryKey: ['categories', 'active', 'list'],
+    queryFn: getActiveCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const availableCategories = useMemo<CategoryOption[]>(() => {
-    const names = new Set<string>();
-    packages.forEach((pkg) => pkg.categories.forEach((c) => names.add(c)));
-    return [...names].sort().map((name) => ({ value: name, label: name }));
-  }, [packages]);
+    if (!dbCategoriesData) return [];
+    return dbCategoriesData.map((c) => ({
+      value: c.name,
+      label: c.name,
+    }));
+  }, [dbCategoriesData]);
 
   // ---- Hydrate filters from the URL on mount ----
   useEffect(() => {
@@ -330,7 +338,7 @@ export function usePackageFilters() {
     setFilters,
     searchInput,
     setSearchInput,
-    loading: isPending || !hydrated,
+    loading: isPending || !hydrated || !dbCategoriesData,
     hydrated,
     sortedPackages,
     totalCount: packages.length,

@@ -4,11 +4,16 @@ import { supabase } from '@/lib/supabase/client';
  * Public, client-safe package reads.
  */
 
-/**
- * Get all published packages (Public)
- */
-export async function getPublishedPackages() {
-  const { data, error } = await supabase
+export interface GetPublishedPackagesFilters {
+  priceMin?: number;
+  priceMax?: number;
+  duration?: string;
+  categories?: string[];
+  search?: string;
+}
+
+export async function getPublishedPackages(filters?: GetPublishedPackagesFilters) {
+  let query = supabase
     .from('packages')
     .select(`
       *,
@@ -28,10 +33,43 @@ export async function getPublishedPackages() {
         is_approved
       )
     `)
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
+    .eq('status', 'published');
 
+  if (filters) {
+    if (filters.priceMin !== undefined) {
+      query = query.gte('price_adult', filters.priceMin);
+    }
+    if (filters.priceMax !== undefined) {
+      query = query.lte('price_adult', filters.priceMax);
+    }
+    if (filters.duration && filters.duration !== 'any') {
+      if (filters.duration === '1-3') {
+        query = query.gte('duration_days', 1).lte('duration_days', 3);
+      } else if (filters.duration === '4-7') {
+        query = query.gte('duration_days', 4).lte('duration_days', 7);
+      } else if (filters.duration === '8+') {
+        query = query.gte('duration_days', 8);
+      }
+    }
+    if (filters.search) {
+      query = query.or(`title.ilike.%${filters.search}%,short_description.ilike.%${filters.search}%,destination_name.ilike.%${filters.search}%`);
+    }
+  }
+
+  query = query.order('created_at', { ascending: false });
+
+  let { data, error } = await query;
   if (error) throw error;
+
+  if (filters?.categories && filters.categories.length > 0) {
+    data = data?.filter((row: any) => {
+      const rowCategories = (row.package_categories ?? [])
+        .map((pc: any) => pc.categories?.name)
+        .filter(Boolean);
+      return rowCategories.some((c: string) => filters.categories?.includes(c));
+    }) ?? null;
+  }
+
   return data;
 }
 
