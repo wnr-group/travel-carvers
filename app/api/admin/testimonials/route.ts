@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { toApiError } from '@/lib/api/errors';
+import { testimonialSchema } from '@/lib/validations/testimonial.schema';
 
 export async function GET() {
   const denied = await requireAdmin();
@@ -29,37 +30,18 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const {
-      customer_name,
-      customer_role,
-      review_text,
-      rating,
-      photo_url,
-      is_featured,
-      display_order,
-    } = body;
+    const parsed = testimonialSchema.safeParse(body);
 
-    if (!customer_name) {
-      return NextResponse.json({ error: 'Customer name is required.' }, { status: 400 });
-    }
-    if (!review_text) {
-      return NextResponse.json({ error: 'Review text is required.' }, { status: 400 });
-    }
-    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: 'Rating must be an integer between 1 and 5.' }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? 'Invalid testimonial data.' },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabaseAdmin
       .from('testimonials')
-      .insert({
-        customer_name,
-        customer_role: customer_role || '',
-        review_text,
-        rating,
-        photo_url: photo_url || null,
-        is_featured: !!is_featured,
-        display_order: typeof display_order === 'number' ? display_order : 0,
-      })
+      .insert(parsed.data)
       .select()
       .single();
 

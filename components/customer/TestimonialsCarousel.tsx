@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, useMotionValue, useMotionValueEvent, animate, useInView, Variants } from 'framer-motion';
-import { Star, Quote, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
+import { motion, useMotionValue, animate, useInView, Variants } from 'framer-motion';
+import { Star, ChevronRight, ChevronLeft } from 'lucide-react';
 import { usePublicTestimonials } from '@/lib/hooks/useTestimonials';
 
 const FALLBACK_TESTIMONIALS = [
@@ -13,6 +14,10 @@ const FALLBACK_TESTIMONIALS = [
   { id: 'fb5', customer_name: 'Priya Sharma', customer_role: 'Verified Traveler', review_text: 'Our Maldives honeymoon was perfect! Romantic setup, wonderful beach villas, and amazing service throughout.', rating: 5, photo_url: null },
   { id: 'fb6', customer_name: 'Alex Martinez', customer_role: 'Verified Explorer', review_text: 'Switzerland Alps tour was stunning! Beautiful scenery, crisp mountain air, and excellent accommodation.', rating: 5, photo_url: null },
 ];
+
+// Milliseconds each testimonial stays on screen before auto-advancing.
+const AUTOPLAY_INTERVAL = 5000;
+const CARD_GAP = 20; // gap-5 in tailwind
 
 const sectionVariants: Variants = {
   hidden: { opacity: 0 },
@@ -30,12 +35,14 @@ const fadeUp: Variants = {
 export default function TestimonialsCarousel() {
   const testimonialsQuery = usePublicTestimonials();
 
-  const [singleSetWidth, setSingleSetWidth] = useState(0);
+  const [step, setStep] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
-  const [isHovering, setIsHovering] = useState(false);
+  // Pauses autoplay while the user hovers/focuses anywhere in the carousel.
+  const [isPaused, setIsPaused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [prevCount, setPrevCount] = useState(0);
 
   const x = useMotionValue(0);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
@@ -44,100 +51,61 @@ export default function TestimonialsCarousel() {
   const featuredTestimonials = dbTestimonials.filter((t) => t.is_featured);
   const testimonialsToUse = featuredTestimonials.length > 0 ? featuredTestimonials : dbTestimonials;
   const activeTestimonials = testimonialsToUse.length > 0 ? testimonialsToUse : FALLBACK_TESTIMONIALS;
+  const count = activeTestimonials.length;
 
+  // Keep the active index valid when the testimonials array changes
+  // (e.g. DB data replaces the fallback) instead of hard-jumping to 0.
+  // Adjusting state during render is the idiomatic pattern here — no effect,
+  // no cascading re-render.
+  if (count !== prevCount) {
+    setPrevCount(count);
+    setActiveIndex((prev) => Math.min(prev, Math.max(0, count - 1)));
+  }
+
+  // Measure the discrete slide step (card width + gap) so we can translate
+  // by whole testimonials. Re-measures on resize and when the data changes.
   useEffect(() => {
-    const updateWidth = () => {
-      if (cardRef.current && activeTestimonials.length > 0) {
-        const cardWidth = cardRef.current.offsetWidth;
-        const gap = 20; // gap-5 in tailwind
-        const setWidth = (cardWidth + gap) * activeTestimonials.length;
-        setSingleSetWidth(setWidth);
-        x.jump(-setWidth);
+    const measure = () => {
+      if (cardRef.current) {
+        setStep(cardRef.current.offsetWidth + CARD_GAP);
       }
     };
-    updateWidth();
-    // Add small delay to ensure cards are fully rendered
-    const timer = setTimeout(updateWidth, 100);
-
-    window.addEventListener('resize', updateWidth);
+    measure();
+    // Small delay so cards are fully laid out before measuring.
+    const timer = setTimeout(measure, 100);
+    window.addEventListener('resize', measure);
     return () => {
-      window.removeEventListener('resize', updateWidth);
+      window.removeEventListener('resize', measure);
       clearTimeout(timer);
     };
-  }, [x, activeTestimonials.length]);
+  }, [count]);
 
-  // Auto-play loop
+  // Slide to the active testimonial whenever the index or measured step changes.
   useEffect(() => {
-    if (singleSetWidth === 0 || isHovering) return;
+    const controls = animate(x, -activeIndex * step, { type: 'spring', stiffness: 220, damping: 28 });
+    return () => controls.stop();
+  }, [activeIndex, step, x]);
 
-    let animationFrameId: number;
-    const speed = 0.8; // speed of auto-play
+  // Discrete autoplay: dwell on each testimonial for AUTOPLAY_INTERVAL, then
+  // advance. Depending on activeIndex means any manual navigation resets the
+  // timer, so a click is never instantly overridden. Paused on hover/focus.
+  useEffect(() => {
+    if (isPaused || count <= 1) return;
+    const timer = setTimeout(() => {
+      setActiveIndex((prev) => (prev + 1) % count);
+    }, AUTOPLAY_INTERVAL);
+    return () => clearTimeout(timer);
+  }, [activeIndex, isPaused, count]);
 
-    const play = () => {
-      const currentX = x.get();
-      x.set(currentX - speed);
-      animationFrameId = requestAnimationFrame(play);
-    };
-
-    animationFrameId = requestAnimationFrame(play);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [singleSetWidth, isHovering, x]);
-
-  useMotionValueEvent(x, "change", (latestX) => {
-    if (singleSetWidth === 0 || activeTestimonials.length === 0) return;
-    if (latestX > -singleSetWidth) {
-      x.jump(latestX - singleSetWidth);
-      return;
-    } else if (latestX <= -singleSetWidth * 2) {
-      x.jump(latestX + singleSetWidth);
-      return;
-    }
-    const positionWithinSet = Math.abs(latestX + singleSetWidth);
-    const scrollPercentage = positionWithinSet / singleSetWidth;
-    let index = Math.round(scrollPercentage * activeTestimonials.length);
-    if (index >= activeTestimonials.length) index = 0;
-    setActiveIndex(index);
-  });
-
-  const handleDotClick = (index: number) => {
-    if (singleSetWidth === 0 || activeTestimonials.length === 0) return;
-    const itemWidth = singleSetWidth / activeTestimonials.length;
-    const targetX = -singleSetWidth - (index * itemWidth);
-    animate(x, targetX, { type: "spring", stiffness: 220, damping: 28 });
-  };
-
-  const handlePrev = () => {
-    if (singleSetWidth === 0 || activeTestimonials.length === 0) return;
-    const cardWidth = singleSetWidth / activeTestimonials.length;
-    const currentX = x.get();
-    const nearestIndex = Math.round(Math.abs(currentX + singleSetWidth) / cardWidth);
-    const targetIndex = (nearestIndex - 1 + activeTestimonials.length) % activeTestimonials.length;
-    const targetX = -singleSetWidth - (targetIndex * cardWidth);
-    animate(x, targetX, { type: "spring", stiffness: 220, damping: 28 });
-  };
-
-  const handleNext = () => {
-    if (singleSetWidth === 0 || activeTestimonials.length === 0) return;
-    const cardWidth = singleSetWidth / activeTestimonials.length;
-    const currentX = x.get();
-    const nearestIndex = Math.round(Math.abs(currentX + singleSetWidth) / cardWidth);
-    const targetIndex = (nearestIndex + 1) % activeTestimonials.length;
-    const targetX = -singleSetWidth - (targetIndex * cardWidth);
-    animate(x, targetX, { type: "spring", stiffness: 220, damping: 28 });
-  };
-
-
-
-  // Triple the items to make the infinite loop layout complete
-  const extendedTestimonials = [...activeTestimonials, ...activeTestimonials, ...activeTestimonials];
+  const handleDotClick = (index: number) => setActiveIndex(index);
+  const handlePrev = () => setActiveIndex((prev) => (prev - 1 + count) % count);
+  const handleNext = () => setActiveIndex((prev) => (prev + 1) % count);
 
   return (
     <section
       ref={sectionRef}
       className="w-full py-12 overflow-hidden relative"
     >
-
-
       <div className="max-w-7xl mx-auto px-6">
         {/* Header section with Framer entrance */}
         <motion.div
@@ -171,12 +139,20 @@ export default function TestimonialsCarousel() {
         </motion.div>
       </div>
 
-      {/* Carousel Wrapper - Full Screen Width */}
-      <div className="relative group/carousel w-full overflow-hidden px-4 md:px-12">
+      {/* Carousel Wrapper - Full Screen Width.
+          Pause handlers live here so hovering/focusing the whole component
+          (arrows included) pauses autoplay. */}
+      <div
+        className="relative group/carousel w-full overflow-hidden px-4 md:px-12"
+        onPointerEnter={() => setIsPaused(true)}
+        onPointerLeave={() => setIsPaused(false)}
+        onFocusCapture={() => setIsPaused(true)}
+        onBlurCapture={() => setIsPaused(false)}
+      >
         {/* Left Arrow Button */}
         <button
           onClick={handlePrev}
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-3 bg-[#1A3C34] hover:bg-[#A9B388] text-white hover:text-[#1A3C34] rounded-full shadow-2xl border border-white/10 transition-all cursor-pointer flex items-center justify-center focus:outline-none scale-100 hover:scale-110"
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-3 bg-[#1A3C34] hover:bg-[#A9B388] text-white hover:text-[#1A3C34] rounded-full shadow-2xl border border-white/10 transition-all cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 scale-100 hover:scale-110"
           aria-label="Previous testimonial"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -188,16 +164,12 @@ export default function TestimonialsCarousel() {
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
           transition={{ duration: 0.7, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
           className="overflow-hidden select-none py-3"
-          onPointerEnter={() => setIsHovering(true)}
-          onPointerLeave={() => setIsHovering(false)}
         >
           <motion.div
-            drag="x"
-            dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
             style={{ x }}
             className="flex gap-5 w-max"
           >
-            {extendedTestimonials.map((t, idx) => {
+            {activeTestimonials.map((t, idx) => {
               const isLightCard = idx % 2 === 0;
               const isDarkerGreen = idx % 4 === 3;
 
@@ -213,7 +185,7 @@ export default function TestimonialsCarousel() {
                   >
                     {/* Stars */}
                     <div className="text-yellow-500 text-base mb-3">
-                      {Array.from({ length: t.rating }).map((_, i) => '⭐').join('')}
+                      {'⭐'.repeat(t.rating)}
                     </div>
 
                     {/* Review text */}
@@ -222,7 +194,14 @@ export default function TestimonialsCarousel() {
                     {/* Divider and profile */}
                     <div className="mt-auto pt-4 border-t border-[#A9B388]/20 flex items-center">
                       {t.photo_url ? (
-                        <img src={t.photo_url} alt={t.customer_name} className="w-12 h-12 object-cover rounded-full shadow-md" draggable="false" />
+                        <Image
+                          src={t.photo_url}
+                          alt={`${t.customer_name} profile photo`}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 object-cover rounded-full shadow-md"
+                          draggable={false}
+                        />
                       ) : (
                         <div className="w-12 h-12 bg-gradient-to-br from-[#1A3C34] to-[#A9B388] rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">
                           {(t.customer_name && t.customer_name[0]) || 'T'}
@@ -251,7 +230,7 @@ export default function TestimonialsCarousel() {
                   >
                     {/* Stars */}
                     <div className="text-yellow-300 text-base mb-3">
-                      {Array.from({ length: t.rating }).map((_, i) => '⭐').join('')}
+                      {'⭐'.repeat(t.rating)}
                     </div>
 
                     {/* Review text */}
@@ -260,7 +239,14 @@ export default function TestimonialsCarousel() {
                     {/* Divider and profile */}
                     <div className="mt-auto pt-4 border-t border-white/30 flex items-center">
                       {t.photo_url ? (
-                        <img src={t.photo_url} alt={t.customer_name} className="w-12 h-12 object-cover rounded-full shadow-md" draggable="false" />
+                        <Image
+                          src={t.photo_url}
+                          alt={`${t.customer_name} profile photo`}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 object-cover rounded-full shadow-md"
+                          draggable={false}
+                        />
                       ) : (
                         <div className={`w-12 h-12 ${initialsBg} rounded-full flex items-center justify-center text-lg font-bold shadow-md`}>
                           {(t.customer_name && t.customer_name[0]) || 'T'}
@@ -281,7 +267,7 @@ export default function TestimonialsCarousel() {
         {/* Right Arrow Button */}
         <button
           onClick={handleNext}
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-3 bg-[#1A3C34] hover:bg-[#A9B388] text-white hover:text-[#1A3C34] rounded-full shadow-2xl border border-white/10 transition-all cursor-pointer flex items-center justify-center focus:outline-none scale-100 hover:scale-110"
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-3 bg-[#1A3C34] hover:bg-[#A9B388] text-white hover:text-[#1A3C34] rounded-full shadow-2xl border border-white/10 transition-all cursor-pointer flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 scale-100 hover:scale-110"
           aria-label="Next testimonial"
         >
           <ChevronRight className="w-5 h-5" />
@@ -299,16 +285,16 @@ export default function TestimonialsCarousel() {
           <button
             key={idx}
             onClick={() => handleDotClick(idx)}
-            className="relative h-1.5 rounded-full transition-all duration-300 overflow-hidden cursor-pointer"
+            className="relative h-1.5 rounded-full transition-all duration-300 overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2"
             style={{
               width: activeIndex === idx ? 28 : 8,
               background: activeIndex === idx ? "#1A3C34" : "rgba(26, 60, 52, 0.2)",
             }}
             aria-label={`Go to slide ${idx + 1}`}
+            aria-current={activeIndex === idx}
           />
         ))}
       </motion.div>
     </section>
   );
 }
-

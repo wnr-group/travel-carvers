@@ -160,10 +160,21 @@ function durationLabel(days?: number | null, nights?: number | null): string {
   return nights ? `${days} Days / ${nights} Nights` : `${days} Days`;
 }
 
-function formatReviewDate(iso: string): string {
+export function formatReviewDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+}
+
+/** Maps a raw review row (from the DB) to the view-model the UI renders. */
+export function toReviewVM(review: RawReview): ReviewVM {
+  return {
+    name: review.reviewer_name,
+    rating: review.rating,
+    date: formatReviewDate(review.created_at),
+    text: review.review_text,
+    images: (review.review_photos ?? []).map((p) => p.image_url).filter(Boolean),
+  };
 }
 
 /* --------------------------------- Mapper ---------------------------------- */
@@ -226,15 +237,7 @@ export function toPackageDetail(
   }
 
   // Reviews + aggregate rating.
-  const reviews: ReviewVM[] = rawReviews.map((review) => ({
-    name: review.reviewer_name,
-    rating: review.rating,
-    date: formatReviewDate(review.created_at),
-    text: review.review_text,
-    images: (review.review_photos ?? [])
-      .map((p) => p.image_url)
-      .filter(Boolean),
-  }));
+  const reviews: ReviewVM[] = rawReviews.map(toReviewVM);
   const reviewCount = reviews.length;
   const rating =
     reviewCount > 0

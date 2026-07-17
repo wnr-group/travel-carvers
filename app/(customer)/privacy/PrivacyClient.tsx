@@ -132,8 +132,8 @@ const SECTIONS = [
         <ul className="list-disc pl-5 space-y-2 text-slate-700">
           <li>The right to request access to the data we have collected about you.</li>
           <li>The right to request that we correct any inaccurate or incomplete personal information.</li>
-          <li>The right to request the deletion of your personal data ("Right to be Forgotten").</li>
-          <li>The right to opt-out of marketing communications at any time by clicking the "unsubscribe" link in our emails.</li>
+          <li>The right to request the deletion of your personal data (&quot;Right to be Forgotten&quot;).</li>
+          <li>The right to opt-out of marketing communications at any time by clicking the &quot;unsubscribe&quot; link in our emails.</li>
         </ul>
       </>
     ),
@@ -157,7 +157,7 @@ const SECTIONS = [
     content: (
       <>
         <p>
-          We may update this privacy notice from time to time. The updated version will be indicated by an updated "Revised" date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.
+          We may update this privacy notice from time to time. The updated version will be indicated by an updated &quot;Revised&quot; date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.
         </p>
       </>
     ),
@@ -173,7 +173,7 @@ const SECTIONS = [
         </p>
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
           <p className="font-medium text-slate-800">Travel Carvers Privacy Team</p>
-          <p className="text-slate-600 mt-1">Email: <a href="mailto:privacy@travelcarvers.com" className="text-[#5F7A5F] hover:underline">privacy@travelcarvers.com</a></p>
+          <p className="text-slate-600 mt-1">Email: <a href="mailto:privacy@travelcarvers.com" className="text-brand-medium hover:underline">privacy@travelcarvers.com</a></p>
           <p className="text-slate-600">Address: 123 Explorer Way, Wanderlust City, WL 45678</p>
         </div>
       </>
@@ -184,30 +184,28 @@ const SECTIONS = [
 export default function PrivacyPolicyPage() {
   const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
 
-  // ScrollSpy functionality
+  // ScrollSpy: highlight the section currently in view via IntersectionObserver.
   useEffect(() => {
-    const handleScroll = () => {
-      let currentActiveId = activeSection;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length === 0) return;
+        // Pick the section closest to the top of the viewport.
+        const topmost = visible.reduce((a, b) =>
+          a.boundingClientRect.top < b.boundingClientRect.top ? a : b
+        );
+        setActiveSection(topmost.target.id);
+      },
+      { rootMargin: '-100px 0px -60% 0px', threshold: 0 }
+    );
 
-      for (const section of SECTIONS) {
-        const el = document.getElementById(section.id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          // If the section is near the top of the viewport
-          if (rect.top <= 150 && rect.bottom >= 150) {
-            currentActiveId = section.id;
-          }
-        }
-      }
+    const elements = SECTIONS.map((section) =>
+      document.getElementById(section.id)
+    ).filter((el): el is HTMLElement => el !== null);
+    elements.forEach((el) => observer.observe(el));
 
-      if (currentActiveId !== activeSection) {
-        setActiveSection(currentActiveId);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [activeSection]);
+    return () => observer.disconnect();
+  }, []);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -218,11 +216,11 @@ export default function PrivacyPolicyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA] font-body text-slate-800">
+    <div className="min-h-screen bg-brand-tint-subtle text-slate-800">
 
       {/* Hero Header */}
-      <header className="bg-[#1A3C34] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#A9B388] via-transparent to-transparent pointer-events-none" />
+      <header className="bg-brand-darkest relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-light via-transparent to-transparent pointer-events-none" />
 
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="relative z-10 mx-auto max-w-7xl px-5 pt-6 sm:px-8 text-xs text-white/70">
@@ -234,8 +232,8 @@ export default function PrivacyPolicyPage() {
         </nav>
 
         <div className="max-w-5xl mx-auto relative z-10 text-center py-12 sm:py-16">
-          <p className="text-[#A9B388] text-sm font-bold tracking-widest uppercase mb-3">Legal Information</p>
-          <h1 className="text-3xl sm:text-5xl font-display font-semibold text-white mb-4">
+          <p className="text-brand-light text-sm font-bold tracking-widest uppercase mb-3">Legal Information</p>
+          <h1 className="text-3xl sm:text-5xl font-semibold text-white mb-4">
             Privacy Policy
           </h1>
           <p className="text-white/80 max-w-2xl mx-auto text-sm sm:text-base">
@@ -249,8 +247,8 @@ export default function PrivacyPolicyPage() {
 
         {/* Interactive Sidebar (Desktop) */}
         <aside className="hidden lg:block w-72 shrink-0">
-          <div className="sticky top-28 bg-white rounded-2xl border border-[#A9B388]/30 shadow-sm p-5">
-            <h3 className="text-sm font-bold text-[#1A3C34] uppercase tracking-wider mb-4 pb-4 border-b border-slate-100">
+          <div className="sticky top-28 bg-white rounded-2xl border border-brand-light/30 shadow-sm p-5">
+            <h3 className="text-sm font-bold text-brand-darkest uppercase tracking-wider mb-4 pb-4 border-b border-slate-100">
               Table of Contents
             </h3>
             <nav className="flex flex-col gap-1">
@@ -259,16 +257,16 @@ export default function PrivacyPolicyPage() {
                   key={section.id}
                   onClick={() => scrollToSection(section.id)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-all ${activeSection === section.id
-                      ? 'bg-[#1A3C34]/5 text-[#1A3C34] font-semibold'
-                      : 'text-slate-500 hover:text-[#1A3C34] hover:bg-slate-50'
+                      ? 'bg-brand-darkest/5 text-brand-darkest font-semibold'
+                      : 'text-slate-500 hover:text-brand-darkest hover:bg-slate-50'
                     }`}
                 >
-                  <span className={activeSection === section.id ? 'text-[#5F7A5F]' : 'text-slate-400'}>
+                  <span className={activeSection === section.id ? 'text-brand-medium' : 'text-slate-400'}>
                     {section.icon}
                   </span>
                   {section.title}
                   {activeSection === section.id && (
-                    <ChevronRight className="w-4 h-4 ml-auto text-[#5F7A5F]" />
+                    <ChevronRight className="w-4 h-4 ml-auto text-brand-medium" />
                   )}
                 </button>
               ))}
@@ -277,15 +275,15 @@ export default function PrivacyPolicyPage() {
         </aside>
 
         {/* Mobile TOC (Dropdown style fallback) */}
-        <div className="lg:hidden bg-white p-4 rounded-xl border border-[#A9B388]/30 shadow-sm mb-4">
+        <div className="lg:hidden bg-white p-4 rounded-xl border border-brand-light/30 shadow-sm mb-4">
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Jump to section:</h3>
-          <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+          <div className="flex overflow-x-auto gap-2 pb-2">
             {SECTIONS.map((section) => (
               <button
                 key={section.id}
                 onClick={() => scrollToSection(section.id)}
                 className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-medium border transition-colors ${activeSection === section.id
-                    ? 'bg-[#1A3C34] border-[#1A3C34] text-white'
+                    ? 'bg-brand-darkest border-brand-darkest text-white'
                     : 'bg-white border-slate-200 text-slate-600'
                   }`}
               >
@@ -296,7 +294,7 @@ export default function PrivacyPolicyPage() {
         </div>
 
         {/* Privacy Content */}
-        <main className="flex-1 max-w-4xl bg-white rounded-2xl border border-[#A9B388]/30 shadow-sm p-6 sm:p-10">
+        <div className="flex-1 max-w-4xl bg-white rounded-2xl border border-brand-light/30 shadow-sm p-6 sm:p-10">
           <div className="space-y-12">
             {SECTIONS.map((section) => (
               <section
@@ -305,10 +303,10 @@ export default function PrivacyPolicyPage() {
                 className="scroll-mt-28"
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1A3C34]/5 text-[#1A3C34]">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-brand-darkest/5 text-brand-darkest">
                     {section.icon}
                   </div>
-                  <h2 className="text-2xl font-display font-semibold text-[#1A3C34]">
+                  <h2 className="text-2xl font-semibold text-brand-darkest">
                     {section.title}
                   </h2>
                 </div>
@@ -324,19 +322,19 @@ export default function PrivacyPolicyPage() {
             ))}
           </div>
 
-          <div className="mt-12 p-6 bg-[#F4F1EA] rounded-xl border border-[#A9B388]/30 text-center">
-            <h4 className="font-semibold text-[#1A3C34] mb-2">Have concerns about your data?</h4>
+          <div className="mt-12 p-6 bg-brand-lightest rounded-xl border border-brand-light/30 text-center">
+            <h4 className="font-semibold text-brand-darkest mb-2">Have concerns about your data?</h4>
             <p className="text-sm text-slate-600 mb-4">
               Our privacy team is available to help you exercise your data rights or answer any questions.
             </p>
             <a
               href="mailto:privacy@travelcarvers.com"
-              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-[#5F7A5F] hover:bg-[#1A3C34] text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-brand-medium hover:bg-brand-darkest text-white text-sm font-semibold transition-colors"
             >
               Contact Privacy Team
             </a>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );

@@ -223,20 +223,21 @@ export function usePackageFilters() {
     [data],
   );
 
-  // ---- Fetch categories from DB ----
-  const { data: dbCategoriesData } = useQuery({
+  // ---- Fetch categories from DB (independent of the package list) ----
+  const { data: dbCategoriesData, isError: categoriesError } = useQuery({
     queryKey: ['categories', 'active', 'list'],
     queryFn: getActiveCategories,
     staleTime: 5 * 60 * 1000,
   });
 
   const availableCategories = useMemo<CategoryOption[]>(() => {
-    if (!dbCategoriesData) return [];
+    // On error or empty result we simply render no category checkboxes; packages are never blocked on this.
+    if (categoriesError || !dbCategoriesData) return [];
     return dbCategoriesData.map((c) => ({
       value: c.name,
       label: c.name,
     }));
-  }, [dbCategoriesData]);
+  }, [dbCategoriesData, categoriesError]);
 
   // ---- Hydrate filters from the URL on mount ----
   useEffect(() => {
@@ -279,7 +280,8 @@ export function usePackageFilters() {
       }
       if (filters.categories.length && !pkg.categories.some((c) => filters.categories.includes(c))) return false;
       if (filters.difficulty.length && (!pkg.difficulty || !filters.difficulty.includes(pkg.difficulty))) return false;
-      if (pkg.price < filters.priceMin || pkg.price > filters.priceMax) return false;
+      // "On request" packages (price 0) are exempt from the price-range filter so they always surface.
+      if (pkg.price !== 0 && (pkg.price < filters.priceMin || pkg.price > filters.priceMax)) return false;
       if (pkg.durationDays < range.min || pkg.durationDays > range.max) return false;
       return true;
     });
@@ -329,7 +331,8 @@ export function usePackageFilters() {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
+    // Sort is not a filter (it isn't counted in countActiveFilters), so preserve the current selection.
+    setFilters((prev) => ({ ...DEFAULT_FILTERS, sort: prev.sort }));
     setSearchInput('');
   }, []);
 
@@ -338,7 +341,7 @@ export function usePackageFilters() {
     setFilters,
     searchInput,
     setSearchInput,
-    loading: isPending || !hydrated || !dbCategoriesData,
+    loading: isPending || !hydrated,
     hydrated,
     sortedPackages,
     totalCount: packages.length,

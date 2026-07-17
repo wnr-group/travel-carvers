@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Share2, Mail } from 'lucide-react';
 
 interface ShareButtonsProps {
@@ -22,19 +22,28 @@ const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function ShareButtons({ title, slug }: ShareButtonsProps) {
-  const [shareUrl, setShareUrl] = useState('');
-
-  useEffect(() => {
-    setShareUrl(window.location.href);
-  }, []);
+  // Build an absolute, shareable URL once. Prefer the configured public app URL
+  // so it is correct during SSR and first paint; fall back to the current origin.
+  const [shareUrl] = useState<string>(() => {
+    const path = `/packages/${slug}`;
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : '');
+    return base ? `${base.replace(/\/$/, '')}${path}` : path;
+  });
 
   const trackShare = (platform: string) => {
-    // Console analytics logging
-    console.log(`[Analytics] Package shared on ${platform} for package ${slug}`);
-
-    // Extensible analytics hook: In production, send beacon or custom tracking
-    if (typeof window !== 'undefined' && 'navigator' in window) {
-      // e.g. window.gtag('event', 'share', { method: platform, content_id: slug });
+    // Emit a real analytics event when a tracker is present (GA gtag or GTM
+    // dataLayer); silently no-op otherwise so this works with or without one.
+    if (typeof window === 'undefined') return;
+    const w = window as unknown as {
+      gtag?: (...args: unknown[]) => void;
+      dataLayer?: unknown[];
+    };
+    if (typeof w.gtag === 'function') {
+      w.gtag('event', 'share', { method: platform, content_type: 'package', item_id: slug });
+    } else if (Array.isArray(w.dataLayer)) {
+      w.dataLayer.push({ event: 'share', method: platform, content_type: 'package', item_id: slug });
     }
   };
 

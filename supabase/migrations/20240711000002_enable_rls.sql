@@ -68,9 +68,12 @@ CREATE POLICY "Public can read trust badges" ON trust_badges FOR SELECT TO anon 
 CREATE POLICY "Public can read site settings" ON site_settings FOR SELECT TO anon USING (true);
 CREATE POLICY "Public can read active pages" ON static_pages FOR SELECT TO anon USING (is_active = true);
 
--- Public can submit leads and reviews
+-- Public can submit leads.
 CREATE POLICY "Public can insert leads" ON leads FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "Public can insert reviews" ON reviews FOR INSERT TO anon WITH CHECK (true);
+-- NOTE: Reviews are intentionally NOT insertable by anon directly. They are
+-- created only via the createReview server action (service role), which forces
+-- moderation (is_approved = NULL) and validates photo references. A direct anon
+-- INSERT policy would let clients set is_approved = true and bypass moderation.
 
 -- review_photos policies
 CREATE POLICY "Public can read review photos" ON review_photos FOR SELECT TO anon USING (true);

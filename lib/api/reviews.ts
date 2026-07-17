@@ -1,27 +1,39 @@
 'use server';
 
-import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { checkRateLimit, clientRateKey } from '@/lib/api/rateLimit';
 import crypto from 'crypto';
 
-/**
- * Public: Get approved reviews for a package
- */
-export async function getPackageReviews(packageId: string) {
-  const { data, error } = await supabaseAdmin
-    .from('reviews')
-    .select('*')
-    .eq('package_id', packageId)
-    .eq('is_approved', true)
-    .order('created_at', { ascending: false });
+const REVIEW_BUCKET = 'review-images';
+const MAX_REVIEW_PHOTOS = 5;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-  if (error) throw error;
-  return data;
+/** Public URL prefix that legitimate review photos must start with. */
+function reviewImagePublicPrefix(): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  return `${base}/storage/v1/object/public/${REVIEW_BUCKET}/`;
 }
 
 /**
- * Public: Submit a review
- * Note: Reviews with 4-5 stars are auto-approved
+ * Verify a photo URL was produced by our own upload endpoint and extract its
+ * storage object path. Returns null for anything that does not belong to the
+ * review-images bucket, so callers can reject client-supplied foreign URLs.
+ */
+function reviewImageObjectPath(url: string): string | null {
+  const prefix = reviewImagePublicPrefix();
+  if (!url.startsWith(prefix)) return null;
+  const path = decodeURIComponent(url.slice(prefix.length));
+  if (!path || path.includes('..') || path.startsWith('/')) return null;
+  return path;
+}
+
+/**
+ * Public: Submit a review.
+ *
+ * Reviews ALWAYS enter moderation (is_approved = NULL) and are only shown
+ * publicly after an admin approves them in /admin/reviews. The client cannot
+ * influence approval. Photo URLs must reference our own review-images bucket;
+ * foreign URLs are rejected. Uploaded files are cleaned up if the insert fails.
  */
 export async function createReview(
   reviewData: {
@@ -33,22 +45,42 @@ export async function createReview(
   },
   photoUrls?: string[]
 ) {
-  // Auto-approve if 4-5 stars
-  const isApproved = reviewData.rating >= 4 ? true : null;
+  if (!checkRateLimit(await clientRateKey('review'), 5, 10 * 60 * 1000)) {
+    throw new Error('Too many submissions. Please try again in a little while.');
+  }
+
+  const urls = photoUrls ?? [];
+  if (urls.length > MAX_REVIEW_PHOTOS) {
+    throw new Error(`A maximum of ${MAX_REVIEW_PHOTOS} photos is allowed per review.`);
+  }
+
+  // Every photo URL must belong to our bucket; collect paths for rollback.
+  const objectPaths: string[] = [];
+  for (const url of urls) {
+    const path = reviewImageObjectPath(url);
+    if (!path) throw new Error('Invalid photo reference.');
+    objectPaths.push(path);
+  }
 
   const { data: review, error: reviewError } = await supabaseAdmin
     .from('reviews')
     .insert({
       ...reviewData,
-      is_approved: isApproved,
+      is_approved: null, // always pending moderation
     })
     .select()
     .single();
 
-  if (reviewError) throw reviewError;
+  if (reviewError) {
+    // Don't leave uploaded photos orphaned in storage.
+    if (objectPaths.length > 0) {
+      await supabaseAdmin.storage.from(REVIEW_BUCKET).remove(objectPaths);
+    }
+    throw reviewError;
+  }
 
-  if (photoUrls && photoUrls.length > 0) {
-    const photoRows = photoUrls.map((url) => ({
+  if (urls.length > 0) {
+    const photoRows = urls.map((url) => ({
       review_id: review.id,
       image_url: url,
     }));
@@ -56,33 +88,34 @@ export async function createReview(
       .from('review_photos')
       .insert(photoRows);
 
-    if (photosError) throw photosError;
+    if (photosError) {
+      // Roll back the review and the uploaded files to avoid partial state.
+      await supabaseAdmin.from('reviews').delete().eq('id', review.id);
+      await supabaseAdmin.storage.from(REVIEW_BUCKET).remove(objectPaths);
+      throw photosError;
+    }
   }
 
   return review;
 }
 
 /**
- * Public: Upload review photo to review-images bucket
+ * Public: Upload a single review photo to the review-images bucket.
+ * Rate-limited and restricted to <=5MB JPEG/PNG/WebP images.
  */
 export async function uploadReviewPhoto(formData: FormData): Promise<string> {
+  if (!checkRateLimit(await clientRateKey('review-upload'), 30, 10 * 60 * 1000)) {
+    throw new Error('Too many uploads. Please try again in a little while.');
+  }
+
   const file = formData.get('file') as File;
   if (!file) throw new Error('No file provided');
 
-  // Verify size and type
   if (file.size > 5 * 1024 * 1024) throw new Error('File size exceeds 5MB limit');
 
   const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-  const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
-  if (!allowedMimes.includes(file.type) && !allowedExts.includes(fileExt)) {
-    throw new Error('Unsupported image format');
-  }
-
-  const filename = `${crypto.randomUUID()}.${fileExt}`;
-
-  // Resolve content type robustly
+  // Resolve the effective content type, then require it to be an allowed image.
   let contentType = file.type;
   if (!contentType || contentType === 'application/octet-stream') {
     if (fileExt === 'webp') contentType = 'image/webp';
@@ -90,11 +123,18 @@ export async function uploadReviewPhoto(formData: FormData): Promise<string> {
     else contentType = 'image/jpeg';
   }
 
+  if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
+    throw new Error('Unsupported image format. Use JPG, PNG, or WebP.');
+  }
+
+  const safeExt = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
+  const filename = `${crypto.randomUUID()}.${safeExt}`;
+
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
   const { error } = await supabaseAdmin.storage
-    .from('review-images')
+    .from(REVIEW_BUCKET)
     .upload(filename, buffer, {
       contentType,
       upsert: false,
@@ -103,7 +143,7 @@ export async function uploadReviewPhoto(formData: FormData): Promise<string> {
   if (error) throw error;
 
   const { data: urlData } = supabaseAdmin.storage
-    .from('review-images')
+    .from(REVIEW_BUCKET)
     .getPublicUrl(filename);
 
   return urlData.publicUrl;

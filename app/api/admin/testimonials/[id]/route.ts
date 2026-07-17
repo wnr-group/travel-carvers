@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { toApiError } from '@/lib/api/errors';
+import { testimonialUpdateSchema } from '@/lib/validations/testimonial.schema';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -13,33 +14,23 @@ export async function PUT(req: Request, { params }: RouteParams) {
 
   try {
     const body = await req.json();
-    const {
-      customer_name,
-      customer_role,
-      review_text,
-      rating,
-      photo_url,
-      is_featured,
-      display_order,
-    } = body;
+    const parsed = testimonialUpdateSchema.safeParse(body);
 
-    const updateFields: Record<string, any> = {};
-    if (customer_name !== undefined) updateFields.customer_name = customer_name;
-    if (customer_role !== undefined) updateFields.customer_role = customer_role;
-    if (review_text !== undefined) updateFields.review_text = review_text;
-    if (rating !== undefined) {
-      if (typeof rating !== 'number' || rating < 1 || rating > 5) {
-        return NextResponse.json({ error: 'Rating must be an integer between 1 and 5.' }, { status: 400 });
-      }
-      updateFields.rating = rating;
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? 'Invalid testimonial data.' },
+        { status: 400 }
+      );
     }
-    if (photo_url !== undefined) updateFields.photo_url = photo_url;
-    if (is_featured !== undefined) updateFields.is_featured = !!is_featured;
-    if (display_order !== undefined) {
-      updateFields.display_order = typeof display_order === 'number' ? display_order : 0;
+
+    // Only persist fields the client actually sent (a reorder must not reset
+    // is_featured, etc.), plus the updated_at bump.
+    const updateFields: Record<string, string | number | boolean | null> = {
+      updated_at: new Date().toISOString(),
+    };
+    for (const [key, value] of Object.entries(parsed.data)) {
+      if (value !== undefined) updateFields[key] = value;
     }
-    
-    updateFields.updated_at = new Date().toISOString();
 
     const { data, error } = await supabaseAdmin
       .from('testimonials')
@@ -57,7 +48,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(req: Request, { params }: RouteParams) {
+export async function DELETE(_req: Request, { params }: RouteParams) {
   const denied = await requireAdmin();
   if (denied) return denied;
 

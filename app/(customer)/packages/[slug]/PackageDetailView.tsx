@@ -9,6 +9,7 @@ import { ReviewForm } from "@/components/customer/ReviewForm";
 import ReviewPhotos from "@/components/customer/ReviewPhotos";
 import { useQuery } from "@tanstack/react-query";
 import { getApprovedReviews } from "@/lib/api/public/reviews";
+import { toReviewVM } from "@/lib/packageDetail";
 import type {
   PackageDetail,
   ItineraryDayVM,
@@ -123,25 +124,6 @@ const Icon = {
 
 const money = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-function formatReviewDate(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
-}
-
-function mapRawReviews(rawReviews: any[]): ReviewVM[] {
-  return rawReviews.map((r) => {
-    if ("name" in r) return r as ReviewVM;
-    return {
-      name: r.reviewer_name,
-      date: formatReviewDate(r.created_at),
-      rating: r.rating,
-      text: r.review_text,
-      images: (r.review_photos ?? []).map((p: any) => p.image_url).filter(Boolean),
-    };
-  });
-}
-
 export default function PackageDetailView({ detail }: { detail: PackageDetail }) {
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("overview");
@@ -157,7 +139,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
     queryFn: () => getApprovedReviews(detail.id),
   });
 
-  const activeReviews = rawDbReviews ? mapRawReviews(rawDbReviews) : detail.reviews;
+  const activeReviews = rawDbReviews ? rawDbReviews.map(toReviewVM) : detail.reviews;
   const reviewCount = activeReviews.length;
   const rating = reviewCount > 0
     ? Math.round((activeReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount) * 10) / 10

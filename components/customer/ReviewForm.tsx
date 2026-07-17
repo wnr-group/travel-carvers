@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useCreateReview } from '@/lib/hooks/useReviews';
-import { reviewSchema, type ReviewFormData } from '@/lib/validations/review.schema';
+import { reviewSchema } from '@/lib/validations/review.schema';
 import { Star, Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { uploadReviewPhoto } from '@/lib/api/reviews';
 
@@ -22,7 +22,6 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
   const [uploading, setUploading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [isApprovedImmediately, setIsApprovedImmediately] = useState(false);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -174,7 +173,6 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
         photoUrls,
       });
 
-      setIsApprovedImmediately(rating >= 4);
       setSubmitSuccess(true);
       
       // Reset form
@@ -206,9 +204,7 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
           Review Submitted!
         </h3>
         <p className="mt-2 text-sm text-slate-800">
-          {isApprovedImmediately
-            ? 'Thank you! Your review has been automatically approved and is now live.'
-            : 'Thank you! Your review is under moderation and will be published shortly.'}
+          Thank you! Your review is under moderation and will be published once our team approves it.
         </p>
         <button
           onClick={() => setSubmitSuccess(false)}
@@ -370,6 +366,8 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
             <div className="flex flex-wrap gap-3">
               {photos.map((p, index) => (
                 <div key={index} className="relative inline-block overflow-hidden rounded-lg border border-brand-light bg-slate-50 p-1">
+                  {/* Local object-URL preview before upload — next/image cannot optimize blob: URLs. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={p.preview}
                     alt={`Preview ${index + 1}`}

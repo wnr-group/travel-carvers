@@ -135,7 +135,7 @@ export default function PackageSearchFilter() {
                 />
               )}
               {filters.duration !== 'any' && (
-                <Chip label={DURATION_RANGES[filters.duration].label} onRemove={() => setDuration('any')} />
+                <Chip label={(DURATION_RANGES[filters.duration] ?? DURATION_RANGES.any).label} onRemove={() => setDuration('any')} />
               )}
               <button
                 type="button"

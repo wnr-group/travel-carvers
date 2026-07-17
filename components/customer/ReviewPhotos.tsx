@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ReviewPhotosProps {
@@ -10,29 +11,39 @@ interface ReviewPhotosProps {
 export default function ReviewPhotos({ images }: ReviewPhotosProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
+  const isOpen = lightboxIndex !== null;
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  const nextImage = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? i : (i + 1) % images.length));
+  }, [images.length]);
+
+  const prevImage = useCallback(() => {
+    setLightboxIndex((i) => (i === null ? i : (i - 1 + images.length) % images.length));
+  }, [images.length]);
+
+  // Keyboard navigation + body scroll lock while the lightbox is open.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowRight') nextImage();
+      else if (e.key === 'ArrowLeft') prevImage();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, closeLightbox, nextImage, prevImage]);
+
   if (!images || images.length === 0) return null;
-
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index);
-  };
-
-  const closeLightbox = () => {
-    setLightboxIndex(null);
-  };
-
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (lightboxIndex !== null) {
-      setLightboxIndex((lightboxIndex + 1) % images.length);
-    }
-  };
-
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (lightboxIndex !== null) {
-      setLightboxIndex((lightboxIndex - 1 + images.length) % images.length);
-    }
-  };
 
   return (
     <div className="mt-3">
@@ -41,24 +52,29 @@ export default function ReviewPhotos({ images }: ReviewPhotosProps) {
         {images.map((src, index) => (
           <button
             key={index}
-            onClick={() => openLightbox(index)}
+            onClick={() => setLightboxIndex(index)}
             className="group relative h-16 w-24 overflow-hidden rounded-lg border border-brand-light bg-slate-50 transition hover:border-brand-medium active:scale-95"
             aria-label={`View photo ${index + 1}`}
           >
-            <img
+            <Image
               src={src}
               alt={`Review photo ${index + 1}`}
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              fill
+              sizes="96px"
+              className="object-cover transition duration-300 group-hover:scale-105"
             />
           </button>
         ))}
       </div>
 
       {/* Lightbox Modal */}
-      {lightboxIndex !== null && (
+      {isOpen && lightboxIndex !== null && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={closeLightbox}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Review photo ${lightboxIndex + 1} of ${images.length}`}
         >
           {/* Close button */}
           <button
@@ -73,14 +89,20 @@ export default function ReviewPhotos({ images }: ReviewPhotosProps) {
           {images.length > 1 && (
             <>
               <button
-                onClick={prevImage}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevImage();
+                }}
                 className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full p-2 bg-black/50 text-white hover:bg-black/80 transition active:scale-95"
                 aria-label="Previous image"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <button
-                onClick={nextImage}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 bg-black/50 text-white hover:bg-black/80 transition active:scale-95"
                 aria-label="Next image"
               >
@@ -91,16 +113,20 @@ export default function ReviewPhotos({ images }: ReviewPhotosProps) {
 
           {/* Large Image */}
           <div
-            className="max-h-[85vh] max-w-[90vw] overflow-hidden rounded-xl bg-black"
+            className="flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={images[lightboxIndex]}
-              alt={`Expanded review photo ${lightboxIndex + 1}`}
-              className="max-h-[85vh] max-w-[90vw] object-contain"
-            />
+            <div className="relative h-[80vh] w-[90vw] max-w-5xl">
+              <Image
+                src={images[lightboxIndex]}
+                alt={`Expanded review photo ${lightboxIndex + 1}`}
+                fill
+                sizes="90vw"
+                className="object-contain"
+              />
+            </div>
             {images.length > 1 && (
-              <p className="py-2 text-center text-xs font-medium text-slate-400">
+              <p className="py-2 text-center text-xs font-medium text-slate-300">
                 {lightboxIndex + 1} of {images.length}
               </p>
             )}

@@ -364,11 +364,12 @@ ON testimonials FOR ALL
 TO service_role
 USING (true);
 
--- public read policy
+-- Public read is limited to featured testimonials (what the homepage shows);
+-- non-featured/draft rows are only visible to the admin (service role).
 CREATE POLICY "Public can read testimonials"
 ON testimonials FOR SELECT
 TO anon, authenticated
-USING (true);
+USING (is_featured = true);
 
 CREATE TRIGGER update_testimonials_updated_at BEFORE UPDATE ON testimonials
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

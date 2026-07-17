@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
   useTestimonials,
   useCreateTestimonial,
@@ -28,6 +29,50 @@ import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ImageUploader from '@/components/admin/ImageUploader';
 
+/**
+ * Number input for display order that keeps its own draft state and only
+ * commits (one API call) on blur or Enter — avoids a mutation per keystroke.
+ */
+function DisplayOrderInput({
+  value,
+  onCommit,
+  className,
+}: {
+  value: number;
+  onCommit: (next: number) => void;
+  className?: string;
+}) {
+  // Remounted via `key={value}` at the call site whenever the persisted value
+  // changes, so the draft always starts from the latest server value.
+  const [draft, setDraft] = useState(String(value));
+
+  const commit = () => {
+    const next = Number(draft);
+    if (!Number.isFinite(next) || next < 0) {
+      setDraft(String(value)); // revert invalid input
+      return;
+    }
+    if (next !== value) onCommit(next);
+  };
+
+  return (
+    <input
+      type="number"
+      min="0"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          (e.target as HTMLInputElement).blur();
+        }
+      }}
+      className={className}
+    />
+  );
+}
+
 export default function TestimonialManager() {
   const { data: testimonials = [], isPending, isError, error } = useTestimonials();
   const createMutation = useCreateTestimonial();
@@ -53,7 +98,7 @@ export default function TestimonialManager() {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
 
   // Pagination Logic
   const totalItems = testimonials.length;
@@ -135,7 +180,7 @@ export default function TestimonialManager() {
         data: { is_featured: !testimonial.is_featured },
       });
       toast.success(testimonial.is_featured ? 'Testimonial unfeatured.' : 'Testimonial featured!');
-    } catch (e: unknown) {
+    } catch {
       toast.error('Failed to update testimonial status.');
     }
   };
@@ -147,7 +192,7 @@ export default function TestimonialManager() {
         data: { display_order: newOrder },
       });
       toast.success('Display order updated.');
-    } catch (e: unknown) {
+    } catch {
       toast.error('Failed to update display order.');
     }
   };
@@ -157,7 +202,7 @@ export default function TestimonialManager() {
     try {
       await deleteMutation.mutateAsync(pendingDelete.id);
       toast.success('Testimonial deleted successfully.');
-    } catch (e: unknown) {
+    } catch {
       toast.error('Failed to delete testimonial.');
     } finally {
       setPendingDelete(null);
@@ -239,7 +284,7 @@ export default function TestimonialManager() {
         <div className="bg-white rounded-xl border border-gray-100 p-16 text-center text-gray-500 shadow-sm">
           <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="font-semibold text-base">No testimonials yet</p>
-          <p className="text-sm text-gray-400 mt-1">Click the "Add Testimonial" button to write your first review.</p>
+          <p className="text-sm text-gray-400 mt-1">Click the &quot;Add Testimonial&quot; button to write your first review.</p>
         </div>
       ) : viewMode === 'table' ? (
         /* Default Table Format */
@@ -262,9 +307,9 @@ export default function TestimonialManager() {
                     {/* Customer Photo & Info */}
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400">
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400">
                           {t.photo_url ? (
-                            <img src={t.photo_url} alt={t.customer_name} className="w-full h-full object-cover" />
+                            <Image src={t.photo_url} alt={t.customer_name} fill sizes="40px" className="object-cover" />
                           ) : (
                             <User className="w-5 h-5" />
                           )}
@@ -281,7 +326,7 @@ export default function TestimonialManager() {
                     {/* Review Snippet */}
                     <td className="p-4 max-w-xs md:max-w-md">
                       <p className="text-sm text-gray-600 line-clamp-2 italic leading-relaxed">
-                        "{t.review_text}"
+                        &quot;{t.review_text}&quot;
                       </p>
                     </td>
 
@@ -318,10 +363,10 @@ export default function TestimonialManager() {
                     <td className="p-4 text-center">
                       <div className="inline-flex items-center gap-1.5 justify-center">
                         <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
-                        <input
-                          type="number"
+                        <DisplayOrderInput
+                          key={t.display_order}
                           value={t.display_order}
-                          onChange={(e) => handleDisplayOrderChange(t, Number(e.target.value))}
+                          onCommit={(next) => handleDisplayOrderChange(t, next)}
                           className="w-16 px-2 py-1 border border-gray-200 rounded text-center text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-700"
                         />
                       </div>
@@ -364,9 +409,9 @@ export default function TestimonialManager() {
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400">
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400">
                       {t.photo_url ? (
-                        <img src={t.photo_url} alt={t.customer_name} className="w-full h-full object-cover" />
+                        <Image src={t.photo_url} alt={t.customer_name} fill sizes="48px" className="object-cover" />
                       ) : (
                         <User className="w-6 h-6" />
                       )}
@@ -392,7 +437,7 @@ export default function TestimonialManager() {
                 </div>
 
                 <p className="text-sm text-gray-600 mt-4 italic leading-relaxed">
-                  "{t.review_text}"
+                  &quot;{t.review_text}&quot;
                 </p>
               </div>
 
@@ -413,10 +458,10 @@ export default function TestimonialManager() {
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
                     <ArrowUpDown className="w-3.5 h-3.5" />
                     <span>Order:</span>
-                    <input
-                      type="number"
+                    <DisplayOrderInput
+                      key={t.display_order}
                       value={t.display_order}
-                      onChange={(e) => handleDisplayOrderChange(t, Number(e.target.value))}
+                      onCommit={(next) => handleDisplayOrderChange(t, next)}
                       className="w-10 px-1 border border-gray-200 rounded text-center focus:outline-none focus:ring-1 focus:ring-brand-medium"
                     />
                   </div>
@@ -639,9 +684,9 @@ export default function TestimonialManager() {
                   <div>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400">
+                        <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center text-gray-400">
                           {photoUrl ? (
-                            <img src={photoUrl} alt="Preview Name" className="w-full h-full object-cover" />
+                            <Image src={photoUrl} alt="Preview" fill sizes="48px" className="object-cover" />
                           ) : (
                             <User className="w-6 h-6" />
                           )}
@@ -669,7 +714,7 @@ export default function TestimonialManager() {
                     </div>
 
                     <p className="text-sm text-gray-600 mt-5 italic leading-relaxed">
-                      "{reviewText.trim() || 'Write the customer\'s review experience here to see the live preview update instantly...'}"
+                      &quot;{reviewText.trim() || 'Write the customer\'s review experience here to see the live preview update instantly...'}&quot;
                     </p>
                   </div>
 

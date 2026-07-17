@@ -56,6 +56,24 @@ export function PackageTabs({ pkg, onOpenLightbox }: PackageTabsProps) {
 
   const money = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
+  // Derive rating + star distribution from the real reviews the component receives.
+  // Mirrors mapPackage/toPackageDetail: average of the review ratings, rounded to 1 dp.
+  const reviews = pkg.reviews ?? [];
+  const reviewCount = reviews.length;
+  const averageRating =
+    reviewCount > 0
+      ? Math.round((reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount) * 10) / 10
+      : null;
+  const ratingCounts = [0, 0, 0, 0, 0]; // index 0 = 1 star
+  reviews.forEach((r) => {
+    if (r.rating >= 1 && r.rating <= 5) ratingCounts[r.rating - 1] += 1;
+  });
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => ({
+    stars,
+    count: ratingCounts[stars - 1],
+    pct: reviewCount ? Math.round((ratingCounts[stars - 1] / reviewCount) * 100) : 0,
+  }));
+
   // Itinerary Skyline elevation details (helper if altitude is provided)
   const renderItinerarySkyline = () => {
     const itn = pkg.itinerary || [];
@@ -364,13 +382,20 @@ export function PackageTabs({ pkg, onOpenLightbox }: PackageTabsProps) {
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex flex-col sm:flex-row gap-6 rounded-xl border border-brand-light/70 p-5 sm:items-center sm:gap-10 bg-white">
               <div className="text-center sm:text-left">
-                <p className="font-display text-4xl font-bold text-brand-darkest">4.8</p>
+                <p className="font-display text-4xl font-bold text-brand-darkest">
+                  {averageRating != null ? averageRating.toFixed(1) : '—'}
+                </p>
                 <div className="mt-1 flex justify-center gap-0.5 text-amber-400 sm:justify-start">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" />
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 fill-current ${
+                        averageRating != null && i < Math.round(averageRating) ? 'text-amber-400' : 'text-slate-200'
+                      }`}
+                    />
                   ))}
                 </div>
-                <p className="mt-1 text-xs text-slate-400">{pkg.reviews?.length || 0} reviews</p>
+                <p className="mt-1 text-xs text-slate-400">{reviewCount} reviews</p>
                 <button
                   type="button"
                   onClick={() => setShowReviewForm(!showReviewForm)}
@@ -380,21 +405,19 @@ export function PackageTabs({ pkg, onOpenLightbox }: PackageTabsProps) {
                 </button>
               </div>
               <div className="flex-1 space-y-1.5">
-                {[
-                  { stars: 5, pct: 78 },
-                  { stars: 4, pct: 15 },
-                  { stars: 3, pct: 5 },
-                  { stars: 2, pct: 1 },
-                  { stars: 1, pct: 1 },
-                ].map((r) => (
-                  <div key={r.stars} className="flex items-center gap-3 text-xs text-slate-500">
-                    <span className="w-8 shrink-0">{r.stars} star</span>
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-brand-dark" style={{ width: `${r.pct}%` }} />
+                {reviewCount === 0 ? (
+                  <p className="text-sm text-slate-500">No reviews yet — be the first to share your experience.</p>
+                ) : (
+                  ratingBreakdown.map((r) => (
+                    <div key={r.stars} className="flex items-center gap-3 text-xs text-slate-500">
+                      <span className="w-8 shrink-0">{r.stars} star</span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full bg-brand-dark" style={{ width: `${r.pct}%` }} />
+                      </div>
+                      <span className="w-8 shrink-0 text-right">{r.pct}%</span>
                     </div>
-                    <span className="w-8 shrink-0 text-right">{r.pct}%</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
