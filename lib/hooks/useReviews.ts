@@ -23,7 +23,19 @@ export function useCreateReview(packageId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createReview,
+    mutationFn: ({
+      reviewData,
+      photoUrls,
+    }: {
+      reviewData: {
+        package_id: string;
+        reviewer_name: string;
+        reviewer_email: string;
+        rating: number;
+        review_text: string;
+      };
+      photoUrls?: string[];
+    }) => createReview(reviewData, photoUrls),
     onSuccess: (data) => {
       if (data.is_approved) {
         toast.success('Thank you! Your review is live.');

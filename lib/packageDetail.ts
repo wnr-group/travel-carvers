@@ -60,6 +60,7 @@ export interface RawReview {
   rating: number;
   review_text: string;
   created_at: string;
+  review_photos?: { image_url: string }[] | null;
 }
 
 interface RawSimilarPackage {
@@ -91,6 +92,7 @@ export interface ReviewVM {
   rating: number;
   date: string;
   text: string;
+  images?: string[];
 }
 export interface RatingBucketVM {
   stars: number;
@@ -229,6 +231,9 @@ export function toPackageDetail(
     rating: review.rating,
     date: formatReviewDate(review.created_at),
     text: review.review_text,
+    images: (review.review_photos ?? [])
+      .map((p) => p.image_url)
+      .filter(Boolean),
   }));
   const reviewCount = reviews.length;
   const rating =

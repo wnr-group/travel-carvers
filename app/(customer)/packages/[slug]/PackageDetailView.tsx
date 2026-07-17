@@ -5,6 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { LeadFormModal } from "@/components/customer/LeadFormModal";
 import ShareButtons from "@/components/customer/ShareButtons";
+import { ReviewForm } from "@/components/customer/ReviewForm";
+import ReviewPhotos from "@/components/customer/ReviewPhotos";
+import { useQuery } from "@tanstack/react-query";
+import { getApprovedReviews } from "@/lib/api/public/reviews";
 import type {
   PackageDetail,
   ItineraryDayVM,
@@ -119,7 +123,24 @@ const Icon = {
 
 const money = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-/* =============================== Page =============================== */
+function formatReviewDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+}
+
+function mapRawReviews(rawReviews: any[]): ReviewVM[] {
+  return rawReviews.map((r) => {
+    if ("name" in r) return r as ReviewVM;
+    return {
+      name: r.reviewer_name,
+      date: formatReviewDate(r.created_at),
+      rating: r.rating,
+      text: r.review_text,
+      images: (r.review_photos ?? []).map((p: any) => p.image_url).filter(Boolean),
+    };
+  });
+}
 
 export default function PackageDetailView({ detail }: { detail: PackageDetail }) {
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
@@ -130,6 +151,26 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
   const [lightbox, setLightbox] = useState<number | null>(null);
   const navSentinel = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  const { data: rawDbReviews } = useQuery({
+    queryKey: ["reviews", "package", detail.id],
+    queryFn: () => getApprovedReviews(detail.id),
+  });
+
+  const activeReviews = rawDbReviews ? mapRawReviews(rawDbReviews) : detail.reviews;
+  const reviewCount = activeReviews.length;
+  const rating = reviewCount > 0
+    ? Math.round((activeReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount) * 10) / 10
+    : null;
+
+  const counts = [0, 0, 0, 0, 0];
+  activeReviews.forEach((r) => {
+    if (r.rating >= 1 && r.rating <= 5) counts[r.rating - 1] += 1;
+  });
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => ({
+    stars,
+    pct: reviewCount ? Math.round((counts[stars - 1] / reviewCount) * 100) : 0,
+  }));
 
   useEffect(() => {
     const el = navSentinel.current;
@@ -177,8 +218,8 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
 
   const total = detail.startingPrice != null ? guests * detail.startingPrice : 0;
   const ratingValue =
-    detail.reviewCount > 0 && detail.rating != null
-      ? `${detail.rating} · ${detail.reviewCount} reviews`
+    reviewCount > 0 && rating != null
+      ? `${rating} · ${reviewCount} reviews`
       : "New package";
 
   return (
@@ -296,7 +337,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
             {activeTab === "info" && <AdditionalInfo />}
             {activeTab === "faqs" && <FAQs open={openFaq} setOpen={setOpenFaq} />}
             {activeTab === "reviews" && (
-              <Reviews rating={detail.rating} reviewCount={detail.reviewCount} ratingBreakdown={detail.ratingBreakdown} reviews={detail.reviews} />
+              <Reviews packageId={detail.id} rating={rating} reviewCount={reviewCount} ratingBreakdown={ratingBreakdown} reviews={activeReviews} />
             )}
             {activeTab === "similar" && <SimilarPackages similar={detail.similar} />}
           </main>
@@ -620,13 +661,31 @@ function FAQs({ open, setOpen }: { open: number | null; setOpen: (i: number | nu
   );
 }
 
-function Reviews({ rating, reviewCount, ratingBreakdown, reviews }: { rating: number | null; reviewCount: number; ratingBreakdown: RatingBucketVM[]; reviews: ReviewVM[] }) {
+function Reviews({ packageId, rating, reviewCount, ratingBreakdown, reviews }: { packageId: string; rating: number | null; reviewCount: number; ratingBreakdown: RatingBucketVM[]; reviews: ReviewVM[] }) {
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
   return (
     <div>
       <SectionHeading eyebrow="Traveler Voices" title="Reviews" />
 
       {reviewCount === 0 ? (
-        <EmptyNote>No reviews yet — be the first to share your experience once you travel with us.</EmptyNote>
+        <div className="space-y-6">
+          <EmptyNote>No reviews yet — be the first to share your experience once you travel with us.</EmptyNote>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowReviewForm(!showReviewForm)}
+              className="inline-flex items-center justify-center rounded-full bg-brand-dark px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-darkest active:scale-95 cursor-pointer"
+            >
+              {showReviewForm ? "Cancel Review" : "Write a Review"}
+            </button>
+          </div>
+          {showReviewForm && (
+            <div className="animate-in fade-in duration-300">
+              <ReviewForm packageId={packageId} onSuccess={() => setShowReviewForm(false)} />
+            </div>
+          )}
+        </div>
       ) : (
         <>
           <div className="mb-8 flex flex-col gap-6 rounded-xl border border-brand-light/70 p-5 sm:flex-row sm:items-center sm:gap-10">
@@ -638,6 +697,13 @@ function Reviews({ rating, reviewCount, ratingBreakdown, reviews }: { rating: nu
                 ))}
               </div>
               <p className="mt-1 text-xs text-slate-600">{reviewCount} reviews</p>
+              <button
+                type="button"
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                className="mt-4 inline-flex items-center justify-center rounded-full bg-brand-dark px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-darkest active:scale-95 cursor-pointer"
+              >
+                {showReviewForm ? "Cancel Review" : "Write a Review"}
+              </button>
             </div>
             <div className="flex-1 space-y-1.5">
               {ratingBreakdown.map((r) => (
@@ -652,6 +718,12 @@ function Reviews({ rating, reviewCount, ratingBreakdown, reviews }: { rating: nu
             </div>
           </div>
 
+          {showReviewForm && (
+            <div className="mb-6 animate-in fade-in duration-300">
+              <ReviewForm packageId={packageId} onSuccess={() => setShowReviewForm(false)} />
+            </div>
+          )}
+
           <div className="space-y-5">
             {reviews.map((r, i) => (
               <div key={i} className="rounded-xl border border-brand-light/60 p-5">
@@ -665,6 +737,9 @@ function Reviews({ rating, reviewCount, ratingBreakdown, reviews }: { rating: nu
                   ))}
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-slate-800">{r.text}</p>
+                {r.images && r.images.length > 0 && (
+                  <ReviewPhotos images={r.images} />
+                )}
               </div>
             ))}
           </div>

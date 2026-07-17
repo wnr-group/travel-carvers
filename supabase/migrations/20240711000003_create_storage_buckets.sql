@@ -8,7 +8,8 @@ VALUES
   ('itinerary-images', 'itinerary-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg']::text[]),
   ('hotel-images', 'hotel-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg']::text[]),
   ('category-images', 'category-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg']::text[]),
-  ('testimonial-images', 'testimonial-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg']::text[])
+  ('testimonial-images', 'testimonial-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg']::text[]),
+  ('review-images', 'review-images', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg']::text[])
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Create storage policies for package-images bucket
@@ -85,5 +86,20 @@ CREATE POLICY "Service role can manage testimonial images"
 ON storage.objects FOR ALL
 TO service_role
 USING (bucket_id = 'testimonial-images');
+
+-- 7. Create storage policies for review-images bucket
+CREATE POLICY "Public can view review images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'review-images');
+
+CREATE POLICY "Authenticated users can upload review images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'review-images');
+
+CREATE POLICY "Service role can manage review images"
+ON storage.objects FOR ALL
+TO service_role
+USING (bucket_id = 'review-images');
 
 -- Note: file_size_limit is in bytes (5242880 = 5MB)

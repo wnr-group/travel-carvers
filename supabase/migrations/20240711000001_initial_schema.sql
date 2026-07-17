@@ -4,7 +4,7 @@
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
+SET search_path TO public,extensions;
 
 -- =====================================================
 -- 1. CATEGORIES & SUBCATEGORIES
@@ -242,6 +242,13 @@ CREATE TABLE reviews (
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   review_text TEXT NOT NULL,
   is_approved BOOLEAN DEFAULT NULL, -- NULL = pending, true = approved, false = rejected
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE review_photos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  review_id UUID NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

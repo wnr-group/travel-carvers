@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase/client';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import crypto from 'crypto';
 
 /**
  * Public: Get approved reviews for a package
@@ -22,17 +23,20 @@ export async function getPackageReviews(packageId: string) {
  * Public: Submit a review
  * Note: Reviews with 4-5 stars are auto-approved
  */
-export async function createReview(reviewData: {
-  package_id: string;
-  reviewer_name: string;
-  reviewer_email: string;
-  rating: number;
-  review_text: string;
-}) {
+export async function createReview(
+  reviewData: {
+    package_id: string;
+    reviewer_name: string;
+    reviewer_email: string;
+    rating: number;
+    review_text: string;
+  },
+  photoUrls?: string[]
+) {
   // Auto-approve if 4-5 stars
   const isApproved = reviewData.rating >= 4 ? true : null;
 
-  const { data, error } = await supabaseAdmin
+  const { data: review, error: reviewError } = await supabaseAdmin
     .from('reviews')
     .insert({
       ...reviewData,
@@ -41,8 +45,68 @@ export async function createReview(reviewData: {
     .select()
     .single();
 
+  if (reviewError) throw reviewError;
+
+  if (photoUrls && photoUrls.length > 0) {
+    const photoRows = photoUrls.map((url) => ({
+      review_id: review.id,
+      image_url: url,
+    }));
+    const { error: photosError } = await supabaseAdmin
+      .from('review_photos')
+      .insert(photoRows);
+
+    if (photosError) throw photosError;
+  }
+
+  return review;
+}
+
+/**
+ * Public: Upload review photo to review-images bucket
+ */
+export async function uploadReviewPhoto(formData: FormData): Promise<string> {
+  const file = formData.get('file') as File;
+  if (!file) throw new Error('No file provided');
+
+  // Verify size and type
+  if (file.size > 5 * 1024 * 1024) throw new Error('File size exceeds 5MB limit');
+
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+
+  if (!allowedMimes.includes(file.type) && !allowedExts.includes(fileExt)) {
+    throw new Error('Unsupported image format');
+  }
+
+  const filename = `${crypto.randomUUID()}.${fileExt}`;
+
+  // Resolve content type robustly
+  let contentType = file.type;
+  if (!contentType || contentType === 'application/octet-stream') {
+    if (fileExt === 'webp') contentType = 'image/webp';
+    else if (fileExt === 'png') contentType = 'image/png';
+    else contentType = 'image/jpeg';
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const { error } = await supabaseAdmin.storage
+    .from('review-images')
+    .upload(filename, buffer, {
+      contentType,
+      upsert: false,
+    });
+
   if (error) throw error;
-  return data;
+
+  const { data: urlData } = supabaseAdmin.storage
+    .from('review-images')
+    .getPublicUrl(filename);
+
+  return urlData.publicUrl;
 }
 
 /**

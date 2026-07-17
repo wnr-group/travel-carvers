@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCreateReview } from '@/lib/hooks/useReviews';
 import { reviewSchema, type ReviewFormData } from '@/lib/validations/review.schema';
 import { Star, Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { uploadReviewPhoto } from '@/lib/api/reviews';
 
 interface ReviewFormProps {
   packageId: string;
@@ -17,36 +18,115 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [reviewText, setReviewText] = useState('');
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isApprovedImmediately, setIsApprovedImmediately] = useState(false);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    if (photos.length + files.length > 5) {
+      setValidationErrors(prev => ({ ...prev, photo: 'Maximum 5 photos allowed per review' }));
+      return;
+    }
+
+    const newPhotos: { file: File; preview: string }[] = [];
+    let hasError = false;
+
+    files.forEach(file => {
       if (file.size > 5 * 1024 * 1024) {
-        setValidationErrors(prev => ({ ...prev, photo: 'Image must be 5MB or smaller' }));
+        setValidationErrors(prev => ({ ...prev, photo: 'Each image must be 5MB or smaller' }));
+        hasError = true;
         return;
       }
-      setPhoto(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      setValidationErrors(prev => {
-        const copy = { ...prev };
-        delete copy.photo;
-        return copy;
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+      const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+      const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+      if (!allowedMimes.includes(file.type) && !allowedExts.includes(fileExt)) {
+        setValidationErrors(prev => ({ ...prev, photo: 'Only JPG, PNG, and WebP images are allowed' }));
+        hasError = true;
+        return;
+      }
+      
+      newPhotos.push({
+        file,
+        preview: URL.createObjectURL(file)
       });
-    }
+    });
+
+    if (hasError) return;
+
+    setPhotos(prev => [...prev, ...newPhotos]);
+    setValidationErrors(prev => {
+      const copy = { ...prev };
+      delete copy.photo;
+      return copy;
+    });
   };
 
-  const removePhoto = () => {
-    setPhoto(null);
-    setPhotoPreview(null);
+  const removePhoto = (index: number) => {
+    setPhotos(prev => {
+      const target = prev[index];
+      if (target) {
+        URL.revokeObjectURL(target.preview);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const optimizeImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const optimizedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                type: 'image/webp',
+                lastModified: Date.now()
+              });
+              resolve(optimizedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/webp',
+          0.8
+        );
+      };
+      img.onerror = () => {
+        resolve(file);
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,7 +158,22 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
     }
 
     try {
-      const data = await createReview.mutateAsync(result.data);
+      setUploading(true);
+      const photoUrls: string[] = [];
+
+      for (const p of photos) {
+        const optimized = await optimizeImage(p.file);
+        const formData = new FormData();
+        formData.append('file', optimized);
+        const url = await uploadReviewPhoto(formData);
+        photoUrls.push(url);
+      }
+
+      await createReview.mutateAsync({
+        reviewData: result.data,
+        photoUrls,
+      });
+
       setIsApprovedImmediately(rating >= 4);
       setSubmitSuccess(true);
       
@@ -87,14 +182,17 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
       setName('');
       setEmail('');
       setReviewText('');
-      setPhoto(null);
-      setPhotoPreview(null);
+      photos.forEach(p => URL.revokeObjectURL(p.preview));
+      setPhotos([]);
 
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
       console.error(err);
+      setValidationErrors(prev => ({ ...prev, submit: 'Failed to submit review. Please try again.' }));
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -239,48 +337,70 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
 
       {/* Optional Photo Upload */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-          Add Photos (Optional)
-        </label>
-        {!photoPreview ? (
-          <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-light/70 bg-slate-50/40 p-5 text-center transition hover:bg-slate-50/80">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
-              className="absolute inset-0 cursor-pointer opacity-0"
-            />
-            <Upload className="h-6 w-6 text-brand-medium transition group-hover:scale-110" />
-            <p className="mt-2 text-xs font-medium text-slate-800">
-              Drag & drop or click to upload
-            </p>
-            <p className="mt-1 text-[10px] text-slate-600">
-              JPEG, PNG, or WebP up to 5MB
-            </p>
-          </div>
-        ) : (
-          <div className="relative inline-block overflow-hidden rounded-lg border border-brand-light bg-slate-50 p-1">
-            <img
-              src={photoPreview}
-              alt="Preview"
-              className="h-24 w-36 rounded object-cover"
-            />
-            <button
-              type="button"
-              onClick={removePhoto}
-              className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/85"
-            >
-              <X className="h-3 w-3" />
-            </button>
-            <p className="mt-1 max-w-[140px] truncate text-[10px] text-slate-600 px-1 text-center">
-              {photo?.name}
-            </p>
-          </div>
-        )}
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+            Add Photos (Optional)
+          </label>
+          <span className="text-[10px] text-slate-400 font-medium">
+            {photos.length}/5 photos
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {photos.length < 5 && (
+            <div className="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-brand-light/70 bg-slate-50/40 p-5 text-center transition hover:bg-slate-50/80">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              />
+              <Upload className="h-6 w-6 text-brand-medium transition group-hover:scale-110" />
+              <p className="mt-2 text-xs font-medium text-slate-800">
+                Drag & drop or click to upload (up to 5)
+              </p>
+              <p className="mt-1 text-[10px] text-slate-600">
+                JPEG, PNG, or WebP up to 5MB per photo
+              </p>
+            </div>
+          )}
+
+          {photos.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {photos.map((p, index) => (
+                <div key={index} className="relative inline-block overflow-hidden rounded-lg border border-brand-light bg-slate-50 p-1">
+                  <img
+                    src={p.preview}
+                    alt={`Preview ${index + 1}`}
+                    className="h-20 w-28 rounded object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index)}
+                    className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/85 transition"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                  <p className="mt-1 max-w-[100px] truncate text-[9px] text-slate-500 px-1 text-center">
+                    {p.file.name}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {validationErrors.photo && (
           <p className="mt-1 flex items-center gap-1 text-xs text-rose-600">
             <AlertCircle className="h-3.5 w-3.5" />
             {validationErrors.photo}
+          </p>
+        )}
+        {validationErrors.submit && (
+          <p className="mt-1 flex items-center gap-1 text-xs text-rose-600">
+            <AlertCircle className="h-3.5 w-3.5" />
+            {validationErrors.submit}
           </p>
         )}
       </div>
@@ -288,10 +408,10 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={createReview.isPending}
+        disabled={uploading || createReview.isPending}
         className="w-full rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] py-3 text-sm font-semibold text-white shadow transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 cursor-pointer"
       >
-        {createReview.isPending ? 'Submitting Review...' : 'Submit Review'}
+        {uploading ? 'Uploading & Optimizing Photos...' : createReview.isPending ? 'Submitting Review...' : 'Submit Review'}
       </button>
     </form>
   );
