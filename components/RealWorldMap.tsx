@@ -150,20 +150,26 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       }
     }, 1500);
 
-    // Land-only layer (ocean is transparent)
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '©Esri',
-      maxZoom: 16,
-      className: 'land-only-layer',
-    }).addTo(map);
-
-    // Labels overlay - country names, capitals, and ocean names
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png', {
-      attribution: '©CartoDB',
-      maxZoom: 16,
-      subdomains: 'abcd',
-      opacity: 0.7,
-    }).addTo(map);
+    // Land: solid brand-green country polygons over the white sea (exact theme colours,
+    // #2D5F2D land + #FFFFFF sea — no tile recolouring so the sea stays truly white).
+    fetch('/data/world-countries.geojson')
+      .then((res) => res.json())
+      .then((geo) => {
+        if (!mapRef.current) return;
+        L.geoJSON(geo, {
+          interactive: false,
+          style: {
+            fillColor: '#527A52', // land green
+            fillOpacity: 1,
+            color: '#FFFFFF',     // thin white borders = subtle country separation on the green
+            weight: 0.5,
+            opacity: 0.6,
+          },
+        }).addTo(mapRef.current);
+      })
+      .catch(() => {
+        /* land layer failed to load — sea (white background) still renders */
+      });
 
     // Custom icon for regular locations - glowing brown
     const regularIcon = L.divIcon({
@@ -361,7 +367,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           ref={mapContainerRef}
           className="w-full h-full"
           style={{
-            background: 'linear-gradient(135deg, #FEFAE0 0%, #FEFAE0 50%, #FEFAE0 100%)',
+            // Sea = app background (pure white) to match the site theme
+            background: '#FFFFFF',
           }}
         />
 
@@ -416,12 +423,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
       <style jsx global>{`
         .leaflet-container {
-          background: linear-gradient(135deg, #FEFAE0 0%, #FEFAE0 50%, #FEFAE0 100%) !important;
-        }
-
-        /* Apply vibrant color to landmass */
-        .land-only-layer {
-          filter: sepia(55%) saturate(85%) hue-rotate(65deg) brightness(105%) contrast(105%);
+          /* Sea = app background (pure white) to match the site theme */
+          background: #FFFFFF !important;
         }
 
         /* Ensure markers and tooltips are visible */
