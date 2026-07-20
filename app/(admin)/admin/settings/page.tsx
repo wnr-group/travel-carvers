@@ -10,6 +10,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { siteSettingsSchema } from '@/lib/validations/site-settings.schema';
 
 export default function SiteSettingsPage() {
   const { data, isPending, isError, error } = useSiteSettings();
@@ -27,6 +28,8 @@ export default function SiteSettingsPage() {
   const [instagramUrl, setInstagramUrl] = useState('');
   const [twitterUrl, setTwitterUrl] = useState('');
   const [linkedinUrl, setLinkedinUrl] = useState('');
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Sync form states with query data. Initialising editable form fields from fetched data is an
   // intentional effect here; the cascading-render lint rule doesn't apply to this one-time sync.
@@ -47,18 +50,46 @@ export default function SiteSettingsPage() {
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    const payload = {
+      company_name: companyName.trim(),
+      contact_email: contactEmail.trim(),
+      contact_phone: contactPhone.trim(),
+      address: address.trim(),
+      show_prices_globally: showPricesGlobally,
+      facebook_url: facebookUrl.trim(),
+      instagram_url: instagramUrl.trim(),
+      twitter_url: twitterUrl.trim(),
+      linkedin_url: linkedinUrl.trim(),
+    };
+
+    const result = siteSettingsSchema.safeParse(payload);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0];
+        if (typeof path === 'string') {
+          fieldErrors[path] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error('Please check the form for mistakes and correct the highlighted fields before saving.');
+      return;
+    }
+
     try {
       await updateMutation.mutateAsync({
         id: id || undefined,
-        company_name: companyName,
-        contact_email: contactEmail,
-        contact_phone: contactPhone,
-        address,
-        show_prices_globally: showPricesGlobally,
-        facebook_url: facebookUrl,
-        instagram_url: instagramUrl,
-        twitter_url: twitterUrl,
-        linkedin_url: linkedinUrl,
+        company_name: result.data.company_name,
+        contact_email: result.data.contact_email,
+        contact_phone: result.data.contact_phone,
+        address: result.data.address,
+        show_prices_globally: result.data.show_prices_globally,
+        facebook_url: result.data.facebook_url || '',
+        instagram_url: result.data.instagram_url || '',
+        twitter_url: result.data.twitter_url || '',
+        linkedin_url: result.data.linkedin_url || '',
       });
       toast.success('Site settings saved successfully!');
     } catch (e: unknown) {
@@ -96,7 +127,7 @@ export default function SiteSettingsPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} noValidate className="space-y-8">
         
         {/* Section 1: Company details */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
@@ -112,55 +143,79 @@ export default function SiteSettingsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
-              <label htmlFor="companyName" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Company Name</label>
+              <label htmlFor="companyName" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Company Name <span className="text-red-500">*</span></label>
               <input
                 id="companyName"
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 placeholder="e.g. Travel Carvers"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
-                required
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.company_name
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.company_name && (
+                <p className="text-red-500 text-xs mt-1">{errors.company_name}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="contactEmail" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Contact Email</label>
+              <label htmlFor="contactEmail" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Contact Email <span className="text-red-500">*</span></label>
               <input
                 id="contactEmail"
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
                 placeholder="e.g. info@travelcarvers.com"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
-                required
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.contact_email
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.contact_email && (
+                <p className="text-red-500 text-xs mt-1">{errors.contact_email}</p>
+              )}
             </div>
 
             <div>
-              <label htmlFor="contactPhone" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Contact Phone</label>
+              <label htmlFor="contactPhone" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Contact Phone <span className="text-red-500">*</span></label>
               <input
                 id="contactPhone"
                 type="text"
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 placeholder="e.g. +1 (555) 123-4567"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
-                required
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.contact_phone
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.contact_phone && (
+                <p className="text-red-500 text-xs mt-1">{errors.contact_phone}</p>
+              )}
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="address" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Company Address</label>
+              <label htmlFor="address" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Company Address <span className="text-red-500">*</span></label>
               <textarea
                 id="address"
                 rows={3}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Enter complete office address..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
-                required
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.address
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.address && (
+                <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+              )}
             </div>
           </div>
         </div>
@@ -217,8 +272,15 @@ export default function SiteSettingsPage() {
                 value={facebookUrl}
                 onChange={(e) => setFacebookUrl(e.target.value)}
                 placeholder="https://facebook.com/..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.facebook_url
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.facebook_url && (
+                <p className="text-red-500 text-xs mt-1">{errors.facebook_url}</p>
+              )}
             </div>
 
             <div>
@@ -229,8 +291,15 @@ export default function SiteSettingsPage() {
                 value={instagramUrl}
                 onChange={(e) => setInstagramUrl(e.target.value)}
                 placeholder="https://instagram.com/..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.instagram_url
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.instagram_url && (
+                <p className="text-red-500 text-xs mt-1">{errors.instagram_url}</p>
+              )}
             </div>
 
             <div>
@@ -241,8 +310,15 @@ export default function SiteSettingsPage() {
                 value={twitterUrl}
                 onChange={(e) => setTwitterUrl(e.target.value)}
                 placeholder="https://x.com/..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.twitter_url
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.twitter_url && (
+                <p className="text-red-500 text-xs mt-1">{errors.twitter_url}</p>
+              )}
             </div>
 
             <div>
@@ -253,8 +329,15 @@ export default function SiteSettingsPage() {
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
                 placeholder="https://linkedin.com/company/..."
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
+                className={`w-full px-3 py-2 border rounded-lg text-base focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                  errors.linkedin_url
+                    ? 'border-red-300 focus:ring-red-500/50'
+                    : 'border-gray-200 focus:ring-brand-medium/50'
+                }`}
               />
+              {errors.linkedin_url && (
+                <p className="text-red-500 text-xs mt-1">{errors.linkedin_url}</p>
+              )}
             </div>
           </div>
         </div>
