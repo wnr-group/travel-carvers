@@ -94,6 +94,7 @@ export interface SeoPackage {
   duration_nights?: number | null;
   destination_name?: string | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
+  show_price?: boolean | null;
 }
 
 /** Cover image for a package: explicit cover → first gallery image → site default OG image. */
@@ -137,7 +138,7 @@ export function organizationJsonLd() {
 /** TouristTrip + Offer for a package detail page. */
 export function packageJsonLd(pkg: SeoPackage) {
   const canonical = absoluteUrl(`/packages/${pkg.slug}`);
-  const price = pkg.price_adult == null ? null : Number(pkg.price_adult);
+  const price = pkg.show_price === false || pkg.price_adult == null ? null : Number(pkg.price_adult);
 
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',

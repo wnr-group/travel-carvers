@@ -754,7 +754,11 @@ function SimilarPackages({ similar }: { similar: SimilarPackageVM[] }) {
                 <h3 className="font-display text-sm font-semibold text-brand-darkest">{s.title}</h3>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-xs text-slate-700">{s.duration}</span>
-                  {s.price != null && <span className="font-mono text-sm font-semibold text-brand-dark">{money(s.price)}</span>}
+                  {s.price != null ? (
+                    <span className="font-mono text-sm font-semibold text-brand-dark">{money(s.price)}</span>
+                  ) : (
+                    <span className="text-xs font-semibold text-brand-dark">On request</span>
+                  )}
                 </div>
               </div>
             </Link>

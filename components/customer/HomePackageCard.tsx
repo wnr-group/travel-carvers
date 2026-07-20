@@ -13,6 +13,7 @@ export interface HomePackage {
   duration_nights?: number | null;
   destination_name?: string | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
+  show_price?: boolean | null;
 }
 
 function coverImage(pkg: HomePackage): string {
@@ -22,8 +23,8 @@ function coverImage(pkg: HomePackage): string {
 }
 
 
-function formatPrice(value: HomePackage['price_adult']): string {
-  if (value === null || value === undefined || value === '') return 'On request';
+function formatPrice(value: HomePackage['price_adult'], showPrice?: boolean | null): string {
+  if (showPrice === false || value === null || value === undefined || value === '') return 'On request';
   return `₹${Number(value).toLocaleString('en-IN')}`;
 }
 
@@ -73,7 +74,7 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
             ) : (
               <span />
             )}
-            <span className="shrink-0 text-lg font-bold text-white">{formatPrice(pkg.price_adult)}</span>
+            <span className="shrink-0 text-lg font-bold text-white">{formatPrice(pkg.price_adult, pkg.show_price)}</span>
           </div>
         </div>
       </div>

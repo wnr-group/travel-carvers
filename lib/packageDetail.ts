@@ -69,6 +69,7 @@ interface RawSimilarPackage {
   duration_days?: number | null;
   price_adult?: number | string | null;
   package_gallery?: RawGalleryImage[] | null;
+  show_price?: boolean | null;
 }
 
 /* ------------------------------- View-model -------------------------------- */
@@ -254,13 +255,16 @@ export function toPackageDetail(
   }));
 
   // Similar packages (other published packages).
-  const similar: SimilarPackageVM[] = rawSimilar.slice(0, 3).map((pkg) => ({
-    slug: pkg.slug,
-    title: pkg.title,
-    duration: durationLabel(pkg.duration_days, null),
-    price: toNumber(pkg.price_adult),
-    img: coverOf(pkg.package_gallery, pkg.slug, '700/500'),
-  }));
+  const similar: SimilarPackageVM[] = rawSimilar.slice(0, 3).map((pkg) => {
+    const showPrice = pkg.show_price ?? true;
+    return {
+      slug: pkg.slug,
+      title: pkg.title,
+      duration: durationLabel(pkg.duration_days, null),
+      price: showPrice ? toNumber(pkg.price_adult) : null,
+      img: coverOf(pkg.package_gallery, pkg.slug, '700/500'),
+    };
+  });
 
   return {
     id: raw.id,
@@ -271,7 +275,7 @@ export function toPackageDetail(
     location: raw.destination_name ?? '',
     duration: durationLabel(raw.duration_days, raw.duration_nights),
     groupSize,
-    startingPrice: priceAdult,
+    startingPrice: showPrice ? priceAdult : null,
     showPrice,
     cover: coverOf(raw.package_gallery, raw.slug),
     rating,

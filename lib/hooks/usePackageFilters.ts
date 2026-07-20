@@ -115,6 +115,7 @@ interface RawListPackage {
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
   package_categories?: { categories: { name: string; slug: string } | null }[] | null;
   reviews?: { rating: number; is_approved: boolean | null }[] | null;
+  show_price?: boolean | null;
 }
 
 function mapPackage(row: RawListPackage): TravelPackage {
@@ -123,7 +124,8 @@ function mapPackage(row: RawListPackage): TravelPackage {
   const categories = (row.package_categories ?? [])
     .map((pc) => pc.categories?.name)
     .filter((name): name is string => Boolean(name));
-  const price = row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
+  const showPrice = row.show_price !== false;
+  const price = !showPrice || row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
 
   // Calculate average rating
   const approvedReviews = (row.reviews ?? []).filter((r) => r.is_approved === true);
