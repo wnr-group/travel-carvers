@@ -110,7 +110,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {/* Header */}
       <div className="border-b border-brand-lightest pb-4">
         <h2 className="text-brand-darkest text-3xl font-extrabold tracking-tight mb-1">
@@ -130,7 +130,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
         <div className="bg-brand-tint-light border border-brand-light p-4 rounded-2xl flex items-center gap-3.5 shadow-sm">
           <div className="w-12 h-12 rounded-xl bg-brand-lightest flex items-center justify-center shrink-0 shadow-sm border border-brand-light">
             <svg className="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
@@ -244,8 +244,11 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 className={inputClasses}
                 required
                 aria-required="true"
+                aria-invalid={errors.travel_start_date ? true : undefined}
+                aria-describedby={errors.travel_start_date ? 'lead-start-date-error' : undefined}
               />
             </div>
+            {errors.travel_start_date && <p id="lead-start-date-error" className="text-red-500 text-xs mt-1 ml-1">{errors.travel_start_date}</p>}
           </div>
 
           <div>
@@ -381,7 +384,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.travel_start_date.trim() || createLead.isPending}
+        disabled={createLead.isPending}
         className="w-full bg-gradient-brand-dark text-white py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex justify-center items-center gap-2 cursor-pointer shadow-lg"
       >
         {createLead.isPending ? (
