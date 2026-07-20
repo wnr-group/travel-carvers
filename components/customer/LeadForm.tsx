@@ -74,7 +74,14 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
     } catch (error) {
       if (error instanceof z.ZodError) {
-        setErrors(z.flattenError(error).fieldErrors);
+        const fieldErrors: Record<string, string> = {};
+        error.issues.forEach(issue => {
+          const path = issue.path[0];
+          if (path && !fieldErrors[path]) {
+            fieldErrors[path] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
       } else {
         setErrors({ submit: 'Failed to submit inquiry. Please try again.' });
       }
@@ -88,6 +95,27 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       const nextVal = Math.max(minVal, current + delta);
       return { ...prev, [field]: nextVal };
     });
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof formData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    if (errors[field]) {
+      const fieldSchema = (leadSchema.shape as any)[field];
+      if (fieldSchema) {
+        const result = fieldSchema.safeParse(value);
+        if (result.success) {
+          setErrors(prev => ({ ...prev, [field]: undefined }));
+        } else {
+          setErrors(prev => ({ ...prev, [field]: result.error.issues?.[0]?.message || result.error.message }));
+        }
+      } else {
+        setErrors(prev => ({ ...prev, [field]: undefined }));
+      }
+    }
   };
 
   const inputClasses = "w-full pl-11 pr-4 py-3 bg-[var(--background)] border border-brand-medium rounded-xl focus:outline-none focus:ring-4 focus:ring-brand-lightest/40 focus:border-brand-dark transition-all duration-300 text-brand-darkest placeholder-brand-medium/50 shadow-sm text-sm";
@@ -159,7 +187,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 id="lead-name"
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 className={inputClasses}
                 placeholder="Enter your full name"
                 required
@@ -183,7 +211,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 id="lead-email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) => handleInputChange('email', e.target.value)}
                 className={inputClasses}
                 placeholder="name@domain.com"
                 required
@@ -207,7 +235,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 id="lead-phone"
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
                 className={inputClasses}
                 placeholder="+91 XXXXX XXXXX"
                 required
@@ -240,7 +268,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 id="lead-start-date"
                 type="date"
                 value={formData.travel_start_date}
-                onChange={(e) => setFormData({ ...formData, travel_start_date: e.target.value })}
+                onChange={(e) => handleInputChange('travel_start_date', e.target.value)}
                 className={inputClasses}
                 required
                 aria-required="true"
@@ -263,7 +291,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 id="lead-end-date"
                 type="date"
                 value={formData.travel_end_date}
-                onChange={(e) => setFormData({ ...formData, travel_end_date: e.target.value })}
+                onChange={(e) => handleInputChange('travel_end_date', e.target.value)}
                 className={inputClasses}
               />
             </div>
@@ -374,7 +402,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
         <textarea
           id="lead-message"
           value={formData.message}
-          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+          onChange={(e) => handleInputChange('message', e.target.value)}
           rows={3}
           className="w-full px-4 py-3 bg-[var(--background)] border border-brand-medium rounded-xl focus:outline-none focus:ring-4 focus:ring-brand-lightest/40 focus:border-brand-dark transition-all duration-300 text-brand-darkest placeholder-brand-medium/50 shadow-sm text-sm resize-none"
           placeholder="Specify room preferences, dietary requirements, or flight timings if any..."
