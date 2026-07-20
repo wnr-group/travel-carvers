@@ -7,6 +7,7 @@ import {
   X,
   ChevronDown,
   Compass,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   usePackageFilters,
@@ -28,6 +29,8 @@ export default function PackageSearchFilter() {
     searchInput,
     setSearchInput,
     loading,
+    error,
+    refetch,
     sortedPackages,
     totalCount,
     availableCategories,
@@ -46,8 +49,8 @@ export default function PackageSearchFilter() {
   return (
     <div className="min-h-screen bg-brand-tint-light">
       <h1 className="sr-only">Tour Packages</h1>
-      {/* Header / search bar */}
-      <div className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur">
+      {/* Header / search bar — offset below the ~80px sticky navbar so it doesn't hide behind it. */}
+      <div className="sticky top-20 z-30 bg-[var(--background)]/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
@@ -105,6 +108,8 @@ export default function PackageSearchFilter() {
             <p className="text-sm text-brand-medium">
               {loading ? (
                 'Searching packages…'
+              ) : error ? (
+                'Unable to load packages'
               ) : (
                 <>
                   Showing{' '}
@@ -154,7 +159,7 @@ export default function PackageSearchFilter() {
                   onRemove={() => setFilters((prev) => ({ ...prev, priceMin: PRICE_FLOOR, priceMax: PRICE_CEIL }))}
                 />
               )}
-              {filters.duration !== 'any' && (
+              {filters.duration !== 'any' && DURATION_RANGES[filters.duration] && (
                 <Chip label={DURATION_RANGES[filters.duration].label} onRemove={() => setDuration('any')} />
               )}
               <button
@@ -170,6 +175,15 @@ export default function PackageSearchFilter() {
           {/* Grid */}
           {loading ? (
             <LoadingSkeleton variant="grid" count={6} />
+          ) : error ? (
+            <EmptyState
+              variant="generic"
+              icon={AlertTriangle}
+              title="Couldn't load packages"
+              description="Something went wrong while loading packages. Please check your connection and try again."
+              actionLabel="Retry"
+              onAction={() => refetch()}
+            />
           ) : sortedPackages.length === 0 ? (
             <EmptyState
               variant="search"

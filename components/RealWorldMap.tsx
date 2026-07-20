@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import DestinationModal from '@/components/customer/DestinationModal';
+import { getDestinationDetail, type DestinationDetail } from '@/lib/data/destinations';
 
 interface RealWorldMapProps {
   isPreview?: boolean;
@@ -56,6 +58,7 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [selectedLocation, setSelectedLocation] = useState<TouristLocation | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<DestinationDetail | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TouristLocation[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -214,7 +217,14 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           clearInterval(autoPanRef.current);
           autoPanRef.current = null;
         }
-        setSelectedLocation(location);
+        // Destinations with hardcoded details open the rich modal; the rest keep
+        // the lightweight info card.
+        const detail = getDestinationDetail(location.name);
+        if (detail) {
+          setSelectedDestination(detail);
+        } else {
+          setSelectedLocation(location);
+        }
         map.flyTo([location.lat, location.lng], 6, {
           duration: 1.5,
         });
@@ -413,6 +423,12 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
             </p>
           </div>
         )}
+
+        {/* Rich destination modal (portaled to <body>) */}
+        <DestinationModal
+          destination={selectedDestination}
+          onClose={() => setSelectedDestination(null)}
+        />
 
       <style jsx global>{`
         .leaflet-container {

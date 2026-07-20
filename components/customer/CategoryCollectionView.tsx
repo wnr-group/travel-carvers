@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { PackageCard } from '@/components/customer/PackageCard';
 import Breadcrumb, { type BreadcrumbItem } from '@/components/customer/Breadcrumb';
 import DynamicIcon from '@/components/ui/DynamicIcon';
@@ -27,6 +30,18 @@ interface CategoryCollectionViewProps {
   emptyDescription?: string;
 }
 
+const CONTAINER_VARIANTS: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+const ITEM_VARIANTS: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+};
+const HERO_VARIANTS: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+};
 
 export default function CategoryCollectionView({
   breadcrumbs,
@@ -37,7 +52,10 @@ export default function CategoryCollectionView({
   collections,
   emptyDescription,
 }: CategoryCollectionViewProps) {
+  const shouldReduce = useReducedMotion();
   const countLabel = `${packages.length} ${packages.length === 1 ? 'package' : 'packages'}`;
+
+  const initial = shouldReduce ? false : 'hidden';
 
   return (
     <div className="min-h-screen bg-brand-tint-light pb-16">
@@ -59,22 +77,32 @@ export default function CategoryCollectionView({
             <div className="absolute inset-0 bg-gradient-to-br from-[#1A3C34] to-[#A9B388]" />
           )}
           <div className="overlay-brand-primary absolute inset-0" />
-          <div className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-10">
+          <motion.div
+            variants={HERO_VARIANTS}
+            initial={initial}
+            animate="visible"
+            className="absolute inset-x-0 bottom-0 z-10 p-6 sm:p-10"
+          >
             <h1 className="max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-5xl">
               {title}
             </h1>
             <p className="mt-2 text-sm font-medium text-white/85">{countLabel}</p>
-          </div>
+          </motion.div>
         </div>
 
         {description && (
-          <p className="mx-auto mt-6 max-w-3xl text-center text-sm leading-relaxed text-brand-medium sm:text-base">
+          <motion.p
+            variants={HERO_VARIANTS}
+            initial={initial}
+            animate="visible"
+            className="mx-auto mt-6 max-w-3xl text-center text-sm leading-relaxed text-brand-medium sm:text-base"
+          >
             {description}
-          </p>
+          </motion.p>
         )}
 
         {collections && collections.length > 0 && (
-          <nav aria-label={`${title} subcategories`} className="mt-10">
+          <nav aria-label={`${title} subcategories`} className="mt-12">
             <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-brand-medium">
               Collections
             </p>
@@ -82,12 +110,18 @@ export default function CategoryCollectionView({
               Find your kind of {title} trip
             </h2>
 
-            <ul className="mx-auto mt-6 grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <motion.ul
+              variants={CONTAINER_VARIANTS}
+              initial={initial}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.15 }}
+              className="mx-auto mt-8 grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            >
               {collections.map((collection) => (
-                <li key={collection.href}>
+                <motion.li key={collection.href} variants={ITEM_VARIANTS} className="h-full">
                   <Link
                     href={collection.href}
-                    className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)] transition hover:-translate-y-1 hover:border-brand-medium hover:shadow-lg"
+                    className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)] transition duration-300 hover:-translate-y-1 hover:border-brand-medium hover:shadow-lg"
                   >
                     {/* Cover — image when set, brand gradient + icon/monogram otherwise */}
                     <span className="relative block h-36 w-full overflow-hidden">
@@ -110,10 +144,10 @@ export default function CategoryCollectionView({
                           {collection.iconName && isIconName(collection.iconName) ? (
                             <DynamicIcon
                               name={collection.iconName}
-                              className="h-10 w-10 text-white/80 transition group-hover:scale-110"
+                              className="h-10 w-10 text-white/80 transition duration-300 group-hover:scale-110"
                             />
                           ) : (
-                            <span className="text-4xl font-bold text-white/80 transition group-hover:scale-110">
+                            <span className="text-4xl font-bold text-white/80 transition duration-300 group-hover:scale-110">
                               {collection.label.charAt(0).toUpperCase()}
                             </span>
                           )}
@@ -139,19 +173,19 @@ export default function CategoryCollectionView({
                       </span>
                       <ArrowRight
                         aria-hidden="true"
-                        className="h-4 w-4 shrink-0 text-brand-medium transition group-hover:translate-x-1 group-hover:text-brand-dark"
+                        className="h-4 w-4 shrink-0 text-brand-medium transition duration-300 group-hover:translate-x-1 group-hover:text-brand-dark"
                       />
                     </span>
                   </Link>
-                </li>
+                </motion.li>
               ))}
-            </ul>
+            </motion.ul>
           </nav>
         )}
       </header>
 
       {/* Package grid */}
-      <main className="mx-auto mt-8 max-w-7xl px-5 sm:px-8">
+      <main className="mx-auto mt-12 max-w-7xl px-5 sm:px-8">
         {packages.length === 0 ? (
           <EmptyState
             variant="packages"
@@ -162,11 +196,37 @@ export default function CategoryCollectionView({
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {packages.map((pkg) => (
-              <PackageCard key={pkg.id} pkg={pkg} />
-            ))}
-          </div>
+          <>
+            <div className="mb-6 flex items-end justify-between gap-4 border-b border-brand-light/60 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-medium">
+                  The Trips
+                </p>
+                <h2 className="mt-1 text-xl font-semibold text-brand-darkest sm:text-2xl">
+                  All {title} packages
+                </h2>
+              </div>
+              <p className="shrink-0 pb-1 text-sm font-medium text-brand-medium">{countLabel}</p>
+            </div>
+
+            <motion.div
+              variants={CONTAINER_VARIANTS}
+              initial={initial}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {packages.map((pkg) => (
+                <motion.div
+                  key={pkg.id}
+                  variants={ITEM_VARIANTS}
+                  className="flex flex-col [&>article]:flex-1"
+                >
+                  <PackageCard pkg={pkg} />
+                </motion.div>
+              ))}
+            </motion.div>
+          </>
         )}
       </main>
     </div>

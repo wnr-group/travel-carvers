@@ -3,15 +3,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { Coffee, Utensils, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { LeadFormModal } from "@/components/customer/LeadFormModal";
+import { SimilarPackages } from "@/components/customer/SimilarPackages";
+import DynamicIcon from "@/components/ui/DynamicIcon";
+import { isIconName } from "@/lib/icons";
+import { youTubeEmbedUrl } from "@/lib/utils";
 import type {
   PackageDetail,
   ItineraryDayVM,
   GalleryImageVM,
+  InclusionVM,
+  StayVM,
+  PlaceVM,
   PricingTierVM,
   ReviewVM,
   RatingBucketVM,
-  SimilarPackageVM,
 } from "@/lib/packageDetail";
 
 /* -------------------- Company-wide static content --------------------- */
@@ -46,6 +54,7 @@ const tabs = [
   { id: "overview", label: "Overview" },
   { id: "itinerary", label: "Itinerary" },
   { id: "inclusions", label: "Inclusions" },
+  { id: "stay", label: "Stay" },
   { id: "gallery", label: "Gallery" },
   { id: "pricing", label: "Pricing" },
   { id: "info", label: "Additional Info" },
@@ -287,14 +296,17 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
             )}
             {activeTab === "itinerary" && <Itinerary days={detail.itinerary} />}
             {activeTab === "inclusions" && <Inclusions inclusions={detail.inclusions} exclusions={detail.exclusions} />}
-            {activeTab === "gallery" && <Gallery gallery={detail.gallery} onOpen={setLightbox} />}
+            {activeTab === "stay" && <Stay stays={detail.stays} />}
+            {activeTab === "gallery" && <Gallery gallery={detail.gallery} videos={detail.videos} onOpen={setLightbox} />}
             {activeTab === "pricing" && <Pricing tiers={detail.pricingTiers} />}
-            {activeTab === "info" && <AdditionalInfo />}
+            {activeTab === "info" && <AdditionalInfo places={detail.places} />}
             {activeTab === "faqs" && <FAQs open={openFaq} setOpen={setOpenFaq} />}
             {activeTab === "reviews" && (
               <Reviews rating={detail.rating} reviewCount={detail.reviewCount} ratingBreakdown={detail.ratingBreakdown} reviews={detail.reviews} />
             )}
-            {activeTab === "similar" && <SimilarPackages similar={detail.similar} />}
+            {activeTab === "similar" && (
+              <SimilarPackages packageId={detail.id} categoryId={detail.categoryId} />
+            )}
           </main>
 
           {/* Booking sidebar */}
@@ -338,10 +350,6 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
           <button className="absolute right-6 top-6 text-white/80 hover:text-white" onClick={() => setLightbox(null)}>
             <Icon.close className="h-7 w-7" />
           </button>
-          {/* Full-screen lightbox: object-contain against the viewport with unknown
-              intrinsic dimensions — a case next/image doesn't handle well. Loads only
-              when the user opens the lightbox. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={detail.gallery[lightbox].src}
             alt={detail.gallery[lightbox].alt}
@@ -427,7 +435,99 @@ function Overview({ tagline, highlights, bestTime }: { tagline: string; highligh
   );
 }
 
+/* Day rows fade/slide in one after another when the itinerary tab opens. */
+const ITINERARY_LIST_VARIANTS: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+};
+const ITINERARY_ITEM_VARIANTS: Variants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
+
+/** Breakfast / Lunch / Dinner each get their own icon; anything else falls back to a check. */
+const MEAL_ICONS: Record<string, LucideIcon> = {
+  Breakfast: Coffee,
+  Lunch: Utensils,
+  Dinner: UtensilsCrossed,
+};
+
+function MealIcon({ meal, className }: { meal: string; className?: string }) {
+  // Static-registry lookup kept in one place, same pattern as DynamicIcon.
+  const Component = MEAL_ICONS[meal];
+  if (!Component) return <Icon.check className={className} />;
+  return <Component className={className} aria-hidden="true" />;
+}
+
+/** The expandable body of a single day: segmented activities, meals, and photos. */
+function DayDetails({ day }: { day: ItineraryDayVM }) {
+  const isEmpty = day.activities.length === 0 && day.meals.length === 0 && day.images.length === 0;
+
+  return (
+    <div className="space-y-5 border-t border-brand-light/50 px-4 pb-5 pt-4 sm:px-5">
+      {day.activities.length > 0 && (
+        <ol className="relative space-y-4 pl-5">
+          {/* Timeline spine linking the morning → afternoon → evening markers. */}
+          <span aria-hidden className="absolute bottom-2 left-[3px] top-2 w-px bg-brand-light" />
+          {day.activities.map((activity) => (
+            <li key={activity.label} className="relative">
+              <span
+                aria-hidden
+                className="absolute -left-5 top-1 h-2 w-2 rounded-full bg-brand-dark ring-4 ring-white"
+              />
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-medium">
+                {activity.label}
+              </p>
+              <p className="mt-0.5 text-sm leading-relaxed text-slate-800">{activity.text}</p>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {day.meals.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand-medium">
+            Meals included
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {day.meals.map((meal) => (
+              <span
+                key={meal}
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-lightest px-3 py-1 text-xs font-medium text-brand-darkest"
+              >
+                <MealIcon meal={meal} className="h-3.5 w-3.5 text-brand-dark" />
+                {meal}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {day.images.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {day.images.map((src, i) => (
+            <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-slate-100">
+              <Image
+                src={src}
+                alt={`${day.title} — photo ${i + 1}`}
+                fill
+                sizes="(max-width: 640px) 50vw, 200px"
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isEmpty && <p className="text-sm text-slate-600">Details for this day are coming soon.</p>}
+    </div>
+  );
+}
+
 function Itinerary({ days }: { days: ItineraryDayVM[] }) {
+  // Collapsed by default — a day expands only when clicked (single day open at a time).
+  const [openDay, setOpenDay] = useState<number | null>(null);
+
   return (
     <div>
       <SectionHeading eyebrow="Day by Day" title="Itinerary" />
@@ -435,27 +535,69 @@ function Itinerary({ days }: { days: ItineraryDayVM[] }) {
       {days.length === 0 ? (
         <EmptyNote>A detailed day-by-day itinerary for this package is coming soon.</EmptyNote>
       ) : (
-        <ol className="space-y-4">
-          {days.map((d) => (
-            <li key={d.n} className="flex gap-4 rounded-xl border border-brand-light/60 p-4 sm:p-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-darkest font-mono text-sm font-semibold text-white">
-                {String(d.n).padStart(2, "0")}
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <h3 className="font-display text-base font-semibold text-brand-darkest">{d.title}</h3>
-                </div>
-                {d.desc && <p className="mt-1.5 text-sm leading-relaxed text-slate-800">{d.desc}</p>}
-              </div>
-            </li>
-          ))}
-        </ol>
+        <motion.ol
+          className="space-y-3"
+          variants={ITINERARY_LIST_VARIANTS}
+          initial="hidden"
+          animate="visible"
+        >
+          {days.map((d) => {
+            const isOpen = openDay === d.n;
+            return (
+              <motion.li
+                key={d.n}
+                variants={ITINERARY_ITEM_VARIANTS}
+                className="overflow-hidden rounded-xl border border-brand-light/60 bg-white"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenDay(isOpen ? null : d.n)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-brand-tint-subtle/50"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-darkest font-mono text-sm font-semibold text-white">
+                    {String(d.n).padStart(2, "0")}
+                  </span>
+                  <span className="min-w-0 flex-1 font-display text-base font-semibold text-brand-darkest">
+                    {d.title}
+                  </span>
+                  <Icon.chevron
+                    className={`h-4 w-4 shrink-0 text-brand-medium transition-transform ${isOpen ? "rotate-90" : ""}`}
+                  />
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <DayDetails day={d} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.li>
+            );
+          })}
+        </motion.ol>
       )}
     </div>
   );
 }
 
-function Inclusions({ inclusions, exclusions }: { inclusions: string[]; exclusions: string[] }) {
+function InclusionIcon({ icon, included }: { icon: string | null; included: boolean }) {
+  const className = `mt-0.5 h-4 w-4 shrink-0 ${included ? "text-brand-medium" : "text-slate-600"}`;
+  if (icon && isIconName(icon)) {
+    return <DynamicIcon name={icon} className={className} />;
+  }
+  return included ? <Icon.check className={className} /> : <Icon.x className={className} />;
+}
+
+function Inclusions({ inclusions, exclusions }: { inclusions: InclusionVM[]; exclusions: InclusionVM[] }) {
   return (
     <div>
       <SectionHeading eyebrow="What You Get" title="Inclusions & Exclusions" />
@@ -468,8 +610,8 @@ function Inclusions({ inclusions, exclusions }: { inclusions: string[]; exclusio
             <ul className="space-y-2.5">
               {inclusions.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-slate-800">
-                  <Icon.check className="mt-0.5 h-4 w-4 shrink-0 text-brand-medium" />
-                  {item}
+                  <InclusionIcon icon={item.icon} included />
+                  {item.text}
                 </li>
               ))}
             </ul>
@@ -479,8 +621,8 @@ function Inclusions({ inclusions, exclusions }: { inclusions: string[]; exclusio
             <ul className="space-y-2.5">
               {exclusions.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
-                  <Icon.x className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" />
-                  {item}
+                  <InclusionIcon icon={item.icon} included={false} />
+                  {item.text}
                 </li>
               ))}
             </ul>
@@ -491,31 +633,66 @@ function Inclusions({ inclusions, exclusions }: { inclusions: string[]; exclusio
   );
 }
 
-function Gallery({ gallery, onOpen }: { gallery: GalleryImageVM[]; onOpen: (i: number) => void }) {
+/** Responsive, privacy-friendly YouTube embed. Renders nothing for a URL we can't parse. */
+function VideoEmbed({ url, title }: { url: string; title: string }) {
+  const embed = youTubeEmbedUrl(url);
+  if (!embed) return null;
+  return (
+    <div className="relative aspect-video overflow-hidden rounded-xl border border-brand-light/60 bg-black">
+      <iframe
+        src={embed}
+        title={title}
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        className="absolute inset-0 h-full w-full"
+      />
+    </div>
+  );
+}
+
+function Gallery({ gallery, videos, onOpen }: { gallery: GalleryImageVM[]; videos: string[]; onOpen: (i: number) => void }) {
+  const hasImages = gallery.length > 0;
+  // A video may be an unparseable URL, so gate the section on something renderable.
+  const playableVideos = videos.filter((url) => youTubeEmbedUrl(url) !== null);
+  const hasVideos = playableVideos.length > 0;
+
   return (
     <div>
       <SectionHeading eyebrow="In Pictures" title="Gallery" />
-      {gallery.length === 0 ? (
-        <EmptyNote>No photos have been added for this package yet.</EmptyNote>
+      {!hasImages && !hasVideos ? (
+        <EmptyNote>No photos or videos have been added for this package yet.</EmptyNote>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {gallery.map((g, i) => (
-            <button
-              key={i}
-              onClick={() => onOpen(i)}
-              className={`group overflow-hidden rounded-xl bg-slate-100 ${i === 1 || i === 4 ? "row-span-2" : ""}`}
-            >
-              {/* Masonry (row-span) heights are grid-derived, so next/image `fill` can't
-                  measure them; kept as <img> and only mounts when the Gallery tab opens. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={g.src}
-                alt={g.alt}
-                loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </button>
-          ))}
+        <div className="space-y-8">
+          {hasImages && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {gallery.map((g, i) => (
+                <button
+                  key={i}
+                  onClick={() => onOpen(i)}
+                  className={`group overflow-hidden rounded-xl bg-slate-100 ${i === 1 || i === 4 ? "row-span-2" : ""}`}
+                >
+                  <img
+                    src={g.src}
+                    alt={g.alt}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {hasVideos && (
+            <div>
+              <h3 className="mb-4 font-display text-lg font-semibold text-brand-darkest">Videos</h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {playableVideos.map((url, i) => (
+                  <VideoEmbed key={url} url={url} title={`Package video ${i + 1}`} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -557,9 +734,40 @@ function Pricing({ tiers }: { tiers: PricingTierVM[] }) {
   );
 }
 
-function AdditionalInfo() {
+function PlaceCard({ place }: { place: PlaceVM }) {
+  return (
+    <div className="rounded-xl border border-brand-light/60 p-4">
+      <div className="flex items-start justify-between gap-2">
+        <h4 className="flex items-center gap-1.5 font-display text-base font-semibold text-brand-darkest">
+          <Icon.pin className="h-4 w-4 shrink-0 text-brand-medium" />
+          {place.name}
+        </h4>
+        {place.entryFee && (
+          <span className="shrink-0 rounded-full bg-brand-tint-subtle px-2.5 py-1 text-xs font-medium text-brand-darkest">
+            {place.entryFee}
+          </span>
+        )}
+      </div>
+      {place.description && <p className="mt-2 text-sm leading-relaxed text-slate-800">{place.description}</p>}
+      {place.distance && <p className="mt-2 text-xs text-slate-600">{place.distance} from hotel</p>}
+    </div>
+  );
+}
+
+function AdditionalInfo({ places }: { places: PlaceVM[] }) {
   return (
     <div className="space-y-10">
+      {places.length > 0 && (
+        <div>
+          <SectionHeading eyebrow="Around the Trip" title="Places to Visit" />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {places.map((place, i) => (
+              <PlaceCard key={i} place={place} />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <SectionHeading eyebrow="Fine Print" title="Additional Information" />
         <h3 className="mb-3 font-display text-base font-semibold text-brand-darkest">Cancellation policy</h3>
@@ -670,33 +878,90 @@ function Reviews({ rating, reviewCount, ratingBreakdown, reviews }: { rating: nu
   );
 }
 
-function SimilarPackages({ similar }: { similar: SimilarPackageVM[] }) {
+/* ------------------------------- Stay ------------------------------- */
+
+function HotelRating({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5 text-amber-400" aria-label={`${rating} star hotel`}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Icon.star key={i} className={`h-4 w-4 ${i < rating ? "" : "text-slate-200"}`} />
+      ))}
+    </div>
+  );
+}
+
+function HotelCard({ hotel }: { hotel: StayVM }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-brand-light/60 sm:flex">
+      {hotel.image && (
+        <div className="relative h-48 w-full shrink-0 sm:h-auto sm:w-56">
+          <Image
+            src={hotel.image}
+            alt={hotel.name}
+            fill
+            sizes="(max-width: 640px) 100vw, 224px"
+            className="object-cover"
+          />
+        </div>
+      )}
+      <div className="flex-1 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="font-display text-lg font-semibold text-brand-darkest">{hotel.name}</h3>
+            {hotel.location && (
+              <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-700">
+                <Icon.pin className="h-3.5 w-3.5" />
+                {hotel.location}
+              </p>
+            )}
+          </div>
+          {hotel.rating != null && <HotelRating rating={hotel.rating} />}
+        </div>
+
+        {hotel.roomType && <p className="mt-2 text-sm text-slate-800">{hotel.roomType}</p>}
+
+        {hotel.amenities.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {hotel.amenities.map((amenity) => (
+              <span
+                key={amenity}
+                className="rounded-full bg-brand-tint-subtle px-2.5 py-1 text-xs text-brand-darkest"
+              >
+                {amenity}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {(hotel.checkIn || hotel.checkOut) && (
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-600">
+            {hotel.checkIn && (
+              <span>
+                Check-in: <span className="font-medium text-brand-darkest">{hotel.checkIn}</span>
+              </span>
+            )}
+            {hotel.checkOut && (
+              <span>
+                Check-out: <span className="font-medium text-brand-darkest">{hotel.checkOut}</span>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Stay({ stays }: { stays: StayVM[] }) {
   return (
     <div>
-      <SectionHeading eyebrow="Keep Exploring" title="Similar Packages" />
-      {similar.length === 0 ? (
-        <EmptyNote>More packages are on the way — check back soon.</EmptyNote>
+      <SectionHeading eyebrow="Where You Stay" title="Stay Details" />
+      {stays.length === 0 ? (
+        <EmptyNote>Accommodation details for this package will be shared soon.</EmptyNote>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {similar.map((s) => (
-            <Link key={s.slug} href={`/packages/${s.slug}`} className="group overflow-hidden rounded-xl border border-brand-light/60">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <Image
-                  src={s.img}
-                  alt={s.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="font-display text-sm font-semibold text-brand-darkest">{s.title}</h3>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-slate-700">{s.duration}</span>
-                  {s.price != null && <span className="font-mono text-sm font-semibold text-brand-dark">{money(s.price)}</span>}
-                </div>
-              </div>
-            </Link>
+        <div className="space-y-5">
+          {stays.map((hotel, i) => (
+            <HotelCard key={i} hotel={hotel} />
           ))}
         </div>
       )}

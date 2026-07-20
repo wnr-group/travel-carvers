@@ -17,8 +17,11 @@ export const AMENITIES = [
   'TV',
 ] as const
 
-export const MIN_RATING = 1
-export const MAX_RATING = 5
+export {
+  MIN_HOTEL_RATING as MIN_RATING,
+  MAX_HOTEL_RATING as MAX_RATING,
+} from '@/lib/validations/package.schema'
+
 export const DEFAULT_RATING = 3
 
 export function createHotel(displayOrder: number): Hotel {

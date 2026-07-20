@@ -48,6 +48,9 @@ export async function getPackageBySlug(slug: string) {
         video_url,
         display_order
       ),
+      package_categories (
+        category_id
+      ),
       itinerary_days (
         *,
         itinerary_day_images (
@@ -122,6 +125,42 @@ export async function getTrendingPackages() {
     .eq('is_trending', true)
     .order('created_at', { ascending: false })
     .limit(6);
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get packages similar
+ */
+export async function getSimilarPackages(
+  packageId: string,
+  categoryId: string,
+  limit = 4,
+) {
+  if (!packageId || !categoryId) return [];
+
+  const { data, error } = await supabase
+    .from('packages')
+    .select(`
+      *,
+      package_gallery (
+        image_url,
+        is_cover
+      ),
+      package_categories!inner (
+        category_id,
+        categories (
+          name,
+          slug
+        )
+      )
+    `)
+    .eq('status', 'published')
+    .eq('package_categories.category_id', categoryId)
+    .neq('id', packageId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
 
   if (error) throw error;
   return data;

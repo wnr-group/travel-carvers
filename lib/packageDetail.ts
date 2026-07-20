@@ -11,12 +11,41 @@ interface RawItineraryDay {
   morning_activity?: string | null;
   afternoon_activity?: string | null;
   evening_activity?: string | null;
+  breakfast?: boolean | null;
+  lunch?: boolean | null;
+  dinner?: boolean | null;
+  itinerary_day_images?: RawGalleryImage[] | null;
 }
 
 interface RawInclusion {
   item_text: string;
+  icon_name?: string | null;
   is_included?: boolean | null;
   display_order?: number | null;
+}
+
+interface RawVideo {
+  video_url: string;
+  display_order?: number | null;
+}
+
+interface RawStay {
+  hotel_name: string;
+  location?: string | null;
+  rating?: number | null;
+  room_type?: string | null;
+  amenities?: string[] | null;
+  image_url?: string | null;
+  check_in_date?: string | null;
+  check_out_date?: string | null;
+  display_order?: number | null;
+}
+
+interface RawPlace {
+  place_name: string;
+  description?: string | null;
+  distance_from_hotel?: string | null;
+  entry_fee?: string | null;
 }
 
 interface RawTravelTip {
@@ -48,11 +77,15 @@ export interface RawPackageDetail {
   group_size_max?: number | null;
   age_restriction?: string | null;
   destination_name?: string | null;
+  package_categories?: { category_id: string }[] | null;
   package_gallery?: RawGalleryImage[] | null;
+  package_videos?: RawVideo[] | null;
   itinerary_days?: RawItineraryDay[] | null;
   package_inclusions?: RawInclusion[] | null;
+  stay_details?: RawStay[] | null;
   travel_tips?: RawTravelTip[] | null;
   best_time_to_visit?: RawBestTime[] | null;
+  places_to_visit?: RawPlace[] | null;
 }
 
 export interface RawReview {
@@ -62,25 +95,45 @@ export interface RawReview {
   created_at: string;
 }
 
-interface RawSimilarPackage {
-  slug: string;
-  title: string;
-  duration_days?: number | null;
-  price_adult?: number | string | null;
-  show_price?: boolean | null;
-  package_gallery?: RawGalleryImage[] | null;
-}
-
 /* ------------------------------- View-model -------------------------------- */
 
+/** A single time-of-day activity block within a day. */
+export interface ItineraryActivityVM {
+  /** "Morning" | "Afternoon" | "Evening". */
+  label: string;
+  text: string;
+}
 export interface ItineraryDayVM {
   n: number;
   title: string;
-  desc: string;
+  activities: ItineraryActivityVM[];
+  meals: string[];
+  images: string[];
 }
 export interface GalleryImageVM {
   src: string;
   alt: string;
+}
+/** An inclusion or exclusion line; `icon` is the admin-chosen lucide icon name. */
+export interface InclusionVM {
+  text: string;
+  icon: string | null;
+}
+export interface StayVM {
+  name: string;
+  location: string | null;
+  rating: number | null;
+  roomType: string | null;
+  amenities: string[];
+  image: string | null;
+  checkIn: string | null;
+  checkOut: string | null;
+}
+export interface PlaceVM {
+  name: string;
+  description: string | null;
+  distance: string | null;
+  entryFee: string | null;
 }
 export interface PricingTierVM {
   label: string;
@@ -96,13 +149,6 @@ export interface ReviewVM {
 export interface RatingBucketVM {
   stars: number;
   pct: number;
-}
-export interface SimilarPackageVM {
-  slug: string;
-  title: string;
-  duration: string;
-  price: number | null;
-  img: string;
 }
 
 export interface PackageDetail {
@@ -122,13 +168,17 @@ export interface PackageDetail {
   highlights: string[];
   bestTime: string | null;
   itinerary: ItineraryDayVM[];
-  inclusions: string[];
-  exclusions: string[];
+  inclusions: InclusionVM[];
+  exclusions: InclusionVM[];
   gallery: GalleryImageVM[];
+  videos: string[];
+  stays: StayVM[];
+  places: PlaceVM[];
   pricingTiers: PricingTierVM[];
   reviews: ReviewVM[];
   ratingBreakdown: RatingBucketVM[];
-  similar: SimilarPackageVM[];
+  /** Primary category, used to fetch similar packages client-side. Null when uncategorised. */
+  categoryId: string | null;
 }
 
 /* -------------------------------- Helpers ---------------------------------- */
@@ -165,12 +215,25 @@ function formatReviewDate(iso: string): string {
   return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
 }
 
+/** Meal booleans on an itinerary day, in the order the admin editor lists them. */
+const MEAL_LABELS: { key: 'breakfast' | 'lunch' | 'dinner'; label: string }[] = [
+  { key: 'breakfast', label: 'Breakfast' },
+  { key: 'lunch', label: 'Lunch' },
+  { key: 'dinner', label: 'Dinner' },
+];
+
+/** Activity columns on an itinerary day, kept segmented instead of concatenated. */
+const ACTIVITY_FIELDS: { key: 'morning_activity' | 'afternoon_activity' | 'evening_activity'; label: string }[] = [
+  { key: 'morning_activity', label: 'Morning' },
+  { key: 'afternoon_activity', label: 'Afternoon' },
+  { key: 'evening_activity', label: 'Evening' },
+];
+
 /* --------------------------------- Mapper ---------------------------------- */
 
 export function toPackageDetail(
   raw: RawPackageDetail,
   rawReviews: RawReview[] = [],
-  rawSimilar: RawSimilarPackage[] = [],
 ): PackageDetail {
   // Group size / age
   const groupSize =
@@ -178,33 +241,63 @@ export function toPackageDetail(
       ? `${raw.group_size_min}–${raw.group_size_max} travellers`
       : raw.age_restriction || 'Flexible group size';
 
-  // Itinerary — no altitude in the schema, so we render title + composed activities only.
+  // Itinerary — title + composed activities, plus the day's meals and images.
   const itinerary: ItineraryDayVM[] = [...(raw.itinerary_days ?? [])]
     .sort((a, b) => a.day_number - b.day_number)
     .map((day) => ({
       n: day.day_number,
       title: day.title ?? `Day ${day.day_number}`,
-      desc: [day.morning_activity, day.afternoon_activity, day.evening_activity]
-        .filter((activity): activity is string => Boolean(activity && activity.trim()))
-        .join(' '),
+      activities: ACTIVITY_FIELDS
+        .map(({ key, label }) => ({ label, text: (day[key] ?? '').trim() }))
+        .filter((activity) => activity.text.length > 0),
+      meals: MEAL_LABELS.filter(({ key }) => day[key]).map(({ label }) => label),
+      images: byOrder(day.itinerary_day_images ?? []).map((image) => image.image_url),
     }));
 
-  // Inclusions / exclusions live in one table, told apart by `is_included`.
+  // Inclusions / exclusions
   const inclusionRows = byOrder(raw.package_inclusions ?? []);
-  const inclusions = inclusionRows.filter((row) => row.is_included).map((row) => row.item_text);
-  const exclusions = inclusionRows.filter((row) => !row.is_included).map((row) => row.item_text);
+  const toInclusion = (row: RawInclusion): InclusionVM => ({
+    text: row.item_text,
+    icon: row.icon_name ?? null,
+  });
+  const inclusions = inclusionRows.filter((row) => row.is_included).map(toInclusion);
+  const exclusions = inclusionRows.filter((row) => !row.is_included).map(toInclusion);
 
   // Highlights ← travel tips.
   const highlights = byOrder(raw.travel_tips ?? []).map((tip) => tip.tip_text);
 
-  // Best time to go ← composed sentence from the season rows.
+  // Best time to go ← composed sentence from the season rows (with weather).
   const bestTimeParts = (raw.best_time_to_visit ?? [])
     .map((season) => {
       const range = [season.month_start, season.month_end].filter(Boolean).join(' – ');
-      return [range, season.description].filter(Boolean).join(': ');
+      const detail = [season.description, season.weather_condition].filter(Boolean).join(' — ');
+      return [range, detail].filter(Boolean).join(': ');
     })
     .filter(Boolean);
   const bestTime = bestTimeParts.length ? bestTimeParts.join(' · ') : null;
+
+  // Videos ← admin-managed YouTube links, in display order.
+  const videos = byOrder(raw.package_videos ?? []).map((video) => video.video_url);
+
+  // Stay details ← one card per hotel, in the order guests stay in them.
+  const stays: StayVM[] = byOrder(raw.stay_details ?? []).map((hotel) => ({
+    name: hotel.hotel_name,
+    location: hotel.location ?? null,
+    rating: hotel.rating ?? null,
+    roomType: hotel.room_type ?? null,
+    amenities: hotel.amenities ?? [],
+    image: hotel.image_url ?? null,
+    checkIn: hotel.check_in_date ?? null,
+    checkOut: hotel.check_out_date ?? null,
+  }));
+
+  // Places to visit ← no display_order column, so kept in the returned order.
+  const places: PlaceVM[] = (raw.places_to_visit ?? []).map((place) => ({
+    name: place.place_name,
+    description: place.description ?? null,
+    distance: place.distance_from_hotel ?? null,
+    entryFee: place.entry_fee ?? null,
+  }));
 
   // Gallery.
   const gallery: GalleryImageVM[] = byOrder(raw.package_gallery ?? []).map((image) => ({
@@ -246,15 +339,8 @@ export function toPackageDetail(
     pct: reviewCount ? Math.round((counts[stars - 1] / reviewCount) * 100) : 0,
   }));
 
-  // Similar packages (other published packages). Each card honours that
-  // package's own show_price flag — null renders without a price.
-  const similar: SimilarPackageVM[] = rawSimilar.slice(0, 3).map((pkg) => ({
-    slug: pkg.slug,
-    title: pkg.title,
-    duration: durationLabel(pkg.duration_days, null),
-    price: (pkg.show_price ?? true) ? toNumber(pkg.price_adult) : null,
-    img: coverOf(pkg.package_gallery, pkg.slug, '700/500'),
-  }));
+  // Primary category id — the similar-packages section fetches siblings from it.
+  const categoryId = raw.package_categories?.find((pc) => pc.category_id)?.category_id ?? null;
 
   return {
     id: raw.id,
@@ -277,9 +363,12 @@ export function toPackageDetail(
     inclusions,
     exclusions,
     gallery,
+    videos,
+    stays,
+    places,
     pricingTiers,
     reviews,
     ratingBreakdown,
-    similar,
+    categoryId,
   };
 }

@@ -1,8 +1,8 @@
-import type { PackageFormInput } from '@/lib/validations/package.schema'
+import { MAX_GALLERY_IMAGES, type PackageFormInput } from '@/lib/validations/package.schema'
+
+export { MAX_GALLERY_IMAGES }
 
 export type GalleryImage = NonNullable<PackageFormInput['gallery_images']>[number]
-
-export const MAX_GALLERY_IMAGES = 20
 
 export function normalize(images: GalleryImage[]): GalleryImage[] {
   if (images.length === 0) return []

@@ -46,6 +46,33 @@ export function isYouTubeUrl(value: string) {
 }
 
 /**
+ * Extract the video id from any recognised YouTube URL shape
+ * (watch?v=, youtu.be/, /embed/, /shorts/). Returns null when none is found.
+ */
+export function youTubeId(value: string): string | null {
+  try {
+    const url = new URL(value.trim())
+    if (!isYouTubeUrl(value)) return null
+    if (url.hostname.replace(/^www\./, '') === 'youtu.be') return url.pathname.slice(1) || null
+    const fromQuery = url.searchParams.get('v')
+    if (fromQuery) return fromQuery
+    const fromPath = url.pathname.match(/\/(?:embed|shorts|v)\/([^/?#]+)/)
+    return fromPath ? fromPath[1] : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Privacy-friendly (no-cookie) embed URL for a YouTube video, or null if the
+ * URL isn't a YouTube link we can parse.
+ */
+export function youTubeEmbedUrl(value: string): string | null {
+  const id = youTubeId(value)
+  return id ? `https://www.youtube-nocookie.com/embed/${id}` : null
+}
+
+/**
  * Format a price for display. When there is no price , display as '-'
  */
 export function formatPrice(value: number | null | undefined) {

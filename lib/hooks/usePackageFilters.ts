@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getPublishedPackages } from '@/lib/api/public/packages';
@@ -73,6 +73,19 @@ export function parseListParam(value: string | null): string[] {
   return value.split(',').filter(Boolean);
 }
 
+/** Parse a numeric URL param, clamping to [min, max] and falling back when invalid. */
+export function clampParam(value: string | null, fallback: number, min: number, max: number): number {
+  if (value === null || value === '') return fallback;
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
+}
+
+/** Keep a URL param only when it's a known key of `allowed`, else fall back. */
+export function sanitizeKey(value: string | null, allowed: Record<string, unknown>, fallback: string): string {
+  return value && Object.prototype.hasOwnProperty.call(allowed, value) ? value : fallback;
+}
+
 export function filtersToSearchParams(filters: Filters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.search) params.set('q', filters.search);
@@ -90,10 +103,10 @@ export function searchParamsToFilters(params: URLSearchParams): Filters {
     search: params.get('q') ?? '',
     categories: parseListParam(params.get('category')),
     difficulty: parseListParam(params.get('difficulty')) as Difficulty[],
-    priceMin: Number(params.get('price_min') ?? PRICE_FLOOR),
-    priceMax: Number(params.get('price_max') ?? PRICE_CEIL),
-    duration: params.get('duration') ?? 'any',
-    sort: params.get('sort') ?? DEFAULT_FILTERS.sort,
+    priceMin: clampParam(params.get('price_min'), PRICE_FLOOR, PRICE_FLOOR, PRICE_CEIL),
+    priceMax: clampParam(params.get('price_max'), PRICE_CEIL, PRICE_FLOOR, PRICE_CEIL),
+    duration: sanitizeKey(params.get('duration'), DURATION_RANGES, 'any'),
+    sort: sanitizeKey(params.get('sort'), SORT_OPTIONS, DEFAULT_FILTERS.sort),
   };
 }
 
@@ -126,7 +139,7 @@ export function usePackageFilters() {
   const debouncedSearch = useDebouncedValue(searchInput, 350);
 
   // ---- Fetch real published packages ----
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['packages', 'published', 'list'],
     queryFn: getPublishedPackages,
     staleTime: 5 * 60 * 1000,
@@ -144,9 +157,11 @@ export function usePackageFilters() {
     return [...names].sort().map((name) => ({ value: name, label: name }));
   }, [packages]);
 
-
   const searchParams = useSearchParams();
+  const didHydrate = useRef(false);
   useEffect(() => {
+    if (didHydrate.current) return;
+    didHydrate.current = true;
     const initial = searchParamsToFilters(new URLSearchParams(searchParams.toString()));
     setFilters(initial);
     setSearchInput(initial.search);
@@ -166,7 +181,11 @@ export function usePackageFilters() {
     const params = filtersToSearchParams(filters);
     const query = params.toString();
     const newUrl = `${window.location.pathname}${query ? `?${query}` : ''}`;
-    window.history.replaceState(null, '', newUrl);
+    // Only write when the URL actually changes — avoids redundant history churn
+    // (and any feedback into search-param-driven effects).
+    if (newUrl !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(null, '', newUrl);
+    }
   }, [filters, hydrated]);
 
   /* ------------------------------ Derived ------------------------------ */
@@ -182,7 +201,8 @@ export function usePackageFilters() {
       }
       if (filters.categories.length && !pkg.categories.some((c) => filters.categories.includes(c))) return false;
       if (filters.difficulty.length && (!pkg.difficulty || !filters.difficulty.includes(pkg.difficulty))) return false;
-      if (pkg.price < filters.priceMin || pkg.price > filters.priceMax) return false;
+      // "On request" packages (price 0) have no real price — don't drop them on a price filter.
+      if (pkg.price > 0 && (pkg.price < filters.priceMin || pkg.price > filters.priceMax)) return false;
       if (pkg.durationDays < range.min || pkg.durationDays > range.max) return false;
       return true;
     });
@@ -242,6 +262,8 @@ export function usePackageFilters() {
     searchInput,
     setSearchInput,
     loading: isPending || !hydrated,
+    error: isError,
+    refetch,
     hydrated,
     sortedPackages,
     totalCount: packages.length,
