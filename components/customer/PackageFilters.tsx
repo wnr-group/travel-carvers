@@ -90,34 +90,33 @@ export function PackageFilters({
 
       {/* Category */}
       {categories.length > 0 && (
-      <section>
-        <h3 className="mb-3 text-sm font-semibold text-brand-darkest">Category</h3>
-        <div className="space-y-2">
-          {categories.map(({ value, label }) => {
-            const checked = filters.categories.includes(value);
-            const Icon = CATEGORY_ICONS[value] || Compass;
-            return (
-              <label
-                key={value}
-                className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition ${
-                  checked
-                    ? 'border-brand-medium bg-brand-lightest text-brand-darkest'
-                    : 'border-transparent text-brand-darkest/80 hover:bg-brand-lightest/60'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleCategory(value)}
-                  className="h-4 w-4 rounded border-brand-light text-brand-dark accent-[var(--logo-forest)]"
-                />
-                <Icon className="h-4 w-4 text-brand-medium" />
-                {label}
-              </label>
-            );
-          })}
-        </div>
-      </section>
+        <section>
+          <h3 className="mb-3 text-sm font-semibold text-brand-darkest">Category</h3>
+          <div className="space-y-2">
+            {categories.map(({ value, label }) => {
+              const checked = filters.categories.includes(value);
+              const Icon = CATEGORY_ICONS[value] || Compass;
+              return (
+                <label
+                  key={value}
+                  className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition ${checked
+                      ? 'border-brand-medium bg-brand-lightest text-brand-darkest'
+                      : 'border-transparent text-brand-darkest/80 hover:bg-brand-lightest/60'
+                    }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleCategory(value)}
+                    className="h-4 w-4 rounded border-brand-light text-brand-dark accent-[var(--logo-forest)]"
+                  />
+                  <Icon className="h-4 w-4 text-brand-medium" />
+                  {label}
+                </label>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Price range */}
@@ -210,11 +209,10 @@ export function PackageFilters({
                 key={level}
                 type="button"
                 onClick={() => toggleDifficulty(level)}
-                className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
-                  checked
+                className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${checked
                     ? 'border-brand-dark bg-brand-dark text-white'
                     : 'border-brand-light text-brand-darkest hover:bg-brand-lightest'
-                }`}
+                  }`}
               >
                 {level}
               </button>

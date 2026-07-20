@@ -63,23 +63,23 @@ export const DURATION_RANGES: Record<string, { label: string; min: number; max: 
 };
 
 export const SORT_OPTIONS: Record<string, { label: string; compare: (a: TravelPackage, b: TravelPackage) => number }> = {
-  'best-match': { 
-    label: 'Best Match', 
+  'best-match': {
+    label: 'Best Match',
     compare: (a, b) => {
       if (a.isFeatured !== b.isFeatured) {
         return a.isFeatured ? -1 : 1;
       }
       return b.createdAt - a.createdAt;
-    } 
+    }
   },
-  'rating-desc': { 
-    label: 'Highest Rated', 
+  'rating-desc': {
+    label: 'Highest Rated',
     compare: (a, b) => {
       if (b.rating !== a.rating) {
         return b.rating - a.rating;
       }
       return b.createdAt - a.createdAt;
-    } 
+    }
   },
   'price-asc': { label: 'Price: Low to High', compare: (a, b) => a.price - b.price },
   'price-desc': { label: 'Price: High to Low', compare: (a, b) => b.price - a.price },
