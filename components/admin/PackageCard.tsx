@@ -1,12 +1,37 @@
 'use client'
 
 import Link from 'next/link'
-import { Edit, Eye, ImageOff } from 'lucide-react'
+import { Edit, Eye, ImageOff, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import StatusBadge from './StatusBadge'
 import { formatPrice, packagePath } from '@/lib/utils'
 import type { AdminPackage } from '@/lib/types/package'
+import { useDeletePackage } from '@/lib/hooks/useAdminPackages'
+import { toast } from 'sonner'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 export default function PackageCard({ pkg }: { pkg: AdminPackage }) {
+  const deleteMutation = useDeletePackage()
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteTitle, setDeleteTitle] = useState<string>('')
+
+  const handleDeleteClick = (id: string, title: string) => {
+    setDeleteId(id)
+    setDeleteTitle(title)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteMutation.mutateAsync(deleteId)
+      toast.success('Package deleted successfully')
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to delete package')
+    } finally {
+      setDeleteId(null)
+    }
+  }
+
   return (
     <article className="flex flex-col overflow-hidden rounded-xl bg-white shadow transition-shadow hover:shadow-lg">
       <div className="relative h-40 bg-gray-100">
@@ -65,9 +90,28 @@ export default function PackageCard({ pkg }: { pkg: AdminPackage }) {
               <Edit className="h-4 w-4" />
               Edit
             </Link>
+            <button
+              onClick={() => handleDeleteClick(pkg.id, pkg.title)}
+              disabled={deleteMutation.isPending}
+              aria-label={`Delete ${pkg.title}`}
+              className="flex items-center justify-center rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Delete Package"
+        message={`Are you sure you want to delete "${deleteTitle}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </article>
   )
 }

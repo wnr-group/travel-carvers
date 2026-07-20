@@ -1,12 +1,37 @@
 'use client'
 
 import Link from 'next/link'
-import { Edit, Eye, ImageOff } from 'lucide-react'
+import { Edit, Eye, ImageOff, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import StatusBadge from './StatusBadge'
 import { formatDate, formatPrice, packagePath } from '@/lib/utils'
 import type { AdminPackage } from '@/lib/types/package'
+import { useDeletePackage } from '@/lib/hooks/useAdminPackages'
+import { toast } from 'sonner'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 
 export default function PackageTable({ packages }: { packages: AdminPackage[] }) {
+  const deleteMutation = useDeletePackage()
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteTitle, setDeleteTitle] = useState<string>('')
+
+  const handleDeleteClick = (id: string, title: string) => {
+    setDeleteId(id)
+    setDeleteTitle(title)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return
+    try {
+      await deleteMutation.mutateAsync(deleteId)
+      toast.success('Package deleted successfully')
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to delete package')
+    } finally {
+      setDeleteId(null)
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-lg bg-white shadow">
       <div className="overflow-x-auto">
@@ -68,6 +93,14 @@ export default function PackageTable({ packages }: { packages: AdminPackage[] })
                     >
                       <Edit className="h-4 w-4" />
                     </Link>
+                    <button
+                      onClick={() => handleDeleteClick(pkg.id, pkg.title)}
+                      disabled={deleteMutation.isPending}
+                      aria-label={`Delete ${pkg.title}`}
+                      className="text-red-500 transition-colors hover:text-red-700 cursor-pointer disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -75,6 +108,17 @@ export default function PackageTable({ packages }: { packages: AdminPackage[] })
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Delete Package"
+        message={`Are you sure you want to delete "${deleteTitle}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   )
 }

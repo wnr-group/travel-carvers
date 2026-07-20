@@ -4,6 +4,7 @@ import { getPackageForEdit, updatePackageWithRelations } from '@/lib/api/package
 import { toApiError } from '@/lib/api/errors';
 import { firstZodIssue } from '@/lib/utils';
 import { packageUpdateSchema } from '@/lib/validations/package.schema';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -64,6 +65,27 @@ export async function PUT(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Package not found' }, { status: 404 });
     }
 
+    const { message, status } = toApiError(error, 'package');
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+export async function DELETE(_req: Request, { params }: RouteParams) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  const { id } = await params;
+
+  try {
+    const { error } = await supabaseAdmin
+      .from('packages')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return NextResponse.json({ data: { success: true } });
+  } catch (error: unknown) {
     const { message, status } = toApiError(error, 'package');
     return NextResponse.json({ error: message }, { status });
   }

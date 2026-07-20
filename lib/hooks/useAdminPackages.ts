@@ -1,8 +1,8 @@
 'use client'
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchJson } from '@/lib/api/fetchJson'
-import { adminPackagesKey } from '@/lib/queryKeys'
+import { adminPackagesKey, ADMIN_PACKAGES_KEY } from '@/lib/queryKeys'
 import type { AdminPackage } from '@/lib/types/package'
 import type { PackageFilters } from '@/lib/validations/package.schema'
 
@@ -22,5 +22,19 @@ export function useAdminPackages(filters: PackageFilters) {
       return fetchJson<AdminPackage[]>(`/api/admin/packages${query ? `?${query}` : ''}`)
     },
     placeholderData: keepPreviousData,
+  })
+}
+
+export function useDeletePackage() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) =>
+      fetchJson<{ success: boolean }>(`/api/admin/packages/${id}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ADMIN_PACKAGES_KEY })
+      queryClient.invalidateQueries({ queryKey: ['packages'] })
+    },
   })
 }
