@@ -58,11 +58,11 @@ export default async function AdminDashboardPage() {
 
   const stats = await getDashboardStats();
   const recentLeads = await getRecentLeads();
-  
+
   return (
     <div className="py-4">
       <h1 className="text-3xl font-bold text-brand-darkest mb-8">Dashboard</h1>
-      
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Total Packages" value={stats.packages} icon={<Package />} color="bg-brand-darkest" />
@@ -70,7 +70,7 @@ export default async function AdminDashboardPage() {
         <StatCard title="Total Reviews" value={stats.reviews} icon={<MessageSquare />} color="bg-secondary-sage" />
         <StatCard title="Categories" value={stats.categories} icon={<FolderTree />} color="bg-brand-medium" />
       </div>
-      
+
       {/* Recent Leads Table */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-brand-lightest/10">
@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
             View All
           </Link>
         </div>
-        
+
         {recentLeads.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             <p className="font-semibold">No leads yet</p>
@@ -102,12 +102,12 @@ export default async function AdminDashboardPage() {
                 {recentLeads.map((lead) => {
                   const initials = lead.name
                     ? lead.name
-                        .trim()
-                        .split(/\s+/)
-                        .map((n) => n[0])
-                        .join('')
-                        .toUpperCase()
-                        .slice(0, 2)
+                      .trim()
+                      .split(/\s+/)
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2)
                     : '?';
 
                   return (
@@ -122,11 +122,10 @@ export default async function AdminDashboardPage() {
                       </td>
                       <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{lead.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          lead.packages?.title 
-                            ? 'bg-brand-lightest text-brand-darkest border border-brand-medium/20' 
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${lead.packages?.title
+                            ? 'bg-brand-lightest text-brand-darkest border border-brand-medium/20'
                             : 'bg-gray-100 text-gray-800 border border-gray-200'
-                        }`}>
+                          }`}>
                           {lead.packages?.title || 'General Inquiry'}
                         </span>
                       </td>
