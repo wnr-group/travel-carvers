@@ -3,13 +3,36 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from '@/lib/api/fetchJson';
 import type { Lead } from '@/lib/types/lead';
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase/client';
 
 export const ADMIN_LEADS_KEY = ['admin-leads'] as const;
 
 export function useAdminLeads() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('leads-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'leads' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ADMIN_LEADS_KEY });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ADMIN_LEADS_KEY,
     queryFn: () => fetchJson<Lead[]>('/api/admin/leads'),
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
