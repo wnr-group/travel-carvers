@@ -54,8 +54,8 @@ const tabs = [
   { id: "inclusions", label: "Inclusions" },
   { id: "gallery", label: "Gallery" },
   { id: "pricing", label: "Pricing" },
-  { id: "info", label: "Additional Info" },
-  { id: "faqs", label: "FAQs" },
+  // { id: "info", label: "Additional Info" },
+  // { id: "faqs", label: "FAQs" },
   { id: "reviews", label: "Reviews" },
   { id: "similar", label: "Similar Packages" },
 ] as const;
@@ -316,8 +316,8 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
             {activeTab === "inclusions" && <Inclusions inclusions={detail.inclusions} exclusions={detail.exclusions} />}
             {activeTab === "gallery" && <Gallery gallery={detail.gallery} onOpen={setLightbox} />}
             {activeTab === "pricing" && <Pricing tiers={detail.pricingTiers} />}
-            {activeTab === "info" && <AdditionalInfo />}
-            {activeTab === "faqs" && <FAQs open={openFaq} setOpen={setOpenFaq} />}
+            {/* {activeTab === "info" && <AdditionalInfo />} */}
+            {/* {activeTab === "faqs" && <FAQs open={openFaq} setOpen={setOpenFaq} />} */}
             {activeTab === "reviews" && (
               <Reviews packageId={detail.id} rating={rating} reviewCount={reviewCount} ratingBreakdown={ratingBreakdown} reviews={activeReviews} />
             )}
