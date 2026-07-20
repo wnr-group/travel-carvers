@@ -1,11 +1,8 @@
 import type { TravelPackage } from '@/lib/packageList';
 
-/**
- * Hardcoded destination details shown in the map's destination modal.
- */
-
 export interface DestinationDetail {
   name: string;
+  slug: string;
   country: string;
   timezone: string;
   currency: string;
@@ -16,7 +13,6 @@ export interface DestinationDetail {
 
 const CREATED_AT = Date.UTC(2024, 0, 1);
 
-/** Build a full TravelPackage from the fields that matter for a card; the rest get sane defaults. */
 function demoPackage(
   partial: Partial<TravelPackage> & Pick<TravelPackage, 'id' | 'name' | 'slug' | 'location'>,
 ): TravelPackage {
@@ -37,6 +33,7 @@ function demoPackage(
 export const DESTINATION_DETAILS: Record<string, DestinationDetail> = {
   Dubai: {
     name: 'Dubai',
+    slug: 'dubai',
     country: 'United Arab Emirates',
     timezone: 'GST · UTC+4',
     currency: 'UAE Dirham (AED)',
@@ -73,6 +70,7 @@ export const DESTINATION_DETAILS: Record<string, DestinationDetail> = {
 
   Bali: {
     name: 'Bali',
+    slug: 'bali',
     country: 'Indonesia',
     timezone: 'WITA · UTC+8',
     currency: 'Indonesian Rupiah (IDR)',
@@ -109,6 +107,7 @@ export const DESTINATION_DETAILS: Record<string, DestinationDetail> = {
 
   Singapore: {
     name: 'Singapore',
+    slug: 'singapore',
     country: 'Singapore',
     timezone: 'SGT · UTC+8',
     currency: 'Singapore Dollar (SGD)',
@@ -146,6 +145,7 @@ export const DESTINATION_DETAILS: Record<string, DestinationDetail> = {
 
   Bangkok: {
     name: 'Bangkok',
+    slug: 'bangkok',
     country: 'Thailand',
     timezone: 'ICT · UTC+7',
     currency: 'Thai Baht (THB)',
@@ -182,6 +182,7 @@ export const DESTINATION_DETAILS: Record<string, DestinationDetail> = {
 
   Paris: {
     name: 'Paris',
+    slug: 'paris',
     country: 'France',
     timezone: 'CET · UTC+1',
     currency: 'Euro (EUR)',
@@ -218,6 +219,7 @@ export const DESTINATION_DETAILS: Record<string, DestinationDetail> = {
 
   Tokyo: {
     name: 'Tokyo',
+    slug: 'tokyo',
     country: 'Japan',
     timezone: 'JST · UTC+9',
     currency: 'Japanese Yen (JPY)',

@@ -11,6 +11,7 @@ import {
   type TravelPackage,
   type RawListPackage,
 } from '@/lib/packageList';
+import { getActiveCategories } from '../api/public/categories';
 
 /* ============================== Types ============================== */
 

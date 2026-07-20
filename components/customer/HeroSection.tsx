@@ -190,7 +190,7 @@ export default function HeroSection() {
         </div>
 
         {/* Right Half - Map Preview with Thin Frame */}
-        <div className="w-full lg:w-1/2 h-1/2 lg:h-full relative bg-[#F8F9FA] p-6 lg:p-8 flex items-center justify-center">
+        <div className="w-full lg:w-1/2 h-1/2 lg:h-full relative bg-[#FFFEFA] p-6 lg:p-8 flex items-center justify-center">
           
           {/* Map Container */}
           <div className="relative w-full h-full max-w-4xl cursor-pointer group/map overflow-hidden rounded-2xl border-4 border-white shadow-2xl">

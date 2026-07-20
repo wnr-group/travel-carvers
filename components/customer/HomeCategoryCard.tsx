@@ -20,7 +20,10 @@ interface HomeCategoryCardProps {
 export function HomeCategoryCard({ category }: HomeCategoryCardProps) {
   return (
     <Link
-      href={`/packages?category=${encodeURIComponent(category.slug)}`}
+      // The dedicated category page, matching what the navbar links to. The old
+      // `/packages?category=<slug>` link filtered on category *name*, so passing a slug matched
+      // nothing and the page came up empty.
+      href={`/categories/${category.slug}`}
       className="group relative block h-96 overflow-hidden rounded-2xl shadow-lg transition-all duration-500 hover:-translate-y-2 hover:scale-105 hover:shadow-2xl"
     >
       {category.cover_image_url ? (

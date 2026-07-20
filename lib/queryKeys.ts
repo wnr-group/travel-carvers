@@ -11,6 +11,8 @@ export interface PackageFilters {
 export const ADMIN_CATEGORIES_KEY = ['admin-categories'] as const
 export const ADMIN_SUBCATEGORIES_KEY = ['admin-subcategories'] as const
 
+export const ADMIN_DESTINATIONS_KEY = ['admin-destinations'] as const
+
 export const ADMIN_PACKAGES_KEY = ['admin-packages'] as const
 
 export const ADMIN_ANALYTICS_KEY = ['admin-analytics'] as const

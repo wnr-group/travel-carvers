@@ -36,3 +36,20 @@ INSERT INTO site_settings (company_name, contact_email, contact_phone, address, 
 INSERT INTO static_pages (page_key, title, content, meta_title, meta_description, is_active) VALUES
   ('about', 'About Us', '<h1>About Travel Carvers</h1><p>We are passionate about creating unforgettable travel experiences...</p>', 'About Us - Travel Carvers', 'Learn more about Travel Carvers and our mission to create amazing travel experiences', true),
   ('contact', 'Contact Us', '<h1>Contact Us</h1><p>Get in touch with our travel experts...</p>', 'Contact Us - Travel Carvers', 'Contact Travel Carvers for inquiries and bookings', true);
+
+-- Destinations
+
+INSERT INTO destinations (name, country, city, slug, latitude, longitude, description, is_featured, is_popular) VALUES
+  ('Dubai', 'United Arab Emirates', NULL, 'dubai', 25.19720000, 55.27440000,
+   'A dazzling city where futuristic skyscrapers meet golden desert dunes.', true, true),
+  ('Bali', 'Indonesia', 'Denpasar', 'bali', -8.50690000, 115.26250000,
+   'The Island of the Gods blends emerald rice terraces, surf beaches and clifftop temples.', true, true),
+  ('Singapore', 'Singapore', NULL, 'singapore', 1.28380000, 103.86070000,
+   'A gleaming city-state of supertree gardens, hawker feasts and island theme parks.', false, true),
+  ('Bangkok', 'Thailand', NULL, 'bangkok', 13.75000000, 100.49170000,
+   'Thailand''s electric capital layers gilded temples over floating markets and street-food lanes.', false, true),
+  ('Paris', 'France', NULL, 'paris', 48.85840000, 2.29450000,
+   'The City of Light charms with grand boulevards, world-class art and riverside cafes.', true, false),
+  ('Tokyo', 'Japan', NULL, 'tokyo', 35.65860000, 139.74540000,
+   'A mesmerising mix of neon-lit districts, serene shrines and cutting-edge culture.', true, false)
+ON CONFLICT (slug) DO NOTHING;

@@ -1,14 +1,28 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { MapPin, X } from 'lucide-react';
 import { PackageCard } from '@/components/customer/PackageCard';
-import type { DestinationDetail } from '@/lib/data/destinations';
+import type { TravelPackage } from '@/lib/packageList';
+
+export interface DestinationModalData {
+  name: string;
+  slug: string;
+  country: string;
+  timezone?: string | null;
+  currency?: string | null;
+  languages?: string | null;
+  description?: string | null;
+  packages: TravelPackage[];
+}
 
 interface DestinationModalProps {
-  destination: DestinationDetail | null;
+  destination: DestinationModalData | null;
   onClose: () => void;
+  totalPackages?: number;
+  isLoadingPackages?: boolean;
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
@@ -20,18 +34,29 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function DestinationModal({ destination, onClose }: DestinationModalProps) {
+export default function DestinationModal({
+  destination,
+  onClose,
+  totalPackages,
+  isLoadingPackages = false,
+}: DestinationModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Lock scroll, close on Escape and move focus into the dialog while open.
+  const isOpen = Boolean(destination);
+
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    if (!destination) return;
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
 
     document.body.style.overflow = 'hidden';
     dialogRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') onCloseRef.current();
     };
     document.addEventListener('keydown', handleKeyDown);
 
@@ -39,9 +64,17 @@ export default function DestinationModal({ destination, onClose }: DestinationMo
       document.body.style.overflow = 'unset';
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [destination, onClose]);
+  }, [isOpen]);
 
   if (!destination || typeof document === 'undefined') return null;
+
+  const facts: { label: string; value: string }[] = [
+    { label: 'Time zone', value: destination.timezone },
+    { label: 'Currency', value: destination.currency },
+    { label: 'Languages', value: destination.languages },
+  ].filter((fact): fact is { label: string; value: string } => Boolean(fact.value));
+
+  const packageTotal = totalPackages ?? destination.packages.length;
 
   return createPortal(
     <div
@@ -78,36 +111,55 @@ export default function DestinationModal({ destination, onClose }: DestinationMo
           </p>
           <h2 className="mt-1 font-display text-3xl font-semibold text-brand-darkest">{destination.name}</h2>
 
-          {/* Quick facts */}
-          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            <Fact label="Time zone" value={destination.timezone} />
-            <Fact label="Currency" value={destination.currency} />
-            <Fact label="Languages" value={destination.languages} />
-          </div>
+          {/* Quick facts — only the ones this destination actually has. */}
+          {facts.length > 0 && (
+            <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              {facts.map((fact) => (
+                <Fact key={fact.label} label={fact.label} value={fact.value} />
+              ))}
+            </div>
+          )}
 
-          {/* Description */}
-          <p className="mt-5 leading-relaxed text-slate-700">{destination.description}</p>
+          {destination.description && (
+            <p className="mt-5 leading-relaxed text-slate-700">{destination.description}</p>
+          )}
 
           {/* Related packages */}
           <div className="mt-8">
             <h3 className="mb-4 font-display text-lg font-semibold text-brand-darkest">
               Related {destination.name} packages
             </h3>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {destination.packages.map((pkg) => (
-                <PackageCard key={pkg.id} pkg={pkg} />
-              ))}
-            </div>
+
+            {isLoadingPackages ? (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2" aria-busy="true">
+                {[0, 1].map((index) => (
+                  <div key={index} className="h-64 animate-pulse rounded-2xl bg-black/5" />
+                ))}
+              </div>
+            ) : destination.packages.length === 0 ? (
+              <p className="rounded-xl bg-brand-tint-subtle p-6 text-center text-sm text-brand-medium">
+                No packages are listed for {destination.name} yet.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {destination.packages.map((pkg) => (
+                  <PackageCard key={pkg.id} pkg={pkg} />
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Explore More — CTA only, intentionally not wired to a route yet. */}
+
           <div className="mt-8 flex justify-center">
-            <button
-              type="button"
-              className="rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.02] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2"
+            <Link
+              href={`/destinations/${destination.slug}`}
+              onClick={onClose}
+              className="rounded-full bg-gradient-to-r from-brand-darkest to-brand-medium px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.02] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2"
             >
-              Explore More
-            </button>
+              {packageTotal > 0
+                ? `Explore all ${packageTotal} ${destination.name} package${packageTotal === 1 ? '' : 's'}`
+                : `Explore ${destination.name}`}
+            </Link>
           </div>
         </div>
       </div>

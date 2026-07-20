@@ -163,12 +163,29 @@ export default function Home() {
     <div className="w-full overflow-y-auto">
       {/* Hero Section with Carousel and Map */}
       <HeroSection />
+       {/* Categories Section */}
+      <section className="py-20 bg-[#FFFEFA]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16 scroll-animate opacity-0 translate-y-10">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#1A3C34] mb-4">
+              Travel Categories
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Choose your perfect adventure from our curated travel experiences
+            </p>
+          </div>
 
-      {/* Trust Badges Section */}
-      <TrustBadges />
+          <CategoryShowcaseGrid
+            isLoading={categories.isLoading}
+            isError={categories.isError}
+            data={categories.data}
+            onRetry={categories.refetch}
+          />
+        </div>
+      </section>
 
       {/* Featured Packages Section */}
-      <section id="featured" className="py-20 bg-[#FEFAE0]">
+      <section id="featured" className="py-20 bg-[#FFFEFA]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between mb-12 scroll-animate opacity-0 translate-y-10">
             <div>
@@ -199,7 +216,7 @@ export default function Home() {
       </section>
 
       {/* Trending Packages Section */}
-      <section id="packages" className="py-20 bg-[#F4F1EA]">
+      <section id="packages" className="py-20 bg-[#FFFEFA]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between mb-12 scroll-animate opacity-0 translate-y-10">
             <div>
@@ -229,29 +246,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-20 bg-[#FEFAE0]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16 scroll-animate opacity-0 translate-y-10">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#1A3C34] mb-4">
-              Travel Categories
-            </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Choose your perfect adventure from our curated travel experiences
-            </p>
-          </div>
-
-          <CategoryShowcaseGrid
-            isLoading={categories.isLoading}
-            isError={categories.isError}
-            data={categories.data}
-            onRetry={categories.refetch}
-          />
-        </div>
-      </section>
-
       {/* Stats/Badges Section */}
-      <section className="py-24 bg-[#FEFAE0] overflow-hidden">
+      <section className="py-24 bg-[#FFFEFA] overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-[#1A3C34] mb-4">Why Choose Us</h2>
@@ -304,7 +300,7 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-[#FEFAE0] overflow-hidden">
+      <section className="py-20 bg-[#FFFEFA]  overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <TestimonialsCarousel />
         </div>
