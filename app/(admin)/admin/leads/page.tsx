@@ -269,7 +269,7 @@ export default function AdminLeadsPage() {
             <p className="text-sm text-gray-400 mt-1">Try adjusting your filters or search criteria.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto w-full">
+          <div className="overflow-x-auto w-full min-h-[280px]">
             <table className="w-full min-w-[1100px] border-collapse text-left text-[15px]">
               <thead className="bg-brand-lightest/40 border-b text-brand-darkest">
                 <tr>
@@ -368,7 +368,7 @@ export default function AdminLeadsPage() {
                             <div className="fixed inset-0 z-10" onClick={() => setOpenStatusMenuId(null)} />
                             
                             <div className={`absolute right-0 w-36 bg-white border border-gray-100 rounded-lg shadow-lg z-20 py-1 animate-in fade-in duration-100 ${
-                              idx >= paginatedLeads.length - 2 && paginatedLeads.length > 2
+                              idx > 0 && idx >= paginatedLeads.length - 2
                                 ? 'bottom-full mb-1.5 slide-in-from-bottom-1' 
                                 : 'top-full mt-1.5 slide-in-from-top-1'
                             }`}>
