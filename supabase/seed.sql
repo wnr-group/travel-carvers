@@ -22,11 +22,18 @@ INSERT INTO homepage_sections (hero_title, hero_subtitle, hero_cta_text, feature
   ('Explore the World with Travel Carvers', 'Discover amazing destinations and create unforgettable memories', 'Browse Packages', 'Featured Destinations', 'Hand-picked destinations for an unforgettable experience', 'Trending Now', 'Most popular packages chosen by travelers');
 
 -- Trust Badges
+-- Numeric badges (start with a number) render as animated stat cards on the
+-- homepage; text-only badges render as pills. Icons use lucide names.
 INSERT INTO trust_badges (text, icon, display_order) VALUES
-  ('10,000+ Happy Travelers', '😊', 1),
-  ('100+ Destinations', '🌍', 2),
-  ('24/7 Support', '💬', 3),
-  ('Best Price Guarantee', '💰', 4);
+  ('10,000+ Happy Travellers', 'Smile', 1),
+  ('50+ Destinations', 'Globe2', 2),
+  ('15+ Years Experience', 'Award', 3),
+  ('24/7 Support', 'Clock', 4),
+  ('World Class', '', 5),
+  ('Award Winning', '', 6),
+  ('Best Price', '', 7),
+  ('Secure Booking', '', 8),
+  ('Expert Guides', '', 9);
 
 -- Site Settings
 INSERT INTO site_settings (company_name, contact_email, contact_phone, address, show_prices_globally, facebook_url, instagram_url, twitter_url, linkedin_url) VALUES

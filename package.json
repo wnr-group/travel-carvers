@@ -11,7 +11,8 @@
     "supabase:stop": "npx supabase stop",
     "supabase:status": "npx supabase status",
     "supabase:reset": "npx supabase db reset",
-    "seed:admin": "tsx scripts/seed-admin.ts"
+    "seed:admin": "tsx scripts/seed-admin.ts",
+    "seed:test": "docker exec -i supabase_db_travel-globe-website psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/seed-test-data.sql"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
