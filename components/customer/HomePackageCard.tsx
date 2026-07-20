@@ -37,9 +37,11 @@ function formatDuration(pkg: HomePackage): string {
 interface HomePackageCardProps {
   pkg: HomePackage;
   badge?: string;
+  showPricesGlobally?: boolean;
 }
 
-export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
+export function HomePackageCard({ pkg, badge, showPricesGlobally = true }: HomePackageCardProps) {
+  const isVisible = showPricesGlobally && pkg.show_price !== false;
   return (
     <Link
       href={`/packages/${pkg.slug}`}
@@ -74,7 +76,7 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
             ) : (
               <span />
             )}
-            <span className="shrink-0 text-lg font-bold text-white">{formatPrice(pkg.price_adult, pkg.show_price)}</span>
+            <span className="shrink-0 text-lg font-bold text-white">{formatPrice(pkg.price_adult, isVisible)}</span>
           </div>
         </div>
       </div>

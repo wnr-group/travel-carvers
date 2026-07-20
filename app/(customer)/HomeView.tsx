@@ -14,7 +14,7 @@ import {
   HomeCategoryCardSkeleton,
   type HomeCategory,
 } from '@/components/customer/HomeCategoryCard';
-import { useFeaturedPackages, useTrendingPackages } from '@/lib/hooks/usePackages';
+import { useFeaturedPackages, useTrendingPackages, usePublicSettings } from '@/lib/hooks/usePackages';
 import { useCategories } from '@/lib/hooks/useCategories';
 import TestimonialsCarousel from '@/components/customer/TestimonialsCarousel';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -38,6 +38,7 @@ function PackageShowcaseGrid({
   onRetry,
   badge,
   emptyText,
+  showPricesGlobally = true,
 }: {
   isLoading: boolean;
   isError: boolean;
@@ -45,6 +46,7 @@ function PackageShowcaseGrid({
   onRetry: () => void;
   badge?: string;
   emptyText: string;
+  showPricesGlobally?: boolean;
 }) {
   if (isLoading) {
     return (
@@ -64,7 +66,7 @@ function PackageShowcaseGrid({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((pkg) => (
-        <HomePackageCard key={pkg.id} pkg={pkg} badge={badge} />
+        <HomePackageCard key={pkg.id} pkg={pkg} badge={badge} showPricesGlobally={showPricesGlobally} />
       ))}
     </div>
   );
@@ -113,6 +115,8 @@ export default function Home() {
   const featured = useFeaturedPackages();
   const trending = useTrendingPackages();
   const categories = useCategories();
+  const { data: settingsData } = usePublicSettings();
+  const showPricesGlobally = settingsData?.show_prices_globally !== false;
 
   useEffect(() => {
     // Intersection Observer for scroll animations
@@ -194,6 +198,7 @@ export default function Home() {
             onRetry={featured.refetch}
             badge="FEATURED"
             emptyText="No featured packages yet. Check back soon!"
+            showPricesGlobally={showPricesGlobally}
           />
         </div>
       </section>
@@ -225,6 +230,7 @@ export default function Home() {
             onRetry={trending.refetch}
             badge="TRENDING"
             emptyText="No trending packages right now. Explore all our packages instead."
+            showPricesGlobally={showPricesGlobally}
           />
         </div>
       </section>

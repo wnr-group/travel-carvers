@@ -184,6 +184,7 @@ export function toPackageDetail(
   raw: RawPackageDetail,
   rawReviews: RawReview[] = [],
   rawSimilar: RawSimilarPackage[] = [],
+  showPricesGlobally = true,
 ): PackageDetail {
   // Group size / age
   const groupSize =
@@ -226,7 +227,7 @@ export function toPackageDetail(
   }));
 
   // Pricing tiers from the three price columns, when prices are shown.
-  const showPrice = raw.show_price ?? true;
+  const showPrice = (raw.show_price ?? true) && showPricesGlobally;
   const priceAdult = toNumber(raw.price_adult);
   const pricingTiers: PricingTierVM[] = [];
   if (showPrice) {
@@ -256,7 +257,7 @@ export function toPackageDetail(
 
   // Similar packages (other published packages).
   const similar: SimilarPackageVM[] = rawSimilar.slice(0, 3).map((pkg) => {
-    const showPrice = pkg.show_price ?? true;
+    const showPrice = (pkg.show_price ?? true) && showPricesGlobally;
     return {
       slug: pkg.slug,
       title: pkg.title,

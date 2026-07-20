@@ -7,6 +7,7 @@ import {
   getTrendingPackages,
   getFeaturedPackages,
   getPackagesByCategory,
+  getPublicSettings,
 } from '@/lib/api/public/packages';
 
 /**
@@ -62,6 +63,17 @@ export function usePackagesByCategory(categoryId: string) {
     queryKey: ['packages', 'category', categoryId],
     queryFn: () => getPackagesByCategory(categoryId),
     enabled: !!categoryId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Get public site settings
+ */
+export function usePublicSettings() {
+  return useQuery({
+    queryKey: ['site-settings', 'public'],
+    queryFn: getPublicSettings,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

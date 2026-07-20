@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createMetadata, packageCoverImage, packageJsonLd } from '@/lib/seo';
 import JsonLd from '@/components/seo/JsonLd';
-import { getPackageBySlug, getPublishedPackages } from '@/lib/api/public/packages';
+import { getPackageBySlug, getPublishedPackages, getPublicSettings } from '@/lib/api/public/packages';
 import { getApprovedReviews } from '@/lib/api/public/reviews';
 import { toPackageDetail, type RawPackageDetail } from '@/lib/packageDetail';
 import PackageDetailView from './PackageDetailView';
@@ -58,14 +58,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   if (!pkg) notFound();
 
-  // Reviews + sibling packages are best-effort — a failure just yields empty sections.
-  const [reviews, published] = await Promise.all([
+  // Reviews + sibling packages + settings are best-effort — a failure just yields empty sections/default settings.
+  const [reviews, published, settings] = await Promise.all([
     getApprovedReviews(pkg.id).catch(() => []),
     getPublishedPackages().catch(() => []),
+    getPublicSettings().catch(() => ({ show_prices_globally: true })),
   ]);
 
   const similar = (published ?? []).filter((candidate) => candidate?.slug && candidate.slug !== slug);
-  const detail = toPackageDetail(pkg, reviews, similar);
+  const detail = toPackageDetail(pkg, reviews, similar, settings?.show_prices_globally !== false);
 
   return (
     <>

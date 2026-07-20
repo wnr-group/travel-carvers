@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getPublishedPackages } from '@/lib/api/public/packages';
+import { getPublishedPackages, getPublicSettings } from '@/lib/api/public/packages';
 import { getActiveCategories } from '@/lib/api/public/categories';
 
 /* ============================== Types ============================== */
@@ -220,9 +220,24 @@ export function usePackageFilters() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // ---- Fetch public site settings ----
+  const { data: settingsData } = useQuery({
+    queryKey: ['site-settings', 'public'],
+    queryFn: getPublicSettings,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const showPricesGlobally = settingsData?.show_prices_globally !== false;
+
   const packages = useMemo<TravelPackage[]>(
-    () => ((data ?? []) as RawListPackage[]).map(mapPackage),
-    [data],
+    () => ((data ?? []) as RawListPackage[]).map((row) => {
+      const mapped = mapPackage(row);
+      return {
+        ...mapped,
+        price: !showPricesGlobally ? 0 : mapped.price,
+      };
+    }),
+    [data, showPricesGlobally],
   );
 
   // ---- Fetch categories from DB (independent of the package list) ----

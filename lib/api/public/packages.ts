@@ -151,3 +151,16 @@ export async function getPackagesByCategory(categoryId: string) {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Get public settings (site_settings)
+ */
+export async function getPublicSettings() {
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('show_prices_globally')
+    .maybeSingle();
+  if (error) return { show_prices_globally: true };
+  return data || { show_prices_globally: true };
+}
+
