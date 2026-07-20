@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ImageUploader from '@/components/admin/ImageUploader';
+import { testimonialSchema } from '@/lib/validations/testimonial.schema';
 
 /**
  * Number input for display order that keeps its own draft state and only
@@ -91,7 +92,8 @@ export default function TestimonialManager() {
   const [rating, setRating] = useState(5);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isFeatured, setIsFeatured] = useState(false);
-  const [displayOrder, setDisplayOrder] = useState(0);
+  const [displayOrder, setDisplayOrder] = useState<number | string>(0);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Deletion state
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
@@ -117,6 +119,7 @@ export default function TestimonialManager() {
     setPhotoUrl(null);
     setIsFeatured(false);
     setDisplayOrder(0);
+    setErrors({});
     setIsModalOpen(false);
   };
 
@@ -129,6 +132,7 @@ export default function TestimonialManager() {
     setPhotoUrl(testimonial.photo_url);
     setIsFeatured(testimonial.is_featured);
     setDisplayOrder(testimonial.display_order);
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -140,31 +144,45 @@ export default function TestimonialManager() {
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
-      toast.error('Customer name is required.');
-      return;
-    }
-    if (!reviewText.trim()) {
-      toast.error('Review text is required.');
-      return;
-    }
-
     const payload = {
       customer_name: name.trim(),
       customer_role: role.trim(),
       review_text: reviewText.trim(),
       rating,
-      photo_url: photoUrl,
+      photo_url: photoUrl || '',
       is_featured: isFeatured,
-      display_order: Number(displayOrder),
+      display_order: displayOrder === '' ? 0 : Number(displayOrder),
+    };
+
+    const result = testimonialSchema.safeParse(payload);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0];
+        if (typeof path === 'string') {
+          fieldErrors[path] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    const validatedData = {
+      customer_name: result.data.customer_name,
+      customer_role: result.data.customer_role || '',
+      review_text: result.data.review_text,
+      rating: result.data.rating,
+      photo_url: result.data.photo_url || null,
+      is_featured: !!result.data.is_featured,
+      display_order: result.data.display_order ?? 0,
     };
 
     try {
       if (editingId) {
-        await updateMutation.mutateAsync({ id: editingId, data: payload });
+        await updateMutation.mutateAsync({ id: editingId, data: validatedData });
         toast.success('Testimonial updated successfully!');
       } else {
-        await createMutation.mutateAsync(payload);
+        await createMutation.mutateAsync(validatedData);
         toast.success('Testimonial created successfully!');
       }
       resetForm();
@@ -577,10 +595,22 @@ export default function TestimonialManager() {
                   <ImageUploader
                     bucket="testimonial-images"
                     maxFiles={1}
-                    onUpload={(urls) => setPhotoUrl(urls[0] || null)}
+                    onUpload={(urls) => {
+                      setPhotoUrl(urls[0] || null);
+                      if (errors.photo_url) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.photo_url;
+                          return next;
+                        });
+                      }
+                    }}
                     initialImages={photoUrl ? [photoUrl] : []}
                     value={photoUrl ? [photoUrl] : []}
                   />
+                  {errors.photo_url && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.photo_url}</p>
+                  )}
                 </div>
 
                 {/* Name */}
@@ -590,11 +620,24 @@ export default function TestimonialManager() {
                     id="customerName"
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (errors.customer_name) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.customer_name;
+                          return next;
+                        });
+                      }
+                    }}
                     placeholder="e.g. Sarah Jenkins"
-                    className="w-full px-3.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-405"
-                    required
+                    className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-405 ${
+                      errors.customer_name ? 'border-red-500 focus:ring-red-500/50' : 'border-gray-200'
+                    }`}
                   />
+                  {errors.customer_name && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.customer_name}</p>
+                  )}
                 </div>
 
                 {/* Role */}
@@ -604,10 +647,24 @@ export default function TestimonialManager() {
                     id="customerRole"
                     type="text"
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => {
+                      setRole(e.target.value);
+                      if (errors.customer_role) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.customer_role;
+                          return next;
+                        });
+                      }
+                    }}
                     placeholder="e.g. Travel Blogger, London"
-                    className="w-full px-3.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-405"
+                    className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-405 ${
+                      errors.customer_role ? 'border-red-500 focus:ring-red-500/50' : 'border-gray-200'
+                    }`}
                   />
+                  {errors.customer_role && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.customer_role}</p>
+                  )}
                 </div>
 
                 {/* Review text */}
@@ -616,12 +673,25 @@ export default function TestimonialManager() {
                   <textarea
                     id="reviewText"
                     value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
+                    onChange={(e) => {
+                      setReviewText(e.target.value);
+                      if (errors.review_text) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.review_text;
+                          return next;
+                        });
+                      }
+                    }}
                     placeholder="Describe their experience..."
                     rows={4}
-                    className="w-full px-3.5 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-405 resize-none"
-                    required
+                    className={`w-full px-3.5 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-405 resize-none ${
+                      errors.review_text ? 'border-red-500 focus:ring-red-500/50' : 'border-gray-200'
+                    }`}
                   />
+                  {errors.review_text && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.review_text}</p>
+                  )}
                 </div>
 
                 {/* Rating */}
@@ -632,7 +702,16 @@ export default function TestimonialManager() {
                       <button
                         key={star}
                         type="button"
-                        onClick={() => setRating(star)}
+                        onClick={() => {
+                          setRating(star);
+                          if (errors.rating) {
+                            setErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.rating;
+                              return next;
+                            });
+                          }
+                        }}
                         className="p-1 hover:scale-110 transition-transform focus:outline-none cursor-pointer"
                       >
                         <Star
@@ -645,6 +724,9 @@ export default function TestimonialManager() {
                       </button>
                     ))}
                   </div>
+                  {errors.rating && (
+                    <p className="mt-1.5 text-xs text-red-600 font-medium">{errors.rating}</p>
+                  )}
                 </div>
 
                 {/* Featured toggle & Display Order */}
@@ -660,17 +742,33 @@ export default function TestimonialManager() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="displayOrderModal" className="text-xs font-semibold text-gray-600 whitespace-nowrap">Display Order</label>
-                    <input
-                      id="displayOrderModal"
-                      type="number"
-                      value={displayOrder}
-                      onChange={(e) => setDisplayOrder(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900"
-                      min="0"
-                      required
-                    />
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="displayOrderModal" className="text-xs font-semibold text-gray-600 whitespace-nowrap">Display Order</label>
+                      <input
+                        id="displayOrderModal"
+                        type="number"
+                        value={displayOrder}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setDisplayOrder(val === '' ? '' : Number(val));
+                          if (errors.display_order) {
+                            setErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.display_order;
+                              return next;
+                            });
+                          }
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 ${
+                          errors.display_order ? 'border-red-500 focus:ring-red-500/50' : 'border-gray-200'
+                        }`}
+                        min="0"
+                      />
+                    </div>
+                    {errors.display_order && (
+                      <p className="text-xs text-red-600 font-medium mt-1">{errors.display_order}</p>
+                    )}
                   </div>
                 </div>
               </form>
