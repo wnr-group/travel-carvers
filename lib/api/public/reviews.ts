@@ -6,7 +6,15 @@ import { supabase } from '@/lib/supabase/client';
 export async function getApprovedReviews(packageId: string) {
   const { data, error } = await supabase
     .from('reviews')
-    .select('reviewer_name, rating, review_text, created_at')
+    .select(`
+      reviewer_name,
+      rating,
+      review_text,
+      created_at,
+      review_photos (
+        image_url
+      )
+    `)
     .eq('package_id', packageId)
     .eq('is_approved', true)
     .order('created_at', { ascending: false });

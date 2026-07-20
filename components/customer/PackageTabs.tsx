@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Check, X, MapPin, Star, ChevronDown } from 'lucide-react';
+import ReviewPhotos from '@/components/customer/ReviewPhotos';
+import { ReviewForm } from '@/components/customer/ReviewForm';
 
 interface Day {
   day_number: number;
@@ -28,7 +30,7 @@ interface PackageTabsProps {
     pricing_tiers?: { label: string; sub: string; price: number }[];
     add_ons?: { label: string; price: number }[];
     faqs?: { q: string; a: string }[];
-    reviews?: { name: string; rating: number; date: string; text: string }[];
+    reviews?: { name: string; rating: number; date: string; text: string; images?: string[] }[];
     best_time?: string;
   };
   onOpenLightbox: (index: number) => void;
@@ -50,8 +52,27 @@ type TabId = (typeof tabs)[number]['id'];
 export function PackageTabs({ pkg, onOpenLightbox }: PackageTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   const money = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+
+  // Derive rating + star distribution from the real reviews the component receives.
+  // Mirrors mapPackage/toPackageDetail: average of the review ratings, rounded to 1 dp.
+  const reviews = pkg.reviews ?? [];
+  const reviewCount = reviews.length;
+  const averageRating =
+    reviewCount > 0
+      ? Math.round((reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount) * 10) / 10
+      : null;
+  const ratingCounts = [0, 0, 0, 0, 0]; // index 0 = 1 star
+  reviews.forEach((r) => {
+    if (r.rating >= 1 && r.rating <= 5) ratingCounts[r.rating - 1] += 1;
+  });
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => ({
+    stars,
+    count: ratingCounts[stars - 1],
+    pct: reviewCount ? Math.round((ratingCounts[stars - 1] / reviewCount) * 100) : 0,
+  }));
 
   // Itinerary Skyline elevation details (helper if altitude is provided)
   const renderItinerarySkyline = () => {
@@ -361,32 +382,53 @@ export function PackageTabs({ pkg, onOpenLightbox }: PackageTabsProps) {
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="flex flex-col sm:flex-row gap-6 rounded-xl border border-brand-light/70 p-5 sm:items-center sm:gap-10 bg-white">
               <div className="text-center sm:text-left">
-                <p className="font-display text-4xl font-bold text-brand-darkest">4.8</p>
+                <p className="font-display text-4xl font-bold text-brand-darkest">
+                  {averageRating != null ? averageRating.toFixed(1) : '—'}
+                </p>
                 <div className="mt-1 flex justify-center gap-0.5 text-amber-400 sm:justify-start">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" />
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 fill-current ${
+                        averageRating != null && i < Math.round(averageRating) ? 'text-amber-400' : 'text-slate-200'
+                      }`}
+                    />
                   ))}
                 </div>
-                <p className="mt-1 text-xs text-slate-400">{pkg.reviews?.length || 0} reviews</p>
+                <p className="mt-1 text-xs text-slate-400">{reviewCount} reviews</p>
+                <button
+                  type="button"
+                  onClick={() => setShowReviewForm(!showReviewForm)}
+                  className="mt-4 inline-flex items-center justify-center rounded-full bg-brand-dark px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-darkest active:scale-95 cursor-pointer"
+                >
+                  {showReviewForm ? 'Cancel Review' : 'Write a Review'}
+                </button>
               </div>
               <div className="flex-1 space-y-1.5">
-                {[
-                  { stars: 5, pct: 78 },
-                  { stars: 4, pct: 15 },
-                  { stars: 3, pct: 5 },
-                  { stars: 2, pct: 1 },
-                  { stars: 1, pct: 1 },
-                ].map((r) => (
-                  <div key={r.stars} className="flex items-center gap-3 text-xs text-slate-500">
-                    <span className="w-8 shrink-0">{r.stars} star</span>
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-brand-dark" style={{ width: `${r.pct}%` }} />
+                {reviewCount === 0 ? (
+                  <p className="text-sm text-slate-500">No reviews yet — be the first to share your experience.</p>
+                ) : (
+                  ratingBreakdown.map((r) => (
+                    <div key={r.stars} className="flex items-center gap-3 text-xs text-slate-500">
+                      <span className="w-8 shrink-0">{r.stars} star</span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full bg-brand-dark" style={{ width: `${r.pct}%` }} />
+                      </div>
+                      <span className="w-8 shrink-0 text-right">{r.pct}%</span>
                     </div>
-                    <span className="w-8 shrink-0 text-right">{r.pct}%</span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
+
+            {showReviewForm && (
+              <div className="animate-in fade-in duration-300">
+                <ReviewForm
+                  packageId={pkg.id}
+                  onSuccess={() => setShowReviewForm(false)}
+                />
+              </div>
+            )}
 
             <div className="space-y-4">
               {pkg.reviews?.map((r, i) => (
@@ -401,6 +443,9 @@ export function PackageTabs({ pkg, onOpenLightbox }: PackageTabsProps) {
                     ))}
                   </div>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">{r.text}</p>
+                  {r.images && r.images.length > 0 && (
+                    <ReviewPhotos images={r.images} />
+                  )}
                 </div>
               ))}
             </div>

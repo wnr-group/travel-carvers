@@ -40,20 +40,35 @@ export const PRICE_CEIL = 500000;
 export const DIFFICULTIES: Difficulty[] = ['Easy', 'Moderate', 'Challenging'];
 
 export const DURATION_RANGES: Record<string, { label: string; min: number; max: number }> = {
-  any: { label: 'Any duration', min: 0, max: Infinity },
-  '1-3': { label: '1 - 3 days', min: 1, max: 3 },
-  '4-7': { label: '4 - 7 days', min: 4, max: 7 },
-  '8-14': { label: '8 - 14 days', min: 8, max: 14 },
-  '15+': { label: '15+ days', min: 15, max: Infinity },
+  any: { label: 'Any', min: 0, max: Infinity },
+  '1-3': { label: '1-3 days', min: 1, max: 3 },
+  '4-7': { label: '4-7 days', min: 4, max: 7 },
+  '8+': { label: '8+ days', min: 8, max: Infinity },
 };
 
 export const SORT_OPTIONS: Record<string, { label: string; compare: (a: TravelPackage, b: TravelPackage) => number }> = {
-  newest: { label: 'Newest first', compare: (a, b) => b.createdAt - a.createdAt },
-  popular: { label: 'Most popular', compare: (a, b) => b.popularity - a.popularity },
-  'price-asc': { label: 'Price: low to high', compare: (a, b) => a.price - b.price },
-  'price-desc': { label: 'Price: high to low', compare: (a, b) => b.price - a.price },
-  'duration-asc': { label: 'Duration: shortest first', compare: (a, b) => a.durationDays - b.durationDays },
-  'duration-desc': { label: 'Duration: longest first', compare: (a, b) => b.durationDays - a.durationDays },
+  'best-match': { 
+    label: 'Best Match', 
+    compare: (a, b) => {
+      if (a.isFeatured !== b.isFeatured) {
+        return a.isFeatured ? -1 : 1;
+      }
+      return b.createdAt - a.createdAt;
+    } 
+  },
+  'rating-desc': { 
+    label: 'Highest Rated', 
+    compare: (a, b) => {
+      if (b.rating !== a.rating) {
+        return b.rating - a.rating;
+      }
+      return b.createdAt - a.createdAt;
+    } 
+  },
+  'price-asc': { label: 'Price: Low to High', compare: (a, b) => a.price - b.price },
+  'price-desc': { label: 'Price: High to Low', compare: (a, b) => b.price - a.price },
+  'newest': { label: 'Newest First', compare: (a, b) => b.createdAt - a.createdAt },
+  'popular': { label: 'Most Popular', compare: (a, b) => b.popularity - a.popularity },
 };
 
 export const DEFAULT_FILTERS: Filters = {
@@ -63,7 +78,7 @@ export const DEFAULT_FILTERS: Filters = {
   priceMin: PRICE_FLOOR,
   priceMax: PRICE_CEIL,
   duration: 'any',
-  sort: 'newest',
+  sort: 'best-match',
 };
 
 /* ============================== Helpers ============================== */
@@ -141,7 +156,7 @@ export function usePackageFilters() {
   // ---- Fetch real published packages ----
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['packages', 'published', 'list'],
-    queryFn: getPublishedPackages,
+    queryFn: () => getPublishedPackages(),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -150,12 +165,21 @@ export function usePackageFilters() {
     [data],
   );
 
-  // ---- Category options derived from the actual catalogue ----
+  // ---- Fetch categories from DB (independent of the package list) ----
+  const { data: dbCategoriesData, isError: categoriesError } = useQuery({
+    queryKey: ['categories', 'active', 'list'],
+    queryFn: getActiveCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const availableCategories = useMemo<CategoryOption[]>(() => {
-    const names = new Set<string>();
-    packages.forEach((pkg) => pkg.categories.forEach((c) => names.add(c)));
-    return [...names].sort().map((name) => ({ value: name, label: name }));
-  }, [packages]);
+    // On error or empty result we simply render no category checkboxes; packages are never blocked on this.
+    if (categoriesError || !dbCategoriesData) return [];
+    return dbCategoriesData.map((c) => ({
+      value: c.name,
+      label: c.name,
+    }));
+  }, [dbCategoriesData, categoriesError]);
 
   const searchParams = useSearchParams();
   const didHydrate = useRef(false);
@@ -209,7 +233,7 @@ export function usePackageFilters() {
   }, [packages, filters]);
 
   const sortedPackages = useMemo(() => {
-    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS.newest;
+    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS['best-match'];
     return [...filteredPackages].sort(sorter.compare);
   }, [filteredPackages, filters.sort]);
 
@@ -252,7 +276,8 @@ export function usePackageFilters() {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
+    // Sort is not a filter (it isn't counted in countActiveFilters), so preserve the current selection.
+    setFilters((prev) => ({ ...DEFAULT_FILTERS, sort: prev.sort }));
     setSearchInput('');
   }, []);
 

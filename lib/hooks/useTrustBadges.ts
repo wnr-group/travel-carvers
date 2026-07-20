@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from '@/lib/api/fetchJson';
+import { getPublicTrustBadges } from '@/lib/api/public/trustBadges';
 
 export const TRUST_BADGES_KEY = ['trust-badges'] as const;
 
@@ -11,6 +12,14 @@ export interface TrustBadge {
   icon: string;
   display_order: number;
   created_at: string;
+}
+
+export function usePublicTrustBadges() {
+  return useQuery({
+    queryKey: ['trust-badges', 'public'],
+    queryFn: getPublicTrustBadges,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
 }
 
 export function useTrustBadges() {

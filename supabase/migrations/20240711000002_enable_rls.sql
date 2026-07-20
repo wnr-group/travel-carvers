@@ -23,6 +23,7 @@ ALTER TABLE homepage_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trust_badges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE static_pages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE review_photos ENABLE ROW LEVEL SECURITY;
 
 -- Admin policies (service_role can do everything)
 CREATE POLICY "Enable all operations for service_role on categories" ON categories FOR ALL TO service_role USING (true);
@@ -46,6 +47,7 @@ CREATE POLICY "Enable all operations for service_role on homepage_sections" ON h
 CREATE POLICY "Enable all operations for service_role on trust_badges" ON trust_badges FOR ALL TO service_role USING (true);
 CREATE POLICY "Enable all operations for service_role on site_settings" ON site_settings FOR ALL TO service_role USING (true);
 CREATE POLICY "Enable all operations for service_role on static_pages" ON static_pages FOR ALL TO service_role USING (true);
+CREATE POLICY "Enable all operations for service_role on review_photos" ON review_photos FOR ALL TO service_role USING (true);
 
 -- Public read policies for customer-facing data
 CREATE POLICY "Public can read active categories" ON categories FOR SELECT TO anon USING (is_active = true);
@@ -66,6 +68,13 @@ CREATE POLICY "Public can read trust badges" ON trust_badges FOR SELECT TO anon 
 CREATE POLICY "Public can read site settings" ON site_settings FOR SELECT TO anon USING (true);
 CREATE POLICY "Public can read active pages" ON static_pages FOR SELECT TO anon USING (is_active = true);
 
--- Public can submit leads and reviews
+-- Public can submit leads.
 CREATE POLICY "Public can insert leads" ON leads FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY "Public can insert reviews" ON reviews FOR INSERT TO anon WITH CHECK (true);
+-- NOTE: Reviews are intentionally NOT insertable by anon directly. They are
+-- created only via the createReview server action (service role), which forces
+-- moderation (is_approved = NULL) and validates photo references. A direct anon
+-- INSERT policy would let clients set is_approved = true and bypass moderation.
+
+-- review_photos policies
+CREATE POLICY "Public can read review photos" ON review_photos FOR SELECT TO anon USING (true);
+CREATE POLICY "Authenticated users can insert review photos" ON review_photos FOR INSERT TO authenticated WITH CHECK (true);

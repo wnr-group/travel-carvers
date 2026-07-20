@@ -11,13 +11,21 @@ export function useCreateReview(packageId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createReview,
-    onSuccess: (data) => {
-      if (data.is_approved) {
-        toast.success('Thank you! Your review is live.');
-      } else {
-        toast.success('Thank you! Your review is under review and will be published soon.');
-      }
+    mutationFn: ({
+      reviewData,
+      photoUrls,
+    }: {
+      reviewData: {
+        package_id: string;
+        reviewer_name: string;
+        reviewer_email: string;
+        rating: number;
+        review_text: string;
+      };
+      photoUrls?: string[];
+    }) => createReview(reviewData, photoUrls),
+    onSuccess: () => {
+      toast.success('Thank you! Your review is under moderation and will be published once approved.');
       // Invalidate package reviews query
       queryClient.invalidateQueries({ queryKey: ['reviews', 'package', packageId] });
     },
