@@ -189,7 +189,7 @@ export default function SEOTab() {
           </div>
 
           <p className="mt-0.5 text-xs text-gray-500">
-            {slug ? packagePath(slug) : '/package/…'}
+            {slug ? packagePath(slug) : '/packages/…'}
           </p>
 
           <p className="mt-1 truncate text-lg text-[#1a0dab]">
