@@ -15,8 +15,6 @@ import DynamicIcon from "@/components/ui/DynamicIcon";
 import { getApprovedReviews } from "@/lib/api/public/reviews";
 import { isIconName } from "@/lib/icons";
 import { youTubeEmbedUrl } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { getApprovedReviews } from "@/lib/api/public/reviews";
 import { toReviewVM } from "@/lib/packageDetail";
 import type { CancellationRule } from "@/lib/packageDefaults";
 import type {
