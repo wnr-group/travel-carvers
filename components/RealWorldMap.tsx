@@ -17,6 +17,14 @@ import type { DestinationMapPin } from '@/lib/types/destination';
 /** The modal is a teaser — the destination page lists the rest. */
 const MODAL_PACKAGE_LIMIT = 2;
 
+/**
+ * Leaflet paints SVG and canvas, so it needs literal colour values — `var(--token)` does
+ * not resolve there. These mirror `--map-land` / `--background` in globals.css; the CSS in
+ * this file uses the tokens directly, so only these two need keeping in step.
+ */
+const LAND_FILL = '#527A52';
+const SEA_FILL = '#FFFFFF';
+
 function normalise(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -286,8 +294,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       }
     }, 1500);
 
-    // Land: solid brand-green country polygons over the white sea (exact theme colours,
-    // #2D5F2D land + #FFFFFF sea — no tile recolouring so the sea stays truly white).
+    // Land: solid brand-green country polygons over the white sea. No tile recolouring,
+    // so the sea stays truly white.
     fetch('/data/world-countries.geojson')
       .then((res) => res.json())
       .then((geo) => {
@@ -295,9 +303,10 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
         L.geoJSON(geo, {
           interactive: false,
           style: {
-            fillColor: '#527A52', // land green
+            fillColor: LAND_FILL,
             fillOpacity: 1,
-            color: '#FFFFFF',     // thin white borders = subtle country separation on the green
+            // Thin white borders = subtle country separation on the green.
+            color: SEA_FILL,
             weight: 0.5,
             opacity: 0.6,
           },
@@ -313,7 +322,7 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       html: `<div style="
         width: 14px;
         height: 14px;
-        background: radial-gradient(circle, #D2691E 0%, #8B4513 70%);
+        background: radial-gradient(circle, var(--map-pin) 0%, var(--map-pin-deep) 70%);
         border: 3px solid #fff;
         border-radius: 50%;
         box-shadow: 0 0 15px rgba(210, 105, 30, 0.8), 0 0 25px rgba(210, 105, 30, 0.4);
@@ -329,7 +338,7 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       html: `<div style="
         width: 18px;
         height: 18px;
-        background: radial-gradient(circle, #FFD700 0%, #FFA500 70%);
+        background: radial-gradient(circle, var(--map-wonder) 0%, var(--map-wonder-deep) 70%);
         border: 3px solid #fff;
         border-radius: 50%;
         box-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 35px rgba(255, 165, 0, 0.6);
@@ -496,9 +505,9 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
               onChange={(e) => handleSearch(e.target.value)}
               onFocus={() => searchQuery && setShowResults(true)}
               placeholder="Search destinations..."
-              className="w-full px-5 py-3 pr-12 rounded-full border-2 border-[#A9B388] bg-white/98 backdrop-blur-md shadow-2xl focus:outline-none focus:ring-3 focus:ring-[#A9B388]/40 focus:border-[#5F6F52] transition-all duration-300 text-sm text-[#5F6F52] placeholder:text-[#A9B388]/70 font-semibold hover:shadow-xl"
+              className="w-full px-5 py-3 pr-12 rounded-full border-2 border-brand-sage bg-white/98 backdrop-blur-md shadow-2xl focus:outline-none focus:ring-3 focus:ring-brand-sage/40 focus:border-brand-olive transition-all duration-300 text-sm text-brand-olive placeholder:text-brand-sage/70 font-semibold hover:shadow-xl"
             />
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gradient-to-br from-[#A9B388] to-[#5F6F52] rounded-full p-2 shadow-md group-hover:scale-110 transition-transform">
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gradient-to-br from-brand-sage to-brand-olive rounded-full p-2 shadow-md group-hover:scale-110 transition-transform">
               <svg
                 className="w-4 h-4 text-white"
                 fill="none"
@@ -517,25 +526,25 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
           {/* Search Results Dropdown */}
           {showResults && searchResults.length > 0 && (
-            <div className="absolute top-full mt-3 w-full bg-white/98 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-[#A9B388]/30 max-h-72 overflow-y-auto">
+            <div className="absolute top-full mt-3 w-full bg-white/98 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-brand-sage/30 max-h-72 overflow-y-auto">
               {searchResults.map((location, index) => (
                 <button
                   key={index}
                   onClick={() => handleSelectLocation(location)}
-                  className="w-full px-5 py-3.5 text-left hover:bg-gradient-to-r hover:from-[#A9B388]/20 hover:to-[#B99470]/20 transition-all duration-200 border-b border-[#A9B388]/10 last:border-b-0 flex items-center justify-between group first:rounded-t-2xl last:rounded-b-2xl"
+                  className="w-full px-5 py-3.5 text-left hover:bg-gradient-to-r hover:from-brand-sage/20 hover:to-brand-clay/20 transition-all duration-200 border-b border-brand-sage/10 last:border-b-0 flex items-center justify-between group first:rounded-t-2xl last:rounded-b-2xl"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#A9B388] group-hover:scale-125 transition-transform"></div>
+                    <div className="w-2 h-2 rounded-full bg-brand-sage group-hover:scale-125 transition-transform"></div>
                     <div>
-                      <p className="font-bold text-[#5F6F52] text-sm group-hover:text-[#5F6F52] transition-colors">
+                      <p className="font-bold text-brand-olive text-sm group-hover:text-brand-olive transition-colors">
                         {location.name}
                         {location.isWonder && ' ⭐'}
                       </p>
-                      <p className="text-xs text-[#A9B388] font-medium">{location.region}</p>
+                      <p className="text-xs text-brand-sage font-medium">{location.region}</p>
                     </div>
                   </div>
                   <svg
-                    className="w-5 h-5 text-[#A9B388] group-hover:translate-x-1 transition-transform"
+                    className="w-5 h-5 text-brand-sage group-hover:translate-x-1 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -554,8 +563,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
           {/* No Results */}
           {showResults && searchQuery && searchResults.length === 0 && (
-            <div className="absolute top-full mt-3 w-full bg-white/98 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-[#A9B388]/30 px-5 py-4">
-              <p className="text-sm text-[#A9B388] text-center font-medium">No destinations found</p>
+            <div className="absolute top-full mt-3 w-full bg-white/98 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-brand-sage/30 px-5 py-4">
+              <p className="text-sm text-brand-sage text-center font-medium">No destinations found</p>
             </div>
           )}
         </div>
@@ -567,7 +576,7 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           className="w-full h-full"
           style={{
             // Sea = app background (pure white) to match the site theme
-            background: '#FFFFFF',
+            background: SEA_FILL,
           }}
         />
 
@@ -586,14 +595,14 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
         {/* Legend - Hide in preview mode */}
         {!isPreview && (
-        <div className="absolute bottom-20 right-4 z-[1000] bg-gradient-to-br from-[#5F6F52]/98 to-[#5F6F52]/98 backdrop-blur-md px-5 py-4 rounded-2xl border-2 border-[#B99470]/60 shadow-2xl hover:scale-105 transition-transform duration-300">
+        <div className="absolute bottom-20 right-4 z-[1000] bg-gradient-to-br from-brand-olive/98 to-brand-olive/98 backdrop-blur-md px-5 py-4 rounded-2xl border-2 border-brand-clay/60 shadow-2xl hover:scale-105 transition-transform duration-300">
           <div className="flex flex-col gap-3 text-sm">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 bg-gradient-to-br from-yellow-300 to-orange-400 rounded-full border-2 border-white shadow-lg" style={{ boxShadow: '0 0 15px rgba(255, 215, 0, 0.8)' }}></div>
               <span className="text-white font-bold">Seven Wonders ⭐</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-4 h-4 bg-gradient-to-br from-[#D2691E] to-[#8B4513] rounded-full border-2 border-white shadow-lg" style={{ boxShadow: '0 0 12px rgba(210, 105, 30, 0.7)' }}></div>
+              <div className="w-4 h-4 bg-gradient-to-br from-map-pin to-map-pin-deep rounded-full border-2 border-white shadow-lg" style={{ boxShadow: '0 0 12px rgba(210, 105, 30, 0.7)' }}></div>
               <span className="text-white font-semibold">Tourist Destinations</span>
             </div>
           </div>
@@ -602,14 +611,14 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
         {/* Selected Location Info */}
         {selectedLocation && (
-          <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-[#5F6F52] to-[#5F6F52] text-white px-8 py-4 rounded-xl shadow-2xl border-2 border-[#B99470]/60 ${isPreview ? 'z-10' : 'z-[1000]'} max-w-md`}>
+          <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-brand-olive to-brand-olive text-white px-8 py-4 rounded-xl shadow-2xl border-2 border-brand-clay/60 ${isPreview ? 'z-10' : 'z-[1000]'} max-w-md`}>
             <button
               onClick={() => setSelectedLocation(null)}
-              className="absolute -top-2 -right-2 w-7 h-7 bg-[#B99470] text-[#5F6F52] rounded-full flex items-center justify-center text-lg font-bold hover:bg-white transition-colors shadow-lg"
+              className="absolute -top-2 -right-2 w-7 h-7 bg-brand-clay text-brand-olive rounded-full flex items-center justify-center text-lg font-bold hover:bg-white transition-colors shadow-lg"
             >
               ×
             </button>
-            <h2 className="text-2xl font-bold text-[#B99470] mb-1">
+            <h2 className="text-2xl font-bold text-brand-clay mb-1">
               {selectedLocation.name}
               {selectedLocation.isWonder && ' ⭐'}
             </h2>
@@ -636,7 +645,7 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       <style jsx global>{`
         .leaflet-container {
           /* Sea = app background (pure white) to match the site theme */
-          background: #FFFFFF !important;
+          background: #fff !important;
         }
 
         /* Ensure markers and tooltips are visible */
@@ -657,8 +666,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
         }
         .custom-tooltip {
           background: linear-gradient(135deg, rgba(48, 96, 41, 0.98) 0%, rgba(122, 148, 116, 0.98) 100%) !important;
-          border: 2px solid #B99470 !important;
-          color: #ffffff !important;
+          border: 2px solid var(--brand-clay) !important;
+          color: #fff !important;
           font-weight: 700;
           font-size: 11px;
           border-radius: 6px;
@@ -668,12 +677,12 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           backdrop-filter: blur(4px);
         }
         .custom-tooltip::before {
-          border-top-color: #B99470 !important;
+          border-top-color: var(--brand-clay) !important;
         }
         .custom-tooltip-wonder {
           background: linear-gradient(135deg, rgba(255, 140, 0, 0.98) 0%, rgba(255, 215, 0, 0.98) 100%) !important;
           border: 2px solid #fff !important;
-          color: #ffffff !important;
+          color: #fff !important;
           font-weight: 700;
           font-size: 12px;
           border-radius: 6px;
@@ -687,18 +696,18 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           border-top-color: #fff !important;
         }
         .leaflet-control-zoom {
-          border: 2px solid #B99470 !important;
+          border: 2px solid var(--brand-clay) !important;
           border-radius: 8px !important;
           overflow: hidden;
         }
         .leaflet-control-zoom a {
-          background-color: #5F6F52 !important;
-          color: #B99470 !important;
+          background-color: var(--brand-olive) !important;
+          color: var(--brand-clay) !important;
           border: none !important;
         }
         .leaflet-control-zoom a:hover {
-          background-color: #B99470 !important;
-          color: #5F6F52 !important;
+          background-color: var(--brand-clay) !important;
+          color: var(--brand-olive) !important;
         }
 
         /* Marker pulse animations */

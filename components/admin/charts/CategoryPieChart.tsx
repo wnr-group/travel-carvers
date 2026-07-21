@@ -1,7 +1,7 @@
 'use client';
 
 import { PieChart, Pie, Tooltip, ResponsiveContainer } from 'recharts';
-import { TOOLTIP_STYLE } from './theme';
+import { CHART_SURFACE, TOOLTIP_STYLE } from './theme';
 
 export interface PieSlice {
   name: string;
@@ -28,7 +28,7 @@ export default function CategoryPieChart({ data }: { data: PieSlice[] }) {
               innerRadius="55%"
               outerRadius="85%"
               paddingAngle={2}
-              stroke="#ffffff"
+              stroke={CHART_SURFACE}
               strokeWidth={2}
             />
             <Tooltip

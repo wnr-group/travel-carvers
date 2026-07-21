@@ -201,7 +201,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
       : "New package";
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA] font-body text-[15px] text-[--foreground]">
+    <div className="min-h-screen bg-brand-linen font-body text-[15px] text-[--foreground]">
       <FontLoader />
 
       {/* Breadcrumb */}
@@ -347,7 +347,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
         <button
           onClick={() => setIsLeadFormOpen(true)}
           disabled={detail.isSoldOut}
-          className="rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-400 disabled:shadow-none disabled:active:scale-100"
+          className="rounded-full bg-gradient-to-r from-brand-forest to-brand-sage px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-400 disabled:shadow-none disabled:active:scale-100"
         >
           {detail.isSoldOut ? "Sold Out" : "Reserve Your Spot"}
         </button>
@@ -1101,7 +1101,7 @@ function BookingCard({ startingPrice, guests, setGuests, total, onBookNow, title
       <button
         onClick={onBookNow}
         disabled={isSoldOut}
-        className="mt-5 w-full rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100"
+        className="mt-5 w-full rounded-full bg-gradient-to-r from-brand-forest to-brand-sage py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100"
       >
         {isSoldOut ? "Sold Out" : "Reserve Your Spot"}
       </button>

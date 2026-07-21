@@ -28,7 +28,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     <div className="fixed inset-0 z-[150] flex items-start justify-center p-4 pt-[12vh] sm:p-6 sm:pt-[14vh]">
       {/* Blurred backdrop — clicking it closes the modal */}
       <div
-        className="absolute inset-0 bg-[#1B4D1B]/50 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-brand-darkest/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />

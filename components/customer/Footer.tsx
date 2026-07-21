@@ -4,8 +4,7 @@ import { useState, type ComponentType, type SyntheticEvent, type SVGProps } from
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react';
-
+import { Phone, Mail, MapPin, Clock, Send, Compass, ArrowUpRight } from 'lucide-react';
 
 interface FooterLink {
   label: string;
@@ -32,7 +31,6 @@ const POPULAR_DESTINATIONS: FooterLink[] = [
   'Europe',
   'Kashmir',
 ].map((name) => ({ label: name, href: `/packages?destination=${name.toLowerCase()}` }));
-
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -91,7 +89,10 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function ColumnHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">{children}</h3>
+    <h3 className="mb-4 text-xs font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
+      <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+      {children}
+    </h3>
   );
 }
 
@@ -99,9 +100,10 @@ function FooterNavLink({ link }: { link: FooterLink }) {
   return (
     <Link
       href={link.href}
-      className="rounded text-sm text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light"
+      className="group inline-flex items-center gap-1.5 text-sm text-white/75 transition-all duration-300 hover:text-white hover:translate-x-1"
     >
-      {link.label}
+      <span className="text-white/40 group-hover:text-amber-400 transition-colors">›</span>
+      <span>{link.label}</span>
     </Link>
   );
 }
@@ -112,7 +114,7 @@ export default function Footer() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubscribe = (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault(); // No backend yet — never reload the page.
+    event.preventDefault();
 
     const trimmed = email.trim();
     if (!trimmed) {
@@ -130,51 +132,63 @@ export default function Footer() {
   };
 
   return (
-    <footer aria-labelledby="footer-heading" className="bg-gradient-brand-navbar shadow-lg sticky text-white">
+    <footer aria-labelledby="footer-heading" className="bg-brand-footer text-white relative overflow-hidden border-t border-white/10">
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
 
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {/* ---------------- Column 1: Company ---------------- */}
-          <div>
-            <Link href="/" className="mb-4 inline-flex items-center gap-3" aria-label="Travel Carvers home">
-              <Image
-                src="/logo.png"
-                alt="Travel Carvers"
-                width={48}
-                height={48}
-                className="h-12 w-auto object-contain brightness-110"
-              />
-              <span className="text-xl font-bold text-white">Travel Carvers</span>
-            </Link>
-            <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/70">
-              Crafting unforgettable journeys across India and the world. From dreamy beaches to
-              soaring mountains, we design travel experiences made just for you.
-            </p>
+      {/* Decorative ambient background blur */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
 
-            <ul className="flex items-center gap-3">
-              {SOCIAL_LINKS.map(({ label, href, Icon }) => (
-                <li key={label}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Follow us on ${label}`}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-brand-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light"
-                  >
-                    <Icon className="h-5 w-5" />
-                  </a>
-                </li>
-              ))}
-            </ul>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-12">
+          
+          {/* ---------------- Column 1: Company Info (4 Cols) ---------------- */}
+          <div className="lg:col-span-4 flex flex-col justify-between space-y-6">
+            <div>
+              <Link href="/" className="mb-4 inline-flex items-center gap-3 group" aria-label="Travel Carvers home">
+                <Image
+                  src="/logo.png"
+                  alt="Travel Carvers"
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 rounded-full object-cover border-2 border-white/50 shadow-md group-hover:scale-105 transition-transform"
+                />
+                <div>
+                  <span className="text-xl font-black text-white tracking-wide">Travel Carvers</span>
+                  <p className="text-[11px] text-white/70 font-medium">Explore Your Next Adventure</p>
+                </div>
+              </Link>
+              <p className="text-sm leading-relaxed text-white/80 font-medium max-w-sm mt-3">
+                Crafting unforgettable journeys across India and the world. From dreamy beaches to soaring mountains, we design travel experiences tailored precisely to your soul.
+              </p>
+            </div>
+
+            {/* Social Links */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-amber-300 mb-3">Connect With Us</p>
+              <ul className="flex items-center gap-2.5">
+                {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Follow us on ${label}`}
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-110 hover:bg-brand-accent hover:text-brand-forest shadow-sm"
+                    >
+                      <Icon className="h-4 w-4" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* ---------------- Column 2: Quick Links ---------------- */}
-          <nav aria-label="Quick links">
+          {/* ---------------- Column 2: Quick Links (2 Cols) ---------------- */}
+          <nav aria-label="Quick links" className="lg:col-span-2">
             <ColumnHeading>Quick Links</ColumnHeading>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2.5 mt-2">
               {QUICK_LINKS.map((link) => (
                 <li key={link.href}>
                   <FooterNavLink link={link} />
@@ -183,10 +197,10 @@ export default function Footer() {
             </ul>
           </nav>
 
-          {/* ---------------- Column 3: Popular Destinations ---------------- */}
-          <nav aria-label="Popular destinations">
-            <ColumnHeading>Popular Destinations</ColumnHeading>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+          {/* ---------------- Column 3: Popular Destinations (3 Cols) ---------------- */}
+          <nav aria-label="Popular destinations" className="lg:col-span-3">
+            <ColumnHeading>Top Destinations</ColumnHeading>
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-2.5 mt-2">
               {POPULAR_DESTINATIONS.map((link) => (
                 <li key={link.href}>
                   <FooterNavLink link={link} />
@@ -195,88 +209,90 @@ export default function Footer() {
             </ul>
           </nav>
 
-          {/* ---------------- Column 4: Newsletter + Contact ---------------- */}
-          <div>
-            <ColumnHeading>Newsletter</ColumnHeading>
-            <p className="mb-3 text-sm text-white/70">
-              Get travel inspiration and exclusive deals in your inbox.
-            </p>
+          {/* ---------------- Column 4: Newsletter + Contact Info (3 Cols) ---------------- */}
+          <div className="lg:col-span-3 space-y-6">
+            <div>
+              <ColumnHeading>Newsletter</ColumnHeading>
+              <p className="text-xs text-white/80 mb-3 font-medium">
+                Get travel inspiration and exclusive deals delivered right to your inbox.
+              </p>
 
-            <form onSubmit={handleSubscribe} noValidate className="mb-8">
-              <label htmlFor="newsletter-email" className="sr-only">
-                Email address
-              </label>
-              <div className="flex flex-col gap-2">
-                <input
-                  id="newsletter-email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => {
-                    setEmail(event.target.value);
-                    if (error) setError(null);
-                  }}
-                  placeholder="you@example.com"
-                  aria-invalid={error ? true : undefined}
-                  aria-describedby={error ? 'newsletter-error' : undefined}
-                  className="w-full rounded-lg border border-white/15 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/50 transition focus:border-brand-light focus:outline-none focus:ring-2 focus:ring-brand-light/40"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-darkest px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light active:scale-[0.99]"
-                >
-                  Subscribe
-                  <Send className="h-4 w-4" />
-                </button>
-              </div>
-              {error && (
-                <p id="newsletter-error" role="alert" className="mt-2 text-xs text-red-300">
-                  {error}
-                </p>
-              )}
-            </form>
+              <form onSubmit={handleSubscribe} noValidate className="relative">
+                <label htmlFor="newsletter-email" className="sr-only">
+                  Email address
+                </label>
+                <div className="flex flex-col gap-2">
+                  <div className="relative">
+                    <input
+                      id="newsletter-email"
+                      type="email"
+                      value={email}
+                      onChange={(event) => {
+                        setEmail(event.target.value);
+                        if (error) setError(null);
+                      }}
+                      placeholder="Enter your email"
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby={error ? 'newsletter-error' : undefined}
+                      className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50 transition focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30 backdrop-blur-md"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-brand-accent-soft px-4 py-3 text-xs font-bold uppercase tracking-widest text-brand-forest transition-all shadow-md hover:scale-[1.02]"
+                  >
+                    <span>Subscribe Now</span>
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                {error && (
+                  <p id="newsletter-error" role="alert" className="mt-1.5 text-xs text-red-300 font-medium">
+                    {error}
+                  </p>
+                )}
+              </form>
+            </div>
 
-            <ColumnHeading>Contact</ColumnHeading>
-            <ul className="flex flex-col gap-3">
-              {CONTACT_DETAILS.map(({ Icon, label, value, href }) => (
-                <li key={label} className="flex items-start gap-3 text-sm text-white/70">
-                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-brand-light" aria-hidden="true" />
-                  {href ? (
-                    <a
-                      href={href}
-                      className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light"
-                    >
-                      <span className="sr-only">{label}: </span>
-                      {value}
-                    </a>
-                  ) : (
-                    <span>
-                      <span className="sr-only">{label}: </span>
-                      {value}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
+            {/* Quick Contact snippet */}
+            <div>
+              <ColumnHeading>Quick Contact</ColumnHeading>
+              <ul className="flex flex-col gap-2 text-xs text-white/80 mt-2 font-medium">
+                {CONTACT_DETAILS.slice(0, 2).map(({ Icon, value, href }) => (
+                  <li key={value} className="flex items-center gap-2.5">
+                    <Icon className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+                    {href ? (
+                      <a href={href} className="hover:text-white transition-colors underline decoration-white/30">
+                        {value}
+                      </a>
+                    ) : (
+                      <span>{value}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
           </div>
+
         </div>
       </div>
 
-      {/* ---------------- Bottom bar ---------------- */}
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-6 py-6 text-sm text-white/60 sm:flex-row sm:justify-between">
+      {/* ---------------- Bottom Bar ---------------- */}
+      <div className="border-t border-white/10 bg-brand-footer-deep">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 sm:px-6 lg:px-8 py-6 text-xs text-white/70 sm:flex-row sm:justify-between font-medium">
           <p>
-            &copy; {currentYear} Travel Carvers. All Rights Reserved.
+            &copy; {currentYear} Travel Carvers. All Rights Reserved. Crafted with care for global explorers.
           </p>
           <nav aria-label="Legal" className="flex items-center gap-6">
             <Link
               href="/privacy"
-              className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light"
+              className="hover:text-white transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="rounded transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-light"
+              className="hover:text-white transition-colors"
             >
               Terms &amp; Conditions
             </Link>

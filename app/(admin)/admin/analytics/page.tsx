@@ -15,7 +15,7 @@ import KpiCard from '@/components/admin/charts/KpiCard';
 import CategoryPieChart from '@/components/admin/charts/CategoryPieChart';
 import CountBarChart from '@/components/admin/charts/CountBarChart';
 import TrendLineChart from '@/components/admin/charts/TrendLineChart';
-import { STATUS_COLORS, STATUS_LABELS } from '@/components/admin/charts/theme';
+import { CHART_MUTED, STATUS_COLORS, STATUS_LABELS } from '@/components/admin/charts/theme';
 import { useAdminAnalytics } from '@/lib/hooks/useAdminAnalytics';
 
 export default function AnalyticsPage() {
@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
   const statusSlices = (data?.leadsByStatus ?? []).map((entry) => ({
     name: STATUS_LABELS[entry.name] ?? entry.name,
     value: entry.count,
-    color: STATUS_COLORS[entry.name] ?? '#6b7280',
+    color: STATUS_COLORS[entry.name] ?? CHART_MUTED,
   }));
 
   const ratingBars = (data?.ratingDistribution ?? []).map((entry) => ({

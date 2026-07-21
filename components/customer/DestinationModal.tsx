@@ -85,7 +85,7 @@ export default function DestinationModal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#1B4D1B]/50 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-brand-darkest/50 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />

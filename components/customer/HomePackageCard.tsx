@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Users } from 'lucide-react';
+import { Users, Clock3, Star } from 'lucide-react';
 import { groupSizeLabel } from '@/lib/packageList';
 
 export interface HomePackage {
@@ -28,9 +28,7 @@ function coverImage(pkg: HomePackage): string {
   return cover?.image_url ?? `https://picsum.photos/seed/${pkg.slug}/800/600`;
 }
 
-
 function formatPrice(pkg: HomePackage): string {
-  // Admins can hide a package's price from customers.
   if (pkg.show_price === false) return 'On request';
   const value = pkg.price_adult;
   if (value === null || value === undefined || value === '') return 'On request';
@@ -39,8 +37,9 @@ function formatPrice(pkg: HomePackage): string {
 
 function formatDuration(pkg: HomePackage): string {
   if (!pkg.duration_days) return 'Flexible itinerary';
-  const nights = pkg.duration_nights ? ` / ${pkg.duration_nights} Nights` : '';
-  return `${pkg.duration_days} Days${nights}`;
+  const nights = pkg.duration_nights ? `${pkg.duration_nights}N` : '';
+  const days = `${pkg.duration_days}D`;
+  return nights ? `${nights} / ${days}` : days;
 }
 
 interface HomePackageCardProps {
@@ -54,57 +53,54 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
   return (
     <Link
       href={`/packages/${pkg.slug}`}
-      className="group relative block h-72 overflow-hidden rounded-2xl shadow-lg transition-all duration-500 hover:-translate-y-2 hover:scale-105 hover:shadow-2xl"
+      className="group relative block overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl border border-brand-light/30 flex flex-col justify-between"
     >
-      <Image
-        src={coverImage(pkg)}
-        alt={pkg.title}
-        fill
-        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        className="object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent transition-all group-hover:from-[#A9B388]/80" />
+      <div className="relative h-48 w-full overflow-hidden">
+        <Image
+          src={coverImage(pkg)}
+          alt={pkg.title}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-      {pkg.status === 'sold_out' && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
-          <span className="rounded-full bg-white/95 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-rose-700">
-            Sold Out
+        {badge && (
+          <span className="absolute top-3 left-3 rounded-full bg-brand-forest px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow">
+            {badge}
           </span>
-        </div>
-      )}
+        )}
 
-      <div className="absolute inset-0 flex flex-col justify-between p-6">
-        <div className="flex items-start justify-between gap-2">
-          {badge ? (
-            <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[#5F6F52] backdrop-blur-sm">
-              {badge}
-            </span>
-          ) : (
-            <span />
-          )}
+        {groupSize && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-brand-forest shadow backdrop-blur-sm">
+            <Users aria-hidden="true" className="h-3 w-3" />
+            {groupSize}
+          </span>
+        )}
+      </div>
 
-          {/* Group departures advertise their size up front, not just on the detail page. */}
-          {groupSize && (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#1A3C34]/90 px-3 py-1 text-xs font-semibold text-white shadow-lg ring-1 ring-white/25 backdrop-blur-sm">
-              <Users aria-hidden="true" className="h-3.5 w-3.5" />
-              {groupSize}
-            </span>
-          )}
-        </div>
-
+      <div className="p-4 flex flex-col justify-between flex-grow bg-white">
         <div>
-          <h3 className="mb-2 line-clamp-2 text-2xl font-bold text-white">{pkg.title}</h3>
-          <p className="mb-3 text-sm text-white/90">{formatDuration(pkg)}</p>
-          <div className="flex items-center justify-between gap-2">
-            {pkg.destination_name ? (
-              <span className="truncate rounded-full bg-[#1A3C34]/50 px-2 py-1 text-xs text-white/90 backdrop-blur-sm">
-                {pkg.destination_name}
-              </span>
-            ) : (
-              <span />
-            )}
-            <span className="shrink-0 text-lg font-bold text-white">{formatPrice(pkg)}</span>
+          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-1">
+            <span>{formatDuration(pkg)}</span>
+            <span className="flex items-center gap-1 text-amber-500 font-bold">
+              <Star className="w-3.5 h-3.5 fill-current" /> 4.8
+            </span>
           </div>
+          <h3 className="line-clamp-1 text-base font-bold text-brand-forest group-hover:text-brand-dark transition-colors">
+            {pkg.title}
+          </h3>
+          <p className="text-xs text-gray-500 truncate mt-0.5">{pkg.destination_name || 'Global Destination'}</p>
+        </div>
+
+        <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-100">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-gray-400 block">Starting from</span>
+            <span className="text-sm font-black text-brand-forest">{formatPrice(pkg)}</span>
+          </div>
+          <span className="px-3.5 py-1.5 bg-brand-forest text-white rounded-full text-xs font-bold group-hover:bg-brand-sage transition-colors">
+            Explore
+          </span>
         </div>
       </div>
     </Link>
@@ -112,5 +108,5 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
 }
 
 export function HomePackageCardSkeleton() {
-  return <div className="h-72 animate-pulse rounded-2xl bg-black/5" />;
+  return <div className="h-72 animate-pulse rounded-2xl bg-black/10" />;
 }

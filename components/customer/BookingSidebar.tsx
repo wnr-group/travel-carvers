@@ -57,7 +57,7 @@ export function BookingSidebar({
 
       <button
         onClick={onBookNow}
-        className="mt-5 w-full rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+        className="mt-5 w-full rounded-full bg-gradient-to-r from-brand-forest to-brand-sage py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
       >
         Reserve Your Spot
       </button>

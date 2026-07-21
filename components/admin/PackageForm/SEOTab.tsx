@@ -192,7 +192,7 @@ export default function SEOTab() {
             {slug ? packagePath(slug) : '/package/…'}
           </p>
 
-          <p className="mt-1 truncate text-lg text-[#1a0dab]">
+          <p className="mt-1 truncate text-lg text-serp-link">
             {previewTitle || 'Your package title will appear here'}
           </p>
 

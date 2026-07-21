@@ -19,7 +19,8 @@ import { useCategories } from '@/lib/hooks/useCategories';
 import TestimonialsCarousel from '@/components/customer/TestimonialsCarousel';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import EmptyState from '@/components/ui/EmptyState';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight,CheckCircle2,Compass } from 'lucide-react';
+import Image from 'next/image';
 
 /* -------------------------------------------------------------------------- */
 /*  Shared section heading — eyebrow + title + subtitle, with an optional CTA  */
@@ -156,7 +157,7 @@ function CategoryShowcaseGrid({
 }) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <HomeCategoryCardSkeleton key={i} />
         ))}
@@ -170,14 +171,13 @@ function CategoryShowcaseGrid({
   if (items.length === 0) return <EmptyState variant="categories" />;
 
   return (
-    <div className="scroll-animate opacity-0 translate-y-8 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
-      {items.map((category) => (
-        <HomeCategoryCard key={category.id} category={category} />
+    <div className="scroll-animate opacity-0 translate-y-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      {items.map((category, index) => (
+        <HomeCategoryCard key={category.id} category={category} index={index} />
       ))}
     </div>
   );
 }
-
 /* -------------------------------------------------------------------------- */
 /*  Page                                                                        */
 /* -------------------------------------------------------------------------- */
@@ -213,15 +213,18 @@ export default function Home() {
     <div className="w-full">
       {/* Hero */}
       <HeroSection />
-      {/* Categories */}
-      <section className="bg-white py-20 md:py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <SectionHeading
-            eyebrow="Find your vibe"
-            title="Travel by Category"
-            subtitle="Choose your perfect adventure from our curated experiences."
-            align="center"
-          />
+       {/* Categories Section */}
+      <section className="py-20 bg-brand-paper">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16 scroll-animate opacity-0 translate-y-10">
+            <h2 className="text-4xl md:text-5xl font-bold text-brand-forest mb-4">
+              Travel Categories
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Choose your perfect adventure from our curated travel experiences
+            </p>
+          </div>
+
           <CategoryShowcaseGrid
             isLoading={categories.isLoading}
             isError={categories.isError}
@@ -231,47 +234,100 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured packages */}
-      <section id="featured" className="bg-brand-tint-subtle py-20 md:py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <SectionHeading
-            eyebrow="Hand picked"
-            title="Featured Packages"
-            subtitle="Journeys our travellers love, chosen by our team."
-            action={{ href: '/packages', label: 'View all' }}
-          />
-          <PackageShowcaseGrid
-            isLoading={featured.isLoading}
-            isError={featured.isError}
-            data={featured.data}
-            onRetry={featured.refetch}
-            badge="FEATURED"
-            emptyText="No featured packages yet. Check back soon!"
-          />
-          <MobileViewAll href="/packages" label="View all packages" />
-        </div>
-      </section>
+      {/* Trending Packages (Most Loved Around The World) */}
+<section className="py-16 bg-white">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-between mb-8">
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-black text-brand-forest">Most Loved Around The World</h2>
+        <p className="text-sm text-gray-600 mt-1">Explore destinations everyone is booking right now.</p>
+      </div>
+      <Link href="/packages" className="text-xs font-bold text-brand-forest hover:underline uppercase tracking-wider flex items-center gap-1">
+        View All Destinations →
+      </Link>
+    </div>
 
-      {/* Trending packages */}
-      <section id="packages" className="bg-white py-20 md:py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <SectionHeading
-            eyebrow="Most booked"
-            title="Trending Now"
-            subtitle="Explore the destinations everyone is talking about."
-            action={{ href: '/packages', label: 'View more' }}
-          />
-          <PackageShowcaseGrid
-            isLoading={trending.isLoading}
-            isError={trending.isError}
-            data={trending.data}
-            onRetry={trending.refetch}
-            badge="TRENDING"
-            emptyText="No trending packages right now. Explore all our packages instead."
-          />
-          <MobileViewAll href="/packages" label="View all packages" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {trending.data?.slice(0, 4).map((pkg) => (
+        <HomePackageCard key={pkg.id} pkg={pkg} badge="TRENDING" />
+      ))}
+    </div>
+  </div>
+</section>
+
+{/* Highlighted Visa Service Banner */}
+<section className="my-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Outer Banner Box with Light Editorial Background */}
+      <div className="relative rounded-3xl bg-gradient-to-r from-brand-shell via-brand-linen to-brand-sand border border-brand-sage/30 shadow-xl px-6 py-10 sm:p-12 overflow-visible flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+        
+        {/* Left Side: Real Uploaded Image Container with Realistic Frame Style */}
+        <div className="relative lg:w-1/3 flex justify-center lg:justify-start -mt-16 sm:-mt-20 lg:-mt-12 lg:-ml-16 mb-4 lg:mb-0 shrink-0">
+          <div className="relative w-[280px] sm:w-[340px] h-[190px] sm:h-[220px] rounded-2xl overflow-hidden shadow-2xl border-4 border-white transform -rotate-3 hover:rotate-0 transition-transform duration-500 bg-black">
+            <img
+              src="/passport-img.jpg" 
+              alt="Visa and Passport Travel Flatlay"
+              className="w-full h-full object-cover filter brightness-[0.95]"
+            />
+            {/* Subtle aesthetic gradient tint */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-brand-forest/15 to-transparent pointer-events-none" />
+          </div>
         </div>
-      </section>
+
+        {/* Center/Right Side: Content, Checklist & CTA */}
+        <div className="flex-1 text-center lg:text-left">
+          <span className="inline-block px-3 py-1 bg-brand-forest/10 text-brand-forest text-[11px] font-bold uppercase tracking-[0.2em] rounded-full mb-3">
+            Visa Services
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-brand-forest tracking-tight mb-3">
+            Hassle-free Visa Processing
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed max-w-2xl">
+            We make your travel smooth with expert visa assistance for all major countries with fast documentation support.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8 text-left max-w-2xl">
+            {['Tourist Visa', 'Business Visa', 'Student Visa', 'Fast Processing', 'Hajj / Umrah Visa', 'Expert Guidance'].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-xs font-bold text-brand-forest">
+                <CheckCircle2 className="w-4 h-4 text-brand-sage shrink-0" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center lg:justify-start">
+            <Link
+              href="/visa"
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-brand-forest hover:bg-black text-white rounded-full font-bold text-xs uppercase tracking-wider shadow-lg transition-all hover:scale-105"
+            >
+              <span>Know More</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+{/* Featured Packages (Handpicked Experiences For You) */}
+<section className="py-16 bg-brand-paper">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-between mb-8">
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-black text-brand-forest">Handpicked Experiences For You</h2>
+        <p className="text-sm text-gray-600 mt-1">Curated journeys hand-selected by our travel experts.</p>
+      </div>
+      <Link href="/packages" className="text-xs font-bold text-brand-forest hover:underline uppercase tracking-wider flex items-center gap-1">
+        View All Packages →
+      </Link>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {featured.data?.slice(0, 4).map((pkg) => (
+        <HomePackageCard key={pkg.id} pkg={pkg} badge="FEATURED" />
+      ))}
+    </div>
+  </div>
+</section>
 
       {/* Why choose us — trust badges from the DB (numeric → stat cards, text → pills) */}
       <section className="bg-brand-tint-subtle py-20 md:py-24">
@@ -289,42 +345,70 @@ export default function Home() {
       {/* Testimonials */}
       <section className="overflow-hidden bg-white py-20 md:py-24">
         <div className="mx-auto max-w-7xl px-6">
-          <SectionHeading
+          {/* <SectionHeading
             eyebrow="Loved by travellers"
             title="What Our Travellers Say"
             subtitle="Real stories from the people who journeyed with us."
             align="center"
-          />
+          /> */}
           <TestimonialsCarousel />
         </div>
       </section>
 
       {/* Closing CTA — uses the header/navbar brand gradient (the app's main color) */}
-      <section className="bg-gradient-brand-navbar">
-        <div className="mx-auto max-w-5xl px-6 py-20 text-center md:py-24">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-            Ready to carve your next journey?
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base md:text-lg text-white/80">
-            Browse our handcrafted packages or tell us your dream trip — our travel experts will design it around you.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/packages"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-brand-darkest shadow-md transition-all hover:gap-3 hover:shadow-lg"
-            >
-              Explore all packages
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              Plan a custom trip
-            </Link>
+      <section className="w-full py-16 bg-brand-paper">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Boxed container layout with rounded corners and shadow */}
+        <div className="relative overflow-hidden rounded-3xl py-16 md:py-20 px-6 sm:px-12 text-white shadow-2xl">
+          {/* Background Image Layer using a direct reliable travel photo with lighter opacity */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&q=80"
+              alt="Travel background"
+              fill
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              className="object-cover"
+            />
+            {/* Lighter semi-transparent gradient overlay so the photo is clearly visible */}
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/80 via-brand-dark/75 to-brand-forest/80 backdrop-blur-[1px]" />
+          </div>
+
+          <div className="relative z-10 mx-auto max-w-3xl text-center">
+            {/* Subtle upper pill tag */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md mb-6 shadow-sm">
+              <Compass className="h-3.5 w-3.5 text-yellow-300 animate-spin" style={{ animationDuration: '12s' }} />
+              <span>Start Exploring Today</span>
+            </div>
+
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
+              Ready to carve your next journey?
+            </h2>
+            
+            <p className="mx-auto mt-4 max-w-xl text-sm md:text-base text-white/95 font-medium leading-relaxed">
+              Browse our handcrafted packages or tell us your dream trip — our travel experts will design it around you.
+            </p>
+
+            {/* Buttons layout */}
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/packages"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-xs md:text-sm font-bold text-brand-forest shadow-lg transition-all duration-300 hover:gap-3 hover:bg-gray-100 hover:scale-105"
+              >
+                <span>Explore all packages</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-transparent px-7 py-3.5 text-xs md:text-sm font-bold text-white transition-all duration-300 hover:bg-white/10 hover:border-white hover:scale-105"
+              >
+                <span>Plan a custom trip</span>
+              </Link>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
     </div>
   );
 }

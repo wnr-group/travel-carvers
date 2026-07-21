@@ -69,7 +69,7 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackShare('whatsapp')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-[#25D366] hover:bg-[#20ba56] text-white shadow-sm hover:shadow transition-all hover:scale-[1.05] active:scale-[0.95] cursor-pointer"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-share-whatsapp hover:bg-share-whatsapp-dark text-white shadow-sm hover:shadow transition-all hover:scale-[1.05] active:scale-[0.95] cursor-pointer"
           title="Share on WhatsApp"
         >
           <WhatsAppIcon />
@@ -81,7 +81,7 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackShare('facebook')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-[#1877F2] hover:bg-[#166fe5] text-white shadow-sm hover:shadow transition-all hover:scale-[1.05] active:scale-[0.95] cursor-pointer"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-share-facebook hover:bg-share-facebook-dark text-white shadow-sm hover:shadow transition-all hover:scale-[1.05] active:scale-[0.95] cursor-pointer"
           title="Share on Facebook"
         >
           <FacebookIcon />
@@ -91,7 +91,7 @@ export default function ShareButtons({ title, slug }: ShareButtonsProps) {
         <a
           href={emailLink}
           onClick={() => trackShare('email')}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-[#5F7A5F] hover:bg-[#2D5F2D] text-white shadow-sm hover:shadow transition-all hover:scale-[1.05] active:scale-[0.95] cursor-pointer"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary-sage hover:bg-brand-dark text-white shadow-sm hover:shadow transition-all hover:scale-[1.05] active:scale-[0.95] cursor-pointer"
           title="Share via Email"
         >
           <Mail className="w-5 h-5" />
