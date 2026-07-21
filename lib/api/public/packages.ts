@@ -112,6 +112,10 @@ export async function getFeaturedPackages() {
       package_gallery (
         image_url,
         is_cover
+      ),
+      reviews (
+        rating,
+        is_approved
       )
     `)
     .in('status', PUBLIC_PACKAGE_STATUSES)
@@ -134,6 +138,10 @@ export async function getTrendingPackages() {
       package_gallery (
         image_url,
         is_cover
+      ),
+      reviews (
+        rating,
+        is_approved
       )
     `)
     .in('status', PUBLIC_PACKAGE_STATUSES)
@@ -162,6 +170,10 @@ export async function getSimilarPackages(
       package_gallery (
         image_url,
         is_cover
+      ),
+      reviews (
+        rating,
+        is_approved
       ),
       package_categories!inner (
         category_id,
@@ -192,6 +204,10 @@ export async function getPackagesByCategory(categoryId: string) {
       package_gallery (
         image_url,
         is_cover
+      ),
+      reviews (
+        rating,
+        is_approved
       ),
       package_categories!inner (
         category_id
