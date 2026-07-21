@@ -65,6 +65,14 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
+        {pkg.status === 'sold_out' && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/45">
+            <span className="rounded-full bg-white/95 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-rose-700">
+              Sold Out
+            </span>
+          </div>
+        )}
+
         {badge && (
           <span className="absolute top-3 left-3 rounded-full bg-brand-forest px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow">
             {badge}
