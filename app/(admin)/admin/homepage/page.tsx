@@ -21,10 +21,10 @@ export default function HomepageManagerPage() {
   const [heroTitle, setHeroTitle] = useState('');
   const [heroSubtitle, setHeroSubtitle] = useState('');
   const [heroCtaText, setHeroCtaText] = useState('');
-  
+
   const [featuredTitle, setFeaturedTitle] = useState('');
   const [featuredDescription, setFeaturedDescription] = useState('');
-  
+
   const [trendingTitle, setTrendingTitle] = useState('');
   const [trendingDescription, setTrendingDescription] = useState('');
 
@@ -93,7 +93,7 @@ export default function HomepageManagerPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        
+
         {/* Section 1: Hero Header settings */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
