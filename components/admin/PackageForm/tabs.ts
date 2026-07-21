@@ -41,6 +41,7 @@ export const PACKAGE_FORM_TABS: readonly PackageFormTab[] = [
       'is_featured',
       'is_trending',
       'is_new',
+      'is_group_package',
     ],
     Component: BasicInfoTab,
   },
@@ -68,8 +69,6 @@ export const PACKAGE_FORM_TABS: readonly PackageFormTab[] = [
       'category_ids',
       'subcategory_ids',
       'destination_name',
-      'main_destination_lat',
-      'main_destination_lng',
     ],
     Component: CategoriesTab,
   },
@@ -100,7 +99,13 @@ export const PACKAGE_FORM_TABS: readonly PackageFormTab[] = [
   {
     id: 'additional',
     label: 'Additional',
-    fields: ['travel_tips', 'best_time_to_visit', 'places_to_visit'],
+    fields: [
+      'travel_tips',
+      'best_time_to_visit',
+      'places_to_visit',
+      'cancellation_policy',
+      'required_documents',
+    ],
     Component: AdditionalTab,
   },
   {

@@ -65,6 +65,7 @@
   --gradient-soft: linear-gradient(135deg, #8FA88F 0%, #B8D4B8 100%);
   --gradient-full: linear-gradient(135deg, #1B4D1B 0%, #2D5F2D 25%, #5F7A5F 50%, #8FA88F 75%, #C8E6C8 100%);
   --tooltip-bg: var(--logo-sage);
+
 }
 
 /* ========================================
@@ -121,6 +122,30 @@ html {
 html,
 body {
   width: 100%;
+}
+
+/* For Webkit browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px; /* Slimmer, premium scrollbar width */
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(27, 77, 27, 0.4); /* Matches your dark forest background with transparency */
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--logo-sage); /* Uses your logo sage green variable */
+  border-radius: 9999px; /* Fully rounded pill shape */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--logo-sage-light); /* Lighter sage on hover */
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--logo-sage) rgba(27, 77, 27, 0.4);
 }
 
 /* Floating wave animation for cards */
@@ -277,3 +302,4 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
+

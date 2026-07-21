@@ -17,6 +17,30 @@ import type { DestinationMapPin } from '@/lib/types/destination';
 /** The modal is a teaser — the destination page lists the rest. */
 const MODAL_PACKAGE_LIMIT = 2;
 
+function normalise(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function slugify(value: string): string {
+  return normalise(value)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+/**
+ * A built-in landmark and an admin-created destination often describe the same place —
+ * "Goa" is in both lists. Match on name or slug so the click can be resolved against the
+ * database row, which is the only one that actually owns packages.
+ */
+function findMatchingPin(
+  pins: DestinationMapPin[],
+  name: string
+): DestinationMapPin | undefined {
+  const key = normalise(name);
+  const slug = slugify(name);
+  return pins.find((pin) => normalise(pin.name) === key || normalise(pin.slug) === slug);
+}
+
 interface RealWorldMapProps {
   isPreview?: boolean;
 }
@@ -77,6 +101,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
   const [isLoadingPinPackages, setIsLoadingPinPackages] = useState(false);
   /** Slug of the most recently clicked pin, so a stale in-flight fetch can be ignored. */
   const openRequestRef = useRef<string | null>(null);
+  /** The pin request itself, so an early click can await it instead of racing it. */
+  const pinsRequestRef = useRef<Promise<DestinationMapPin[]> | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TouristLocation[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -84,6 +110,95 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
   const userInteractedRef = useRef(false);
   const programmaticMoveRef = useRef(false);
   const [showInteractOverlay, setShowInteractOverlay] = useState(!isPreview);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const request = getDestinationMapPins();
+    pinsRequestRef.current = request;
+
+    request
+      .then((pins) => {
+        if (!cancelled) setDestinationPins(pins);
+      })
+      .catch(() => {
+        // Degraded, not broken: the map still renders its built-in pins.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const openDestinationPin = useCallback((pin: DestinationMapPin) => {
+    openRequestRef.current = pin.slug;
+    setSelectedDestination({
+      name: pin.name,
+      slug: pin.slug,
+      country: pin.country,
+      timezone: pin.timezone,
+      currency: pin.currency,
+      languages: pin.languages,
+      description: pin.description,
+      packages: [],
+    });
+    setPinPackageTotal(pin.package_count);
+    setIsLoadingPinPackages(true);
+
+    getPublishedPackagesByDestination(pin.id)
+      .then((rows) => {
+        if (openRequestRef.current !== pin.slug) return;
+
+        const packages = rows.map(mapPackage).slice(0, MODAL_PACKAGE_LIMIT);
+        setSelectedDestination((current) =>
+          current?.slug === pin.slug ? { ...current, packages } : current
+        );
+      })
+      .catch(() => {
+      })
+      .finally(() => {
+        if (openRequestRef.current === pin.slug) setIsLoadingPinPackages(false);
+      });
+  }, []);
+
+  /**
+   * Opening a built-in landmark pin. The database is the source of truth: if an admin has
+   * created a destination for this place, show that (with its linked packages) rather than
+   * the static copy in lib/data/destinations, which knows nothing about the admin panel.
+   */
+  const openBuiltInLocation = useCallback(
+    async (location: TouristLocation) => {
+      const pins = await (pinsRequestRef.current ?? Promise.resolve([])).catch(
+        () => [] as DestinationMapPin[]
+      );
+      const pin = findMatchingPin(pins, location.name);
+
+      if (pin) {
+        openDestinationPin(pin);
+        return;
+      }
+
+      // No destination row — fall back to the static blurb, then to bare coordinates.
+      const detail = getDestinationDetail(location.name);
+      if (detail) {
+        openRequestRef.current = null;
+        setSelectedDestination(detail);
+        setPinPackageTotal(undefined);
+        setIsLoadingPinPackages(false);
+        return;
+      }
+
+      setSelectedLocation(location);
+    },
+    [openDestinationPin]
+  );
+
+  // Markers are bound once at mount, so they read the handler through a ref to avoid
+  // capturing an empty destination list.
+  const openBuiltInLocationRef = useRef(openBuiltInLocation);
+  useEffect(() => {
+    openBuiltInLocationRef.current = openBuiltInLocation;
+  }, [openBuiltInLocation]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -171,20 +286,26 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       }
     }, 1500);
 
-    // Land-only layer (ocean is transparent)
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '©Esri',
-      maxZoom: 16,
-      className: 'land-only-layer',
-    }).addTo(map);
-
-    // Labels overlay - country names, capitals, and ocean names
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png', {
-      attribution: '©CartoDB',
-      maxZoom: 16,
-      subdomains: 'abcd',
-      opacity: 0.7,
-    }).addTo(map);
+    // Land: solid brand-green country polygons over the white sea (exact theme colours,
+    // #2D5F2D land + #FFFFFF sea — no tile recolouring so the sea stays truly white).
+    fetch('/data/world-countries.geojson')
+      .then((res) => res.json())
+      .then((geo) => {
+        if (!mapRef.current) return;
+        L.geoJSON(geo, {
+          interactive: false,
+          style: {
+            fillColor: '#527A52', // land green
+            fillOpacity: 1,
+            color: '#FFFFFF',     // thin white borders = subtle country separation on the green
+            weight: 0.5,
+            opacity: 0.6,
+          },
+        }).addTo(mapRef.current);
+      })
+      .catch(() => {
+        /* land layer failed to load — sea (white background) still renders */
+      });
 
     // Custom icon for regular locations - glowing brown
     const regularIcon = L.divIcon({
@@ -235,15 +356,7 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           clearInterval(autoPanRef.current);
           autoPanRef.current = null;
         }
-        const detail = getDestinationDetail(location.name);
-        if (detail) {
-          setSelectedDestination(detail);
-          openRequestRef.current = null;
-          setPinPackageTotal(undefined);
-          setIsLoadingPinPackages(false);
-        } else {
-          setSelectedLocation(location);
-        }
+        void openBuiltInLocationRef.current(location);
         map.flyTo([location.lat, location.lng], 6, {
           duration: 1.5,
         });
@@ -270,54 +383,6 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
 
   useEffect(() => {
-    let cancelled = false;
-
-    getDestinationMapPins()
-      .then((pins) => {
-        if (!cancelled) setDestinationPins(pins);
-      })
-      .catch(() => {
-        // Degraded, not broken: the map still renders its built-in pins.
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-
-  const openDestinationPin = useCallback((pin: DestinationMapPin) => {
-    openRequestRef.current = pin.slug;
-    setSelectedDestination({
-      name: pin.name,
-      slug: pin.slug,
-      country: pin.country,
-      timezone: pin.timezone,
-      currency: pin.currency,
-      languages: pin.languages,
-      description: pin.description,
-      packages: [],
-    });
-    setPinPackageTotal(pin.package_count);
-    setIsLoadingPinPackages(true);
-
-    getPublishedPackagesByDestination(pin.id)
-      .then((rows) => {
-        if (openRequestRef.current !== pin.slug) return;
-
-        const packages = rows.map(mapPackage).slice(0, MODAL_PACKAGE_LIMIT);
-        setSelectedDestination((current) =>
-          current?.slug === pin.slug ? { ...current, packages } : current
-        );
-      })
-      .catch(() => {
-      })
-      .finally(() => {
-        if (openRequestRef.current === pin.slug) setIsLoadingPinPackages(false);
-      });
-  }, []);
-
-  useEffect(() => {
     const map = mapRef.current;
     if (!map || destinationPins.length === 0) return;
 
@@ -339,12 +404,15 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
     const layer = L.layerGroup().addTo(map);
 
-    // The built-in list already pins several of these by name; a second marker on the same spot
-    // would just look like a rendering bug.
-    const builtInNames = new Set(locations.map((location) => location.name.toLowerCase()));
+    // Several of these already have a built-in landmark marker on the same spot; a second
+    // marker would just look like a rendering bug. Those markers open this same destination
+    // (see openBuiltInLocation), so nothing is lost by skipping them here.
+    const builtInKeys = new Set(
+      locations.flatMap((location) => [normalise(location.name), slugify(location.name)])
+    );
 
     destinationPins
-      .filter((pin) => !builtInNames.has(pin.name.toLowerCase()))
+      .filter((pin) => !builtInKeys.has(normalise(pin.name)) && !builtInKeys.has(normalise(pin.slug)))
       .forEach((pin) => {
         const marker = L.marker([pin.latitude, pin.longitude], {
           icon: destinationIcon,
@@ -404,7 +472,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       mapRef.current.flyTo([location.lat, location.lng], 8, {
         duration: 2,
       });
-      setSelectedLocation(location);
+      // Same resolution as clicking the marker, so search opens the real destination too.
+      void openBuiltInLocation(location);
     }
     setSearchQuery('');
     setShowResults(false);
@@ -497,7 +566,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           ref={mapContainerRef}
           className="w-full h-full"
           style={{
-            background: 'linear-gradient(135deg, #FEFAE0 0%, #FEFAE0 50%, #FEFAE0 100%)',
+            // Sea = app background (pure white) to match the site theme
+            background: '#FFFFFF',
           }}
         />
 
@@ -565,12 +635,8 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
 
       <style jsx global>{`
         .leaflet-container {
-          background: linear-gradient(135deg, #FEFAE0 0%, #FEFAE0 50%, #FEFAE0 100%) !important;
-        }
-
-        /* Apply vibrant color to landmass */
-        .land-only-layer {
-          filter: sepia(55%) saturate(85%) hue-rotate(65deg) brightness(105%) contrast(105%);
+          /* Sea = app background (pure white) to match the site theme */
+          background: #FFFFFF !important;
         }
 
         /* Ensure markers and tooltips are visible */

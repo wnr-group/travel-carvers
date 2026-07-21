@@ -8,6 +8,7 @@ import { ArrowLeft } from 'lucide-react';
 import PackageForm from '@/components/admin/PackageForm/PackageForm';
 import { fetchJson } from '@/lib/api/fetchJson';
 import { ADMIN_PACKAGES_KEY } from '@/lib/queryKeys';
+import { PACKAGE_STATUS_LABELS } from '@/lib/types/package';
 import type { PackageFormOutput } from '@/lib/validations/package.schema';
 
 export default function NewPackagePage() {
@@ -23,9 +24,7 @@ export default function NewPackagePage() {
       }),
 
     onSuccess: (_result, data) => {
-      toast.success(
-        data.status === 'published' ? 'Package published' : 'Package saved as draft'
-      );
+      toast.success(`Package saved as ${PACKAGE_STATUS_LABELS[data.status]}`);
 
       queryClient.invalidateQueries({ queryKey: ADMIN_PACKAGES_KEY });
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import { ImageOff, Loader2, UploadCloud, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { uploadImage } from '@/lib/api/uploadImage';
+import { uploadFile } from '@/lib/api/uploadFile';
 import {
   DROPZONE_ACCEPT,
   MAX_UPLOAD_BYTES,
@@ -101,7 +101,7 @@ export default function ImageUploader({
 
       const results = await Promise.allSettled(
         files.map((file, index) =>
-          uploadImage({
+          uploadFile({
             file,
             bucket,
             path,

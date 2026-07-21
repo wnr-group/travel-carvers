@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { PUBLIC_PACKAGE_STATUSES } from '@/lib/types/package';
 
 /**
  * Public, client-safe category reads.
@@ -157,7 +158,7 @@ export async function getSubcategoryPackageCounts(
   const { data, error } = await supabase
     .from('package_subcategories')
     .select('subcategory_id, packages!inner(id)')
-    .eq('packages.status', 'published')
+    .in('packages.status', PUBLIC_PACKAGE_STATUSES)
     .in('subcategory_id', subcategoryIds);
 
   if (error) throw error;
@@ -187,7 +188,7 @@ export async function getPublishedPackagesByCategory(categoryId: string) {
       )
     `)
     .eq('package_categories.category_id', categoryId)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -212,7 +213,7 @@ export async function getPublishedPackagesBySubcategory(subcategoryId: string) {
       )
     `)
     .eq('package_subcategories.subcategory_id', subcategoryId)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

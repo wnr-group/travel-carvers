@@ -4,15 +4,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Search } from 'lucide-react'
+import { Search, Sparkles } from 'lucide-react'
 import SearchModal from './SearchModal'
 import { useNavCategories } from '@/lib/hooks/useNavCategories'
 
 const NAV_ITEMS = [
   { label: 'Home', href: '/' },
   { label: 'Packages', href: '/packages' },
-  // { label: 'Countries', href: '/countries' },
-  // { label: 'India', href: '/india' },
+  { label: 'Visa', href: '/visa', highlight: true }, // Highlighted Visa link
   { label: 'About Us', href: '/about' },
 ];
 
@@ -21,11 +20,11 @@ export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const pathname = usePathname()
 
-  // Categories the admin flagged with "Show in navigation menu"
   const { data: navCategories } = useNavCategories()
   const categoryItems = (navCategories ?? []).map((category) => ({
     label: category.name,
     href: `/categories/${category.slug}`,
+    highlight: false,
   }))
   const packagesIndex = NAV_ITEMS.findIndex((item) => item.href === '/packages')
   const insertAt = packagesIndex === -1 ? NAV_ITEMS.length : packagesIndex + 1
@@ -35,7 +34,6 @@ export default function Navbar() {
     <nav className="bg-gradient-brand-navbar shadow-lg sticky top-0 z-[100]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo and Brand */}
           <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity flex-shrink-0">
             <Image
               src="/logo.png"
@@ -50,7 +48,6 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation - Right Side */}
           <div className="hidden md:flex items-center gap-2">
             {navItems.map((item) => {
               const active = pathname === item.href
@@ -58,19 +55,26 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative px-4 py-2 text-white font-semibold transition-all duration-300 hover:scale-110 group ${active ? 'scale-105' : ''
-                    }`}
+                  className={`relative px-4 py-2 font-semibold transition-all duration-300 group ${
+                    item.highlight 
+                      ? 'text-white bg-white/15 rounded-full border border-white/30 shadow-inner hover:bg-white/25' 
+                      : 'text-white hover:scale-110'
+                  } ${active ? 'scale-105' : ''}`}
                 >
-                  <span className="relative z-10">{item.label}</span>
-                  <span className={`absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg transition-transform duration-300 ${active ? 'scale-100' : 'scale-0 group-hover:scale-100'
-                    }`}></span>
-                  <span className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-white transition-all duration-300 ${active ? 'w-3/4' : 'w-0 group-hover:w-3/4'
-                    }`}></span>
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {item.highlight && <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />}
+                    {item.label}
+                  </span>
+                  {!item.highlight && (
+                    <>
+                      <span className={`absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg transition-transform duration-300 ${active ? 'scale-100' : 'scale-0 group-hover:scale-100'}`} />
+                      <span className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-white transition-all duration-300 ${active ? 'w-3/4' : 'w-0 group-hover:w-3/4'}`} />
+                    </>
+                  )}
                 </Link>
               )
             })}
 
-            {/* Search */}
             <button
               onClick={() => setIsSearchOpen(true)}
               className="p-2.5 text-white rounded-lg hover:bg-white/10 hover:scale-110 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -79,7 +83,6 @@ export default function Navbar() {
               <Search aria-hidden="true" className="w-5 h-5" />
             </button>
 
-            {/* Contact Us Button */}
             <Link
               href="/contact"
               onClick={(e) => {
@@ -98,36 +101,34 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile: search + menu buttons */}
           <div className="md:hidden flex items-center gap-1">
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            aria-label="Search packages, categories and destinations"
-          >
-            <Search aria-hidden="true" className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={isMenuOpen}
-            aria-controls="mobile-menu"
-          >
-            {isMenuOpen ? (
-              <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Search packages, categories and destinations"
+            >
+              <Search aria-hidden="true" className="w-6 h-6" />
+            </button>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white p-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu"
+            >
+              {isMenuOpen ? (
+                <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div id="mobile-menu" className="md:hidden pb-4 border-t border-white/20 mt-2 pt-4">
             <div className="flex flex-col gap-3">
@@ -137,16 +138,20 @@ export default function Navbar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`font-semibold transition-all py-3 px-4 rounded-lg hover:translate-x-2 ${active
-                      ? 'bg-white/20 text-white'
-                      : 'text-white hover:bg-white/10'
-                      }`}
+                    className={`font-semibold transition-all py-3 px-4 rounded-lg flex items-center justify-between ${
+                      item.highlight ? 'bg-white/20 text-yellow-200 border border-white/30' : ''
+                    } ${active ? 'bg-white/20 text-white' : 'text-white hover:bg-white/10'}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {item.label}
+                    <span className="flex items-center gap-2">
+                      {item.highlight && <Sparkles className="w-4 h-4 text-yellow-300" />}
+                      {item.label}
+                    </span>
+                    {item.highlight && <span className="text-[10px] uppercase tracking-widest bg-yellow-400 text-brand-darkest font-extrabold px-2 py-0.5 rounded-full">Fast Track</span>}
                   </Link>
                 )
               })}
+
               <Link
                 href="/contact"
                 onClick={() => {

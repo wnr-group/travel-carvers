@@ -1,7 +1,7 @@
 'use client';
 
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { CalendarRange, Lightbulb, MapPin, Plus, Trash2 } from 'lucide-react';
+import { CalendarRange, FileCheck, Lightbulb, MapPin, Plus, Trash2, Wallet } from 'lucide-react';
 import FieldError from '@/components/admin/FieldError';
 import { cn } from '@/lib/utils';
 import type {
@@ -13,9 +13,13 @@ import { INPUT_CLASSES } from './fields';
 import {
   MONTHS,
   WEATHER_CONDITIONS,
+  createCancellationRow,
+  createDocumentRow,
   createPeriod,
   createPlace,
   createTip,
+  standardCancellationRows,
+  standardDocumentRows,
   wrapsYearEnd,
 } from './additional';
 import { useOrderedFieldArray } from './useOrderedFieldArray';
@@ -26,6 +30,8 @@ export default function AdditionalTab() {
       <TravelTipsSection />
       <BestTimeSection />
       <PlacesSection />
+      <CancellationPolicySection />
+      <RequiredDocumentsSection />
     </div>
   );
 }
@@ -277,6 +283,189 @@ function BestTimeRow({
         </p>
       )}
     </li>
+  );
+}
+
+/** Small "use the standard terms" affordance, shared by the two fallback-backed lists. */
+function UseStandardButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mt-3 ml-2 inline-flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * Cancellation policy. Empty means the package falls back to the company-wide terms,
+ * which is what every package did before this section existed.
+ */
+function CancellationPolicySection() {
+  const { register, formState } = useFormContext<
+    PackageFormInput,
+    unknown,
+    PackageFormOutput
+  >();
+
+  const { fields, append, removeAt } = useOrderedFieldArray('cancellation_policy');
+
+  const addStandard = () =>
+    standardCancellationRows().forEach((row, index) =>
+      append({ ...row, display_order: fields.length + index })
+    );
+
+  return (
+    <FormSection
+      title="Cancellation Policy"
+      description="Leave empty to use the standard company policy. Add rows here only to override it for this package."
+    >
+      {fields.length === 0 ? (
+        <Empty icon={Wallet}>Using the standard cancellation policy.</Empty>
+      ) : (
+        <ul className="space-y-2">
+          {fields.map((field, index) => (
+            <li
+              key={field.id}
+              className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-2"
+            >
+              <span className="mt-2 w-5 shrink-0 text-center text-xs font-medium tabular-nums text-gray-400">
+                {index + 1}
+              </span>
+
+              <div className="grid flex-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <input
+                    type="text"
+                    aria-label={`Cancellation window ${index + 1}`}
+                    placeholder="e.g. 30+ days before departure"
+                    {...register(`cancellation_policy.${index}.window_label`)}
+                    className={INPUT_CLASSES}
+                  />
+                  <FieldError
+                    message={formState.errors.cancellation_policy?.[index]?.window_label?.message}
+                  />
+                </div>
+
+                <div>
+                  <input
+                    type="text"
+                    aria-label={`Refund for window ${index + 1}`}
+                    placeholder="e.g. 90% refund"
+                    {...register(`cancellation_policy.${index}.refund_text`)}
+                    className={INPUT_CLASSES}
+                  />
+                  <FieldError
+                    message={formState.errors.cancellation_policy?.[index]?.refund_text?.message}
+                  />
+                </div>
+              </div>
+
+              <input
+                type="hidden"
+                {...register(`cancellation_policy.${index}.display_order`, {
+                  valueAsNumber: true,
+                })}
+              />
+
+              <RemoveButton
+                onClick={() => removeAt(index)}
+                label={`Remove cancellation row ${index + 1}`}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex flex-wrap items-center">
+        <AddButton onClick={() => append(createCancellationRow(fields.length))}>
+          Add row
+        </AddButton>
+        {fields.length === 0 && (
+          <UseStandardButton onClick={addStandard}>Start from the standard policy</UseStandardButton>
+        )}
+      </div>
+
+      <FieldError message={formState.errors.cancellation_policy?.message} />
+    </FormSection>
+  );
+}
+
+/**
+ * Documents the traveller must bring. Same fallback rule as the cancellation policy.
+ */
+function RequiredDocumentsSection() {
+  const { register, formState } = useFormContext<
+    PackageFormInput,
+    unknown,
+    PackageFormOutput
+  >();
+
+  const { fields, append, removeAt } = useOrderedFieldArray('required_documents');
+
+  const addStandard = () =>
+    standardDocumentRows().forEach((row, index) =>
+      append({ ...row, display_order: fields.length + index })
+    );
+
+  return (
+    <FormSection
+      title="Documents Required"
+      description="Leave empty to use the standard document list. Add rows here only to override it for this package."
+    >
+      {fields.length === 0 ? (
+        <Empty icon={FileCheck}>Using the standard document list.</Empty>
+      ) : (
+        <ul className="space-y-2">
+          {fields.map((field, index) => (
+            <li
+              key={field.id}
+              className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-2"
+            >
+              <span className="mt-2 w-5 shrink-0 text-center text-xs font-medium tabular-nums text-gray-400">
+                {index + 1}
+              </span>
+
+              <div className="flex-1">
+                <input
+                  type="text"
+                  aria-label={`Document ${index + 1}`}
+                  placeholder="e.g. Government-issued photo ID"
+                  {...register(`required_documents.${index}.document_text`)}
+                  className={INPUT_CLASSES}
+                />
+                <FieldError
+                  message={formState.errors.required_documents?.[index]?.document_text?.message}
+                />
+              </div>
+
+              <input
+                type="hidden"
+                {...register(`required_documents.${index}.display_order`, {
+                  valueAsNumber: true,
+                })}
+              />
+
+              <RemoveButton
+                onClick={() => removeAt(index)}
+                label={`Remove document ${index + 1}`}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex flex-wrap items-center">
+        <AddButton onClick={() => append(createDocumentRow(fields.length))}>Add document</AddButton>
+        {fields.length === 0 && (
+          <UseStandardButton onClick={addStandard}>Start from the standard list</UseStandardButton>
+        )}
+      </div>
+
+      <FieldError message={formState.errors.required_documents?.message} />
+    </FormSection>
   );
 }
 

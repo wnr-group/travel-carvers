@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { PUBLIC_PACKAGE_STATUSES } from '@/lib/types/package';
 
 /**
  * Public, client-safe package reads.
@@ -25,7 +26,7 @@ export async function getPublishedPackages() {
         is_approved
       )
     `)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -54,8 +55,12 @@ export async function getPackageBySlug(slug: string) {
       ),
       itinerary_days (
         *,
-        itinerary_day_images (
+        itinerary_entries (
+          name,
+          time_label,
+          description,
           image_url,
+          icon_name,
           display_order
         )
       ),
@@ -77,10 +82,19 @@ export async function getPackageBySlug(slug: string) {
       ),
       places_to_visit (
         *
+      ),
+      cancellation_policies (
+        window_label,
+        refund_text,
+        display_order
+      ),
+      required_documents (
+        document_text,
+        display_order
       )
     `)
     .eq('slug', slug)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .single();
 
   if (error) throw error;
@@ -100,7 +114,7 @@ export async function getFeaturedPackages() {
         is_cover
       )
     `)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .eq('is_featured', true)
     .order('created_at', { ascending: false })
     .limit(6);
@@ -122,7 +136,7 @@ export async function getTrendingPackages() {
         is_cover
       )
     `)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .eq('is_trending', true)
     .order('created_at', { ascending: false })
     .limit(6);
@@ -157,7 +171,7 @@ export async function getSimilarPackages(
         )
       )
     `)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .eq('package_categories.category_id', categoryId)
     .neq('id', packageId)
     .order('created_at', { ascending: false })
@@ -183,7 +197,7 @@ export async function getPackagesByCategory(categoryId: string) {
         category_id
       )
     `)
-    .eq('status', 'published')
+    .in('status', PUBLIC_PACKAGE_STATUSES)
     .eq('package_categories.category_id', categoryId)
     .order('created_at', { ascending: false });
 

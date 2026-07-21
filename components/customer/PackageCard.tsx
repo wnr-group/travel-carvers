@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Clock3, Star, Tent } from 'lucide-react';
+import { MapPin, Clock3, Star, Tent, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { TravelPackage, Difficulty, formatPrice } from '@/lib/hooks/usePackageFilters';
@@ -38,9 +38,25 @@ export function PackageCard({ pkg }: PackageCardProps) {
           className="object-cover transition duration-500 group-hover:scale-105"
         />
         <div className="overlay-brand-primary absolute inset-0" />
+        {pkg.isSoldOut && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/45">
+            <span className="rounded-full bg-white/95 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-rose-700">
+              Sold Out
+            </span>
+          </div>
+        )}
         {pkg.difficulty && (
           <div className="absolute left-3 top-3">
             <DifficultyBadge difficulty={pkg.difficulty} />
+          </div>
+        )}
+        {/* Group departures advertise their size up front, not just on the detail page. */}
+        {pkg.groupSize && (
+          <div className="absolute right-3 top-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-darkest/95 px-3 py-1 text-xs font-semibold text-white shadow-lg ring-1 ring-white/25 backdrop-blur-sm">
+              <Users aria-hidden="true" className="h-3.5 w-3.5" />
+              {pkg.groupSize}
+            </span>
           </div>
         )}
         {pkg.location && (

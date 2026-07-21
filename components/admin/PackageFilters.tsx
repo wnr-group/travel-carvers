@@ -1,7 +1,7 @@
 'use client'
 
 import { Search } from 'lucide-react'
-import { PACKAGE_STATUSES, type PackageStatus } from '@/lib/types/package'
+import { PACKAGE_STATUSES, PACKAGE_STATUS_LABELS, type PackageStatus } from '@/lib/types/package'
 import type { Category } from '@/lib/types/category'
 
 export interface PackageFilterState {
@@ -48,8 +48,8 @@ export default function PackageFilters({
       >
         <option value="">All statuses</option>
         {PACKAGE_STATUSES.map((status) => (
-          <option key={status} value={status} className="capitalize">
-            {status}
+          <option key={status} value={status}>
+            {PACKAGE_STATUS_LABELS[status]}
           </option>
         ))}
       </select>

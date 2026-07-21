@@ -87,6 +87,9 @@ export async function getPublishedPackagesByDestination(
         difficulty_level,
         destination_name,
         status,
+        is_group_package,
+        group_size_min,
+        group_size_max,
         created_at,
         package_gallery (
           image_url,

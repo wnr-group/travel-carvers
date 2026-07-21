@@ -1,20 +1,35 @@
 
+import {
+  DEFAULT_CANCELLATION_POLICY,
+  DEFAULT_REQUIRED_DOCUMENTS,
+  type CancellationRule,
+} from '@/lib/packageDefaults';
+
+export type { CancellationRule };
+
 interface RawGalleryImage {
   image_url: string;
   is_cover?: boolean | null;
   display_order?: number | null;
 }
 
+interface RawItineraryEntry {
+  name: string;
+  time_label?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  icon_name?: string | null;
+  display_order?: number | null;
+}
+
 interface RawItineraryDay {
   day_number: number;
   title?: string | null;
-  morning_activity?: string | null;
-  afternoon_activity?: string | null;
-  evening_activity?: string | null;
+  timing?: string | null;
   breakfast?: boolean | null;
   lunch?: boolean | null;
   dinner?: boolean | null;
-  itinerary_day_images?: RawGalleryImage[] | null;
+  itinerary_entries?: RawItineraryEntry[] | null;
 }
 
 interface RawInclusion {
@@ -53,6 +68,17 @@ interface RawTravelTip {
   display_order?: number | null;
 }
 
+interface RawCancellationRule {
+  window_label: string;
+  refund_text: string;
+  display_order?: number | null;
+}
+
+interface RawRequiredDocument {
+  document_text: string;
+  display_order?: number | null;
+}
+
 interface RawBestTime {
   month_start?: string | null;
   month_end?: string | null;
@@ -77,6 +103,7 @@ export interface RawPackageDetail {
   group_size_max?: number | null;
   age_restriction?: string | null;
   destination_name?: string | null;
+  status?: string | null;
   package_categories?: { category_id: string }[] | null;
   package_gallery?: RawGalleryImage[] | null;
   package_videos?: RawVideo[] | null;
@@ -86,6 +113,8 @@ export interface RawPackageDetail {
   travel_tips?: RawTravelTip[] | null;
   best_time_to_visit?: RawBestTime[] | null;
   places_to_visit?: RawPlace[] | null;
+  cancellation_policies?: RawCancellationRule[] | null;
+  required_documents?: RawRequiredDocument[] | null;
 }
 
 export interface RawReview {
@@ -98,18 +127,23 @@ export interface RawReview {
 
 /* ------------------------------- View-model -------------------------------- */
 
-/** A single time-of-day activity block within a day. */
-export interface ItineraryActivityVM {
-  /** "Morning" | "Afternoon" | "Evening". */
-  label: string;
-  text: string;
+/** One thing that happens on a day, in the order the admin arranged them. */
+export interface ItineraryEntryVM {
+  name: string;
+  /** Free text ("9:00 AM", "After breakfast"), or null when unset. */
+  time: string | null;
+  description: string | null;
+  image: string | null;
+  /** A lucide icon name the admin picked, or null. */
+  icon: string | null;
 }
 export interface ItineraryDayVM {
   n: number;
   title: string;
-  activities: ItineraryActivityVM[];
+  /** Free-text schedule for the day ("9:00 AM – 6:00 PM"), or null when unset. */
+  timing: string | null;
+  entries: ItineraryEntryVM[];
   meals: string[];
-  images: string[];
 }
 export interface GalleryImageVM {
   src: string;
@@ -179,7 +213,9 @@ export interface PackageDetail {
   pricingTiers: PricingTierVM[];
   reviews: ReviewVM[];
   ratingBreakdown: RatingBucketVM[];
-  /** Primary category, used to fetch similar packages client-side. Null when uncategorised. */
+  cancellationPolicy: CancellationRule[];
+  requiredDocuments: string[];
+  isSoldOut: boolean;
   categoryId: string | null;
 }
 
@@ -217,19 +253,23 @@ export function formatReviewDate(iso: string): string {
   return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
 }
 
-/** Meal booleans on an itinerary day, in the order the admin editor lists them. */
+export function toReviewVM(review: RawReview): ReviewVM {
+  return {
+    name: review.reviewer_name,
+    rating: review.rating,
+    date: formatReviewDate(review.created_at),
+    text: review.review_text,
+    images: (review.review_photos ?? []).map((p) => p.image_url).filter(Boolean),
+  };
+}
+
 const MEAL_LABELS: { key: 'breakfast' | 'lunch' | 'dinner'; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },
   { key: 'lunch', label: 'Lunch' },
   { key: 'dinner', label: 'Dinner' },
 ];
 
-/** Activity columns on an itinerary day, kept segmented instead of concatenated. */
-const ACTIVITY_FIELDS: { key: 'morning_activity' | 'afternoon_activity' | 'evening_activity'; label: string }[] = [
-  { key: 'morning_activity', label: 'Morning' },
-  { key: 'afternoon_activity', label: 'Afternoon' },
-  { key: 'evening_activity', label: 'Evening' },
-];
+const trimmed = (value?: string | null): string | null => value?.trim() || null;
 
 /* --------------------------------- Mapper ---------------------------------- */
 
@@ -249,11 +289,15 @@ export function toPackageDetail(
     .map((day) => ({
       n: day.day_number,
       title: day.title ?? `Day ${day.day_number}`,
-      activities: ACTIVITY_FIELDS
-        .map(({ key, label }) => ({ label, text: (day[key] ?? '').trim() }))
-        .filter((activity) => activity.text.length > 0),
+      timing: trimmed(day.timing),
+      entries: byOrder(day.itinerary_entries ?? []).map((entry) => ({
+        name: entry.name,
+        time: trimmed(entry.time_label),
+        description: trimmed(entry.description),
+        image: trimmed(entry.image_url),
+        icon: trimmed(entry.icon_name),
+      })),
       meals: MEAL_LABELS.filter(({ key }) => day[key]).map(({ label }) => label),
-      images: byOrder(day.itinerary_day_images ?? []).map((image) => image.image_url),
     }));
 
   // Inclusions / exclusions
@@ -267,6 +311,21 @@ export function toPackageDetail(
 
   // Highlights ← travel tips.
   const highlights = byOrder(raw.travel_tips ?? []).map((tip) => tip.tip_text);
+
+  const cancellationRows = byOrder(raw.cancellation_policies ?? []);
+  const cancellationPolicy: CancellationRule[] =
+    cancellationRows.length > 0
+      ? cancellationRows.map((rule) => ({
+          window: rule.window_label,
+          refund: rule.refund_text,
+        }))
+      : DEFAULT_CANCELLATION_POLICY;
+
+  const documentRows = byOrder(raw.required_documents ?? []);
+  const requiredDocuments =
+    documentRows.length > 0
+      ? documentRows.map((row) => row.document_text)
+      : DEFAULT_REQUIRED_DOCUMENTS;
 
   // Best time to go ← composed sentence from the season rows (with weather).
   const bestTimeParts = (raw.best_time_to_visit ?? [])
@@ -366,6 +425,9 @@ export function toPackageDetail(
     pricingTiers,
     reviews,
     ratingBreakdown,
+    cancellationPolicy,
+    requiredDocuments,
+    isSoldOut: raw.status === 'sold_out',
     categoryId,
   };
 }

@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { Users } from 'lucide-react';
+import { groupSizeLabel } from '@/lib/packageList';
 
 export interface HomePackage {
   id: string;
@@ -13,6 +15,10 @@ export interface HomePackage {
   duration_days?: number | null;
   duration_nights?: number | null;
   destination_name?: string | null;
+  status?: string | null;
+  is_group_package?: boolean | null;
+  group_size_min?: number | null;
+  group_size_max?: number | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
 }
 
@@ -43,6 +49,8 @@ interface HomePackageCardProps {
 }
 
 export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
+  const groupSize = groupSizeLabel(pkg);
+
   return (
     <Link
       href={`/packages/${pkg.slug}`}
@@ -57,11 +65,29 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-[#A9B388]/70 via-[#A9B388]/30 to-transparent transition-all group-hover:from-[#A9B388]/80" />
 
+      {pkg.status === 'sold_out' && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/45">
+          <span className="rounded-full bg-white/95 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-rose-700">
+            Sold Out
+          </span>
+        </div>
+      )}
+
       <div className="absolute inset-0 flex flex-col justify-between p-6">
-        <div className="flex items-start justify-between">
-          {badge && (
+        <div className="flex items-start justify-between gap-2">
+          {badge ? (
             <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[#5F6F52] backdrop-blur-sm">
               {badge}
+            </span>
+          ) : (
+            <span />
+          )}
+
+          {/* Group departures advertise their size up front, not just on the detail page. */}
+          {groupSize && (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#1A3C34]/90 px-3 py-1 text-xs font-semibold text-white shadow-lg ring-1 ring-white/25 backdrop-blur-sm">
+              <Users aria-hidden="true" className="h-3.5 w-3.5" />
+              {groupSize}
             </span>
           )}
         </div>

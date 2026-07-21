@@ -1,11 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
-
-/**
- * Public, client-safe global search across packages, categories and destinations.
- *
- * "Destinations" are the distinct `destination_name` values on published packages —
- * there is no separate destinations table.
- */
+import { PUBLIC_PACKAGE_STATUSES } from '@/lib/types/package';
 
 export interface PackageSearchResult {
   id: string;
@@ -37,11 +31,6 @@ const PACKAGE_LIMIT = 6;
 const CATEGORY_LIMIT = 5;
 const DESTINATION_LIMIT = 5;
 
-/**
- * PostgREST's `.or()` filter string treats `,` and parentheses as syntax, and
- * `%`/`_` are LIKE wildcards. Strip/escape them so user input can't break the
- * filter or wildcard-match everything.
- */
 function sanitizeTerm(query: string): string {
   return query
     .replace(/[,()]/g, ' ')
@@ -60,7 +49,7 @@ export async function searchSite(query: string): Promise<GlobalSearchResults> {
     supabase
       .from('packages')
       .select('id, title, slug, destination_name, duration_days, price_adult, show_price')
-      .eq('status', 'published')
+      .in('status', PUBLIC_PACKAGE_STATUSES)
       .or(`title.ilike.${pattern},short_description.ilike.${pattern}`)
       .order('created_at', { ascending: false })
       .limit(PACKAGE_LIMIT),
@@ -78,7 +67,7 @@ export async function searchSite(query: string): Promise<GlobalSearchResults> {
     supabase
       .from('packages')
       .select('destination_name')
-      .eq('status', 'published')
+      .in('status', PUBLIC_PACKAGE_STATUSES)
       .not('destination_name', 'is', null)
       .ilike('destination_name', pattern)
       .order('destination_name', { ascending: true })
