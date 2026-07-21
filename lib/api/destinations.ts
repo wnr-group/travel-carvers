@@ -171,6 +171,17 @@ export async function updateDestination(
 ): Promise<Destination | null> {
   const { package_ids, ...destinationData } = input;
 
+  // Snapshot the current row + links so a failed package-link replace can be
+  // rolled back completely (both the column changes and the links).
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from('destinations')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  if (!existing) return null;
+
   const { data: existingLinks, error: linksError } = await supabaseAdmin
     .from('package_destinations')
     .select('package_id')
@@ -192,6 +203,15 @@ export async function updateDestination(
   try {
     await replacePackageLinks(id, package_ids);
   } catch (linkError) {
+    // Roll back the column changes we just committed...
+    const restoredColumns = Object.fromEntries(
+      Object.keys(destinationData).map((key) => [key, (existing as Record<string, unknown>)[key]]),
+    );
+    await supabaseAdmin
+      .from('destinations')
+      .update({ ...restoredColumns, updated_at: (existing as Record<string, unknown>).updated_at })
+      .eq('id', id);
+    // ...and restore the original package links.
     await supabaseAdmin.from('package_destinations').upsert(
       (existingLinks ?? []).map((link) => ({
         destination_id: id,
