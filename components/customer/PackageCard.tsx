@@ -91,7 +91,7 @@ export function PackageCard({ pkg }: PackageCardProps) {
           </div>
           <Link
             href={`/packages/${pkg.slug}`}
-            className="rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] px-4 py-1.5 text-xs font-semibold text-white transition hover:shadow-md hover:scale-105"
+            className="rounded-full bg-brand-dark px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-brand-darkest hover:shadow-md"
           >
             View
           </Link>

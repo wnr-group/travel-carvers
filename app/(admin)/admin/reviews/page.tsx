@@ -194,14 +194,14 @@ export default function AdminReviewsPage() {
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           {/* Status Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-medium">Status:</span>
+            <span className="text-sm text-gray-800 font-semibold">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected');
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-base lg:text-sm bg-white text-gray-700 focus:ring-1 focus:ring-brand-medium"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-medium shadow-sm"
             >
               <option value="all">All Reviews</option>
               <option value="pending">Pending Approval</option>
@@ -212,7 +212,7 @@ export default function AdminReviewsPage() {
 
           {/* Rating Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-medium">Rating:</span>
+            <span className="text-sm text-gray-800 font-semibold">Rating:</span>
             <select
               value={ratingFilter}
               onChange={(e) => {
@@ -220,7 +220,7 @@ export default function AdminReviewsPage() {
                 setRatingFilter(val === 'all' ? 'all' : Number(val));
                 setCurrentPage(1);
               }}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-base lg:text-sm bg-white text-gray-700 focus:ring-1 focus:ring-brand-medium"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-brand-medium shadow-sm"
             >
               <option value="all">All Ratings</option>
               <option value="5">5 Stars</option>

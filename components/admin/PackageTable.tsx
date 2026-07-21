@@ -36,21 +36,21 @@ export default function PackageTable({ packages }: { packages: AdminPackage[] })
     <div className="overflow-hidden rounded-lg bg-white shadow">
       <div className="overflow-x-auto">
         <table className="w-full min-w-3xl">
-          <thead className="border-b bg-brand-lightest/40 text-brand-darkest">
+          <thead className="bg-brand-lightest/40 border-b text-brand-darkest text-sm font-semibold tracking-wide">
             <tr>
-              <th className="p-4 text-left">Image</th>
-              <th className="p-4 text-left">Title</th>
-              <th className="p-4 text-left">Category</th>
-              <th className="p-4 text-left">Status</th>
-              <th className="p-4 text-left">Price</th>
-              <th className="p-4 text-left">Views</th>
-              <th className="p-4 text-left">Created</th>
-              <th className="p-4 text-left">Actions</th>
+              <th className="py-3.5 px-4 text-left">IMAGE</th>
+              <th className="py-3.5 px-4 text-left">TITLE</th>
+              <th className="py-3.5 px-4 text-left">CATEGORY</th>
+              <th className="py-3.5 px-4 text-left">STATUS</th>
+              <th className="py-3.5 px-4 text-left">PRICE</th>
+              <th className="py-3.5 px-4 text-left">VIEWS</th>
+              <th className="py-3.5 px-4 text-left">CREATED</th>
+              <th className="py-3.5 px-4 text-left">ACTIONS</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-brand-light/30">
             {packages.map((pkg) => (
-              <tr key={pkg.id} className="border-b last:border-b-0 hover:bg-brand-lightest/20">
+              <tr key={pkg.id} className="transition-colors hover:bg-brand-lightest/15">
                 <td className="p-4">
                   {pkg.cover_image_url ? (
                     <img

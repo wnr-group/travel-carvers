@@ -206,7 +206,7 @@ export default function AboutPage() {
                     <div className="mt-10 flex flex-wrap items-center gap-4">
                         <Link
                             href="/packages"
-                            className="rounded-full bg-white px-7 py-3 font-medium text-brand-darkest transition hover:-translate-y-0.5 hover:shadow-lg"
+                            className="rounded-full bg-brand-dark px-7 py-3 font-semibold text-white shadow-sm transition-all hover:bg-brand-darkest hover:shadow-md"
                         >
                             Explore Packages
                         </Link>
