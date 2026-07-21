@@ -28,13 +28,13 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
     message: '',
     source: 'website',
   });
-  
+
   const [errors, setErrors] = useState<Record<string, string | string[] | undefined>>({});
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     try {
       const leadData = {
         package_id: formData.package_id,
@@ -51,7 +51,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
       const validated = leadSchema.parse(leadData);
       await createLead.mutateAsync(validated);
-      
+
       setIsSuccess(true);
       setTimeout(() => {
         onSuccess?.();
@@ -76,7 +76,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
         error.issues.forEach(issue => {
-          const path = issue.path[0];
+          const path = issue.path[0] != null ? String(issue.path[0]) : null;
           if (path && !fieldErrors[path]) {
             fieldErrors[path] = issue.message;
           }
@@ -102,7 +102,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     if (errors[field]) {
       const fieldSchema = (leadSchema.shape as any)[field];
       if (fieldSchema) {
@@ -173,7 +173,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
         <h3 className="text-xs font-bold text-brand-medium uppercase tracking-widest border-l-2 border-brand-dark pl-2">
           1. Contact Details
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label htmlFor="lead-name" className={labelClasses}>

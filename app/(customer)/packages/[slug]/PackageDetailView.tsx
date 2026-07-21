@@ -209,13 +209,23 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
       <FontLoader />
 
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="mx-auto max-w-7xl px-5 pt-5 text-xs text-slate-700 sm:px-8">
-        <ol className="flex items-center gap-1.5">
-          <li><Link href="/" className="hover:text-brand-dark">Home</Link></li>
-          <Icon.chevron className="h-3 w-3 text-slate-300" />
-          <li><Link href="/packages" className="hover:text-brand-dark">Packages</Link></li>
-          <Icon.chevron className="h-3 w-3 text-slate-300" />
-          <li className="font-medium text-brand-dark">{detail.title}</li>
+      <nav aria-label="Breadcrumb" className="mx-auto max-w-7xl px-5 pt-6 pb-2 text-sm sm:px-8">
+        <ol className="flex flex-wrap items-center gap-2.5 text-slate-700 font-medium">
+          <li>
+            <Link href="/" className="hover:text-emerald-800 transition-colors flex items-center gap-1">
+              Home
+            </Link>
+          </li>
+          <Icon.chevron className="h-4 w-4 text-slate-700 shrink-0 stroke-[2.5]" />
+          <li>
+            <Link href="/packages" className="hover:text-emerald-800 transition-colors">
+              Packages
+            </Link>
+          </li>
+          <Icon.chevron className="h-4 w-4 text-slate-700 shrink-0 stroke-[2.5]" />
+          <li className="text-slate-900 font-semibold truncate max-w-[200px] sm:max-w-md" title={detail.title}>
+            {detail.title}
+          </li>
         </ol>
       </nav>
 
