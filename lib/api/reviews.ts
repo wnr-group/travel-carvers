@@ -8,11 +8,17 @@ const REVIEW_BUCKET = 'review-images';
 const MAX_REVIEW_PHOTOS = 5;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
+/** Public URL prefix that legitimate review photos must start with. */
 function reviewImagePublicPrefix(): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   return `${base}/storage/v1/object/public/${REVIEW_BUCKET}/`;
 }
 
+/**
+ * Verify a photo URL was produced by our own upload endpoint and extract its
+ * storage object path. Returns null for anything that does not belong to the
+ * review-images bucket, so callers can reject client-supplied foreign URLs.
+ */
 function reviewImageObjectPath(url: string): string | null {
   const prefix = reviewImagePublicPrefix();
   if (!url.startsWith(prefix)) return null;

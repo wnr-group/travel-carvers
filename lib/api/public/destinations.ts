@@ -104,14 +104,19 @@ export async function getPublishedPackagesByDestination(
       )
     `)
     .eq('destination_id', destinationId)
-    .order('created_at', { referencedTable: 'packages', ascending: false })
     .overrideTypes<LinkedPackageRow[], { merge: false }>();
 
   if (error) throw error;
 
+  // Ordering a to-one embed (`packages`) can't reorder the top-level
+  // package_destinations rows, so sort newest-first in JS after mapping.
   return (data ?? [])
     .map((row) => row.packages)
-    .filter((pkg): pkg is RawListPackage => pkg !== null);
+    .filter((pkg): pkg is RawListPackage => pkg !== null)
+    .sort(
+      (a, b) =>
+        new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime(),
+    );
 }
 
 export async function getDestinationMapPins(): Promise<DestinationMapPin[]> {
