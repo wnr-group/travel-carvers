@@ -7,9 +7,15 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { Coffee, Utensils, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { LeadFormModal } from "@/components/customer/LeadFormModal";
 import { SimilarPackages } from "@/components/customer/SimilarPackages";
+import ShareButtons from "@/components/customer/ShareButtons";
+import { ReviewForm } from "@/components/customer/ReviewForm";
+import ReviewPhotos from "@/components/customer/ReviewPhotos";
 import DynamicIcon from "@/components/ui/DynamicIcon";
 import { isIconName } from "@/lib/icons";
 import { youTubeEmbedUrl } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { getApprovedReviews } from "@/lib/api/public/reviews";
+import { toReviewVM } from "@/lib/packageDetail";
 import type {
   PackageDetail,
   ItineraryDayVM,

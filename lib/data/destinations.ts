@@ -26,6 +26,7 @@ function demoPackage(
     popularity: 0,
     image: `https://picsum.photos/seed/${partial.slug}/480/320`,
     createdAt: CREATED_AT,
+    isFeatured: false,
     ...partial,
   };
 }

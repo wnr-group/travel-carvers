@@ -18,6 +18,7 @@ export interface TravelPackage {
   image: string;
   location: string;
   createdAt: number; // epoch ms, for "newest" ordering
+  isFeatured: boolean; // admin-flagged; floats to the top of "best match"
 }
 
 export const DIFFICULTY_MAP: Record<string, Difficulty> = {
@@ -38,6 +39,7 @@ export interface RawListPackage {
   difficulty_level?: string | null;
   destination_name?: string | null;
   view_count?: number | null;
+  is_featured?: boolean | null;
   created_at?: string | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
   package_categories?: { categories: { name: string; slug: string } | null }[] | null;
@@ -68,6 +70,7 @@ export function mapPackage(row: RawListPackage): TravelPackage {
     image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
     location: row.destination_name ?? '',
     createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
+    isFeatured: row.is_featured ?? false,
   };
 }
 

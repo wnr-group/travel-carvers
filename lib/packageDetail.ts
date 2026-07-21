@@ -217,6 +217,17 @@ export function formatReviewDate(iso: string): string {
   return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
 }
 
+/** Map a raw DB review row to the review view model used by the UI. */
+export function toReviewVM(r: RawReview): ReviewVM {
+  return {
+    name: r.reviewer_name,
+    rating: r.rating,
+    date: formatReviewDate(r.created_at),
+    text: r.review_text,
+    images: r.review_photos?.map((p) => p.image_url) ?? [],
+  };
+}
+
 /** Meal booleans on an itinerary day, in the order the admin editor lists them. */
 const MEAL_LABELS: { key: 'breakfast' | 'lunch' | 'dinner'; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },

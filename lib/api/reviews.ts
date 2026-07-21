@@ -1,14 +1,31 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { reviewSchema, type ReviewFormData } from '@/lib/validations/review.schema';
-/**
- * Public: Submit a review.
- */
-export async function createReview(input: ReviewFormData) {
-  const reviewData = reviewSchema.parse(input);
+import { checkRateLimit, clientRateKey } from '@/lib/api/rateLimit';
+import crypto from 'crypto';
 
-  const isApproved = reviewData.rating >= 4 ? true : null;
+const REVIEW_BUCKET = 'review-images';
+const MAX_REVIEW_PHOTOS = 5;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+/** Public URL prefix that legitimate review photos must start with. */
+function reviewImagePublicPrefix(): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  return `${base}/storage/v1/object/public/${REVIEW_BUCKET}/`;
+}
+
+/**
+ * Verify a photo URL was produced by our own upload endpoint and extract its
+ * storage object path. Returns null for anything that does not belong to the
+ * review-images bucket, so callers can reject client-supplied foreign URLs.
+ */
+function reviewImageObjectPath(url: string): string | null {
+  const prefix = reviewImagePublicPrefix();
+  if (!url.startsWith(prefix)) return null;
+  const path = decodeURIComponent(url.slice(prefix.length));
+  if (!path || path.includes('..') || path.startsWith('/')) return null;
+  return path;
+}
 
 /**
  * Public: Submit a review.
@@ -48,12 +65,8 @@ export async function createReview(
   const { data: review, error: reviewError } = await supabaseAdmin
     .from('reviews')
     .insert({
-      package_id: reviewData.package_id,
-      reviewer_name: reviewData.reviewer_name,
-      reviewer_email: reviewData.reviewer_email,
-      rating: reviewData.rating,
-      review_text: reviewData.review_text,
-      is_approved: isApproved,
+      ...reviewData,
+      is_approved: null, // always pending moderation
     })
     .select()
     .single();
@@ -134,4 +147,68 @@ export async function uploadReviewPhoto(formData: FormData): Promise<string> {
     .getPublicUrl(filename);
 
   return urlData.publicUrl;
+}
+
+/**
+ * Admin: Get all reviews (requires server-side)
+ */
+export async function getAllReviews() {
+
+  const { data, error } = await supabaseAdmin
+    .from('reviews')
+    .select(`
+      *,
+      packages (
+        title
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Admin: Approve review (requires server-side)
+ */
+export async function approveReview(id: string) {
+
+  const { data, error } = await supabaseAdmin
+    .from('reviews')
+    .update({ is_approved: true })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Admin: Reject review (requires server-side)
+ */
+export async function rejectReview(id: string) {
+
+  const { data, error } = await supabaseAdmin
+    .from('reviews')
+    .update({ is_approved: false })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Admin: Delete review (requires server-side)
+ */
+export async function deleteReview(id: string) {
+
+  const { error } = await supabaseAdmin
+    .from('reviews')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }

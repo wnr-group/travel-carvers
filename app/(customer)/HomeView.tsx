@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import HeroSection from '@/components/customer/HeroSection';
 import TrustBadges from '@/components/customer/TrustBadges';
@@ -19,7 +19,7 @@ import { useCategories } from '@/lib/hooks/useCategories';
 import TestimonialsCarousel from '@/components/customer/TestimonialsCarousel';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import EmptyState from '@/components/ui/EmptyState';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Globe, Package, HeartHandshake, Smile, Compass, MapPin } from 'lucide-react';
 
 /* -------------------------------------------------------------------------- */
 /*  Shared section heading — eyebrow + title + subtitle, with an optional CTA  */
@@ -184,6 +184,8 @@ function CategoryShowcaseGrid({
 
 export default function Home() {
   const observerRef = useRef<IntersectionObserver | null>(null);
+  // Which "Why Choose Us" stat card is hovered (drives the active-highlight styling).
+  const [activeCard, setActiveCard] = useState<number | null>(null);
 
   const featured = useFeaturedPackages();
   const trending = useTrendingPackages();
@@ -315,6 +317,8 @@ export default function Home() {
             ].map((stat, i) => (
               <div
                 key={i}
+                onMouseEnter={() => setActiveCard(i)}
+                onMouseLeave={() => setActiveCard(null)}
                 className={`${stat.bgColor} rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer border-2 ${stat.borderColor} ${activeCard === i
                     ? 'scale-110 -translate-y-2 shadow-2xl ring-4 ring-offset-2'
                     : ''
@@ -322,9 +326,6 @@ export default function Home() {
                 style={{
                   animation: `float 3s ease-in-out infinite`,
                   animationDelay: `${i * 0.3}s`,
-                  ...(activeCard === i && {
-                    ringColor: stat.borderColor.replace('border-', ''),
-                  })
                 }}
               >
                 <div className="flex flex-col items-center text-center">
@@ -351,7 +352,7 @@ export default function Home() {
       </section>
       
       {/* Why choose us — trust badges from the DB (numeric → stat cards, text → pills) */}
-<!--       <section className="bg-brand-tint-subtle py-20 md:py-24">
+{/*       <section className="bg-brand-tint-subtle py-20 md:py-24">
         <div className="mx-auto max-w-7xl px-6">
           <SectionHeading
             eyebrow="Why Travel Carvers"
@@ -361,7 +362,7 @@ export default function Home() {
           />
           <TrustBadges />
         </div>
-      </section> -->
+      </section> */}
 
       {/* Testimonials */}
       <section className="overflow-hidden bg-white py-20 md:py-24">
