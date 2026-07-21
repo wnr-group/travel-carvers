@@ -16,10 +16,12 @@ import {
   ArrowDown,
   Copy,
   ChevronDown,
-  Check
+  Check,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import AddLeadForm from '@/components/admin/AddLeadForm';
 
 export default function AdminLeadsPage() {
   const { data: leads = [], isPending, isError, error } = useAdminLeads();
@@ -43,6 +45,9 @@ export default function AdminLeadsPage() {
 
   // Pending delete (drives the confirmation dialog)
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
+
+  // Manual lead entry dialog
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   // Handlers
   const handleStatusChange = async (id: string, status: string) => {
@@ -202,14 +207,24 @@ export default function AdminLeadsPage() {
           <h1 className="text-3xl font-bold text-brand-darkest">Leads Management</h1>
           <p className="text-gray-600 mt-1">Moderate inquiries and track customer lead conversion stages.</p>
         </div>
-        <button
-          onClick={exportToCSV}
-          disabled={filteredLeads.length === 0}
-          className="px-4 py-2 bg-brand-dark text-white rounded-lg flex items-center gap-2 hover:bg-brand-darkest transition-colors w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Download className="w-5 h-5" /> Export to CSV
-        </button>
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <button
+            onClick={() => setIsAddOpen(true)}
+            className="px-4 py-2 border border-brand-dark text-brand-dark rounded-lg flex items-center gap-2 hover:bg-brand-lightest/40 transition-colors w-full sm:w-auto justify-center"
+          >
+            <Plus className="w-5 h-5" /> Add Lead
+          </button>
+          <button
+            onClick={exportToCSV}
+            disabled={filteredLeads.length === 0}
+            className="px-4 py-2 bg-brand-dark text-white rounded-lg flex items-center gap-2 hover:bg-brand-darkest transition-colors w-full sm:w-auto justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-5 h-5" /> Export to CSV
+          </button>
+        </div>
       </div>
+
+      <AddLeadForm open={isAddOpen} onClose={() => setIsAddOpen(false)} />
 
       {/* Filter and Control Bar */}
       <div className="bg-white rounded-t-xl border border-gray-100 shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between">

@@ -15,6 +15,8 @@ const ORDER_CONFIG = {
   exclusions: { key: 'display_order', startAt: 0 },
   travel_tips: { key: 'display_order', startAt: 0 },
   stay_details: { key: 'display_order', startAt: 0 },
+  cancellation_policy: { key: 'display_order', startAt: 0 },
+  required_documents: { key: 'display_order', startAt: 0 },
 } as const
 
 export type OrderedArrayName = keyof typeof ORDER_CONFIG

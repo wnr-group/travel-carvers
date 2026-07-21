@@ -27,6 +27,8 @@ function demoPackage(
     image: `https://picsum.photos/seed/${partial.slug}/480/320`,
     createdAt: CREATED_AT,
     isFeatured: false,
+    isSoldOut: false,
+    groupSize: null,
     ...partial,
   };
 }
@@ -256,7 +258,6 @@ export const DESTINATION_DETAILS: Record<string, DestinationDetail> = {
   },
 };
 
-/** Look up hardcoded details for a marker name (undefined when there's no entry). */
 export function getDestinationDetail(name: string): DestinationDetail | undefined {
   return DESTINATION_DETAILS[name];
 }

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { Coffee, Utensils, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { LeadFormModal } from "@/components/customer/LeadFormModal";
 import { SimilarPackages } from "@/components/customer/SimilarPackages";
@@ -11,11 +12,11 @@ import ShareButtons from "@/components/customer/ShareButtons";
 import { ReviewForm } from "@/components/customer/ReviewForm";
 import ReviewPhotos from "@/components/customer/ReviewPhotos";
 import DynamicIcon from "@/components/ui/DynamicIcon";
+import { getApprovedReviews } from "@/lib/api/public/reviews";
 import { isIconName } from "@/lib/icons";
 import { youTubeEmbedUrl } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { getApprovedReviews } from "@/lib/api/public/reviews";
 import { toReviewVM } from "@/lib/packageDetail";
+import type { CancellationRule } from "@/lib/packageDefaults";
 import type {
   PackageDetail,
   ItineraryDayVM,
@@ -29,22 +30,8 @@ import type {
 } from "@/lib/packageDetail";
 
 /* -------------------- Company-wide static content --------------------- */
-/* These are standard across every package (there are no per-package tables for them),
-   so they stay as constants rather than being faked as package-specific data. */
-
-const CANCELLATION_POLICY = [
-  { window: "30+ days before departure", refund: "90% refund" },
-  { window: "15–29 days before departure", refund: "50% refund" },
-  { window: "7–14 days before departure", refund: "25% refund" },
-  { window: "Within 7 days", refund: "No refund" },
-];
-
-const DOCUMENTS_NEEDED = [
-  "Government-issued photo ID (passport for international travel)",
-  "2 recent passport-size photographs",
-  "Valid travel insurance certificate (recommended)",
-  "Any visas or permits required for the destination",
-];
+/* The cancellation policy and document list are per-package now (Admin → Additional),
+   falling back to lib/packageDefaults.ts. The FAQs below are still the same everywhere. */
 
 const FAQS = [
   { q: "How do I book this package?", a: "Send an enquiry using the “Reserve Your Spot” button and our travel team will get back to you within 24 hours to confirm availability, customise the plan and share payment details." },
@@ -214,7 +201,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
       : "New package";
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA] font-body text-[15px] text-[--foreground]">
+    <div className="min-h-screen bg-brand-linen font-body text-[15px] text-[--foreground]">
       <FontLoader />
 
       {/* Breadcrumb */}
@@ -326,7 +313,13 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
             {activeTab === "stay" && <Stay stays={detail.stays} />}
             {activeTab === "gallery" && <Gallery gallery={detail.gallery} videos={detail.videos} onOpen={setLightbox} />}
             {activeTab === "pricing" && <Pricing tiers={detail.pricingTiers} />}
-            {activeTab === "info" && <AdditionalInfo places={detail.places} />}
+            {activeTab === "info" && (
+              <AdditionalInfo
+                places={detail.places}
+                cancellationPolicy={detail.cancellationPolicy}
+                requiredDocuments={detail.requiredDocuments}
+              />
+            )}
             {activeTab === "faqs" && <FAQs open={openFaq} setOpen={setOpenFaq} />}
             {activeTab === "reviews" && (
               <Reviews packageId={detail.id} rating={rating} reviewCount={reviewCount} ratingBreakdown={ratingBreakdown} reviews={activeReviews} />
@@ -338,7 +331,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
 
           {/* Booking sidebar */}
           <aside className="hidden lg:block sticky top-28 self-start">
-            <BookingCard startingPrice={detail.startingPrice} guests={guests} setGuests={setGuests} total={total} onBookNow={() => setIsLeadFormOpen(true)} title={detail.title} slug={detail.slug} />
+            <BookingCard startingPrice={detail.startingPrice} guests={guests} setGuests={setGuests} total={total} onBookNow={() => setIsLeadFormOpen(true)} title={detail.title} slug={detail.slug} isSoldOut={detail.isSoldOut} />
           </aside>
         </div>
       </div>
@@ -353,9 +346,10 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
         </div>
         <button
           onClick={() => setIsLeadFormOpen(true)}
-          className="rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 active:scale-[0.98] cursor-pointer"
+          disabled={detail.isSoldOut}
+          className="rounded-full bg-gradient-to-r from-brand-forest to-brand-sage px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-400 disabled:shadow-none disabled:active:scale-100"
         >
-          Reserve Your Spot
+          {detail.isSoldOut ? "Sold Out" : "Reserve Your Spot"}
         </button>
       </div>
       <div className="h-16 lg:hidden" />
@@ -488,24 +482,52 @@ function MealIcon({ meal, className }: { meal: string; className?: string }) {
 
 /** The expandable body of a single day: segmented activities, meals, and photos. */
 function DayDetails({ day }: { day: ItineraryDayVM }) {
-  const isEmpty = day.activities.length === 0 && day.meals.length === 0 && day.images.length === 0;
+  const isEmpty = day.entries.length === 0 && day.meals.length === 0;
 
   return (
     <div className="space-y-5 border-t border-brand-light/50 px-4 pb-5 pt-4 sm:px-5">
-      {day.activities.length > 0 && (
-        <ol className="relative space-y-4 pl-5">
-          {/* Timeline spine linking the morning → afternoon → evening markers. */}
+      {day.entries.length > 0 && (
+        <ol className="relative space-y-5 pl-5">
+          {/* Timeline spine linking the entry markers. */}
           <span aria-hidden className="absolute bottom-2 left-[3px] top-2 w-px bg-brand-light" />
-          {day.activities.map((activity) => (
-            <li key={activity.label} className="relative">
+          {day.entries.map((entry, i) => (
+            <li key={i} className="relative">
               <span
                 aria-hidden
-                className="absolute -left-5 top-1 h-2 w-2 rounded-full bg-brand-dark ring-4 ring-white"
+                className="absolute -left-5 top-1 flex h-2 w-2 items-center justify-center rounded-full bg-brand-dark ring-4 ring-white"
               />
-              <p className="text-xs font-semibold uppercase tracking-wide text-brand-medium">
-                {activity.label}
-              </p>
-              <p className="mt-0.5 text-sm leading-relaxed text-slate-800">{activity.text}</p>
+
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                {entry.icon && isIconName(entry.icon) && (
+                  <DynamicIcon
+                    name={entry.icon}
+                    aria-hidden
+                    className="h-4 w-4 shrink-0 self-center text-brand-dark"
+                  />
+                )}
+                <p className="font-display text-sm font-semibold text-brand-darkest">
+                  {entry.name}
+                </p>
+                {entry.time && (
+                  <span className="text-xs font-medium text-brand-medium">{entry.time}</span>
+                )}
+              </div>
+
+              {entry.description && (
+                <p className="mt-1 text-sm leading-relaxed text-slate-800">{entry.description}</p>
+              )}
+
+              {entry.image && (
+                <div className="relative mt-2 aspect-[16/9] max-w-sm overflow-hidden rounded-lg bg-slate-100">
+                  <Image
+                    src={entry.image}
+                    alt={entry.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 384px"
+                    className="object-cover"
+                  />
+                </div>
+              )}
             </li>
           ))}
         </ol>
@@ -527,22 +549,6 @@ function DayDetails({ day }: { day: ItineraryDayVM }) {
               </span>
             ))}
           </div>
-        </div>
-      )}
-
-      {day.images.length > 0 && (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {day.images.map((src, i) => (
-            <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-slate-100">
-              <Image
-                src={src}
-                alt={`${day.title} — photo ${i + 1}`}
-                fill
-                sizes="(max-width: 640px) 50vw, 200px"
-                className="object-cover"
-              />
-            </div>
-          ))}
         </div>
       )}
 
@@ -582,11 +588,19 @@ function Itinerary({ days }: { days: ItineraryDayVM[] }) {
                   aria-expanded={isOpen}
                   className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-brand-tint-subtle/50"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-darkest font-mono text-sm font-semibold text-white">
-                    {String(d.n).padStart(2, "0")}
+                  <span className="flex h-10 shrink-0 items-center justify-center rounded-full bg-brand-darkest px-3.5 text-sm font-semibold text-white">
+                    Day {d.n}
                   </span>
-                  <span className="min-w-0 flex-1 font-display text-base font-semibold text-brand-darkest">
-                    {d.title}
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-base font-semibold text-brand-darkest">
+                      {d.title}
+                    </span>
+                    {d.timing && (
+                      <span className="mt-0.5 flex items-center gap-1.5 text-xs text-brand-medium">
+                        <Icon.clock aria-hidden className="h-3.5 w-3.5" />
+                        {d.timing}
+                      </span>
+                    )}
                   </span>
                   <Icon.chevron
                     className={`h-4 w-4 shrink-0 text-brand-medium transition-transform ${isOpen ? "rotate-90" : ""}`}
@@ -781,7 +795,15 @@ function PlaceCard({ place }: { place: PlaceVM }) {
   );
 }
 
-function AdditionalInfo({ places }: { places: PlaceVM[] }) {
+function AdditionalInfo({
+  places,
+  cancellationPolicy,
+  requiredDocuments,
+}: {
+  places: PlaceVM[];
+  cancellationPolicy: CancellationRule[];
+  requiredDocuments: string[];
+}) {
   return (
     <div className="space-y-10">
       {places.length > 0 && (
@@ -799,7 +821,7 @@ function AdditionalInfo({ places }: { places: PlaceVM[] }) {
         <SectionHeading eyebrow="Fine Print" title="Additional Information" />
         <h3 className="mb-3 font-display text-base font-semibold text-brand-darkest">Cancellation policy</h3>
         <div className="overflow-hidden rounded-xl border border-brand-light/70">
-          {CANCELLATION_POLICY.map((c, i) => (
+          {cancellationPolicy.map((c, i) => (
             <div
               key={c.window}
               className={`flex items-center justify-between px-5 py-3.5 text-sm ${i % 2 ? "bg-brand-tint-subtle" : ""}`}
@@ -814,7 +836,7 @@ function AdditionalInfo({ places }: { places: PlaceVM[] }) {
       <div>
         <h3 className="mb-3 font-display text-base font-semibold text-brand-darkest">Documents required</h3>
         <ul className="space-y-2.5">
-          {DOCUMENTS_NEEDED.map((d, i) => (
+          {requiredDocuments.map((d, i) => (
             <li key={i} className="flex items-start gap-2.5 text-sm text-slate-800">
               <Icon.check className="mt-0.5 h-4 w-4 shrink-0 text-brand-medium" />
               {d}
@@ -1032,9 +1054,14 @@ function Stay({ stays }: { stays: StayVM[] }) {
 
 /* --------------------------- Booking sidebar -------------------------- */
 
-function BookingCard({ startingPrice, guests, setGuests, total, onBookNow, title, slug }: { startingPrice: number | null; guests: number; setGuests: (n: number) => void; total: number; onBookNow: () => void; title: string; slug: string }) {
+function BookingCard({ startingPrice, guests, setGuests, total, onBookNow, title, slug, isSoldOut }: { startingPrice: number | null; guests: number; setGuests: (n: number) => void; total: number; onBookNow: () => void; title: string; slug: string; isSoldOut: boolean }) {
   return (
     <div className="ticket rounded-2xl border border-brand-light bg-white p-6 shadow-[0_20px_50px_-20px_rgba(27,77,27,0.3)]">
+      {isSoldOut && (
+        <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-center text-xs font-bold uppercase tracking-widest text-rose-700">
+          Sold Out
+        </p>
+      )}
       <p className="text-xs uppercase tracking-wide text-slate-600">Starting from</p>
       <p className="mt-1 font-mono text-3xl font-semibold text-brand-darkest">
         {startingPrice != null ? money(startingPrice) : "On request"}
@@ -1073,19 +1100,27 @@ function BookingCard({ startingPrice, guests, setGuests, total, onBookNow, title
 
       <button
         onClick={onBookNow}
-        className="mt-5 w-full rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+        disabled={isSoldOut}
+        className="mt-5 w-full rounded-full bg-gradient-to-r from-brand-forest to-brand-sage py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-medium/30 transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-400 disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100"
       >
-        Reserve Your Spot
+        {isSoldOut ? "Sold Out" : "Reserve Your Spot"}
       </button>
 
-      <div className="mt-4 space-y-2 text-xs text-slate-700">
-        <p className="flex items-center gap-2">
-          <Icon.shield className="h-3.5 w-3.5 text-brand-medium" /> Free cancellation up to 30 days out
+      {isSoldOut ? (
+        <p className="mt-4 text-xs text-slate-700">
+          This departure is fully booked. Browse our other packages, or get in touch and we
+          will let you know when dates open up.
         </p>
-        <p className="flex items-center gap-2">
-          <Icon.plane className="h-3.5 w-3.5 text-brand-medium" /> Reserve now, pay later available
-        </p>
-      </div>
+      ) : (
+        <div className="mt-4 space-y-2 text-xs text-slate-700">
+          <p className="flex items-center gap-2">
+            <Icon.shield className="h-3.5 w-3.5 text-brand-medium" /> Free cancellation up to 30 days out
+          </p>
+          <p className="flex items-center gap-2">
+            <Icon.plane className="h-3.5 w-3.5 text-brand-medium" /> Reserve now, pay later available
+          </p>
+        </div>
+      )}
 
       <ShareButtons title={title} slug={slug} />
     </div>

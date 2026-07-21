@@ -3,10 +3,11 @@ import { requireAdmin } from '@/lib/api/guard';
 import { toApiError } from '@/lib/api/errors';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import {
-  ALLOWED_IMAGE_TYPES,
-  MAX_UPLOAD_BYTES,
+  allowedTypesFor,
+  isDocumentBucket,
   isSafeStoragePath,
   isUploadBucket,
+  maxBytesFor,
   normalizeStoragePath,
 } from '@/lib/storage/buckets';
 
@@ -29,10 +30,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const extension = ALLOWED_IMAGE_TYPES[file.type];
-    if (!extension) {
+    // Each bucket accepts one family of files — images or documents, never both.
+    const allowed = allowedTypesFor(bucket);
+    const contentType = resolveContentType(file, allowed);
+    const extension = contentType ? allowed[contentType] : undefined;
+
+    if (!extension || !contentType) {
       return NextResponse.json(
-        { error: 'Unsupported file type. Use JPEG, PNG or WebP.' },
+        {
+          error: isDocumentBucket(bucket)
+            ? 'Unsupported file type. Use PDF or XLSX.'
+            : 'Unsupported file type. Use JPEG, PNG or WebP.',
+        },
         { status: 415 }
       );
     }
@@ -41,8 +50,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File is empty' }, { status: 400 });
     }
 
-    if (file.size > MAX_UPLOAD_BYTES) {
-      return NextResponse.json({ error: 'Image must be 5MB or smaller' }, { status: 413 });
+    const maxBytes = maxBytesFor(bucket);
+    if (file.size > maxBytes) {
+      return NextResponse.json(
+        { error: `File must be ${Math.floor(maxBytes / (1024 * 1024))}MB or smaller` },
+        { status: 413 }
+      );
     }
 
     const folder = normalizeStoragePath(typeof path === 'string' ? path : '');
@@ -54,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from(bucket)
-      .upload(key, file, { contentType: file.type, upsert: false });
+      .upload(key, file, { contentType, upsert: false });
 
     if (uploadError) throw uploadError;
 
@@ -62,9 +75,36 @@ export async function POST(req: NextRequest) {
       data: { publicUrl },
     } = supabaseAdmin.storage.from(bucket).getPublicUrl(key);
 
-    return NextResponse.json({ data: { url: publicUrl, path: key } }, { status: 201 });
+    return NextResponse.json(
+      {
+        data: {
+          url: publicUrl,
+          path: key,
+          name: file.name,
+          type: contentType,
+          size: file.size,
+        },
+      },
+      { status: 201 }
+    );
   } catch (error: unknown) {
     const { message, status } = toApiError(error);
     return NextResponse.json({ error: message }, { status });
   }
+}
+
+/**
+ * Browsers are unreliable about the content type of office documents — Windows in
+ * particular often reports an empty type or `application/octet-stream` for .xlsx. Fall
+ * back to the file extension, but only ever to a type the bucket already allows.
+ */
+function resolveContentType(file: File, allowed: Record<string, string>): string | undefined {
+  if (file.type && allowed[file.type]) return file.type;
+
+  if (!file.type || file.type === 'application/octet-stream') {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    return Object.keys(allowed).find((type) => allowed[type] === extension);
+  }
+
+  return undefined;
 }

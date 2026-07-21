@@ -22,6 +22,12 @@ export const SERIES_COLOR = 'var(--logo-forest, #2D5F2D)';
 
 /** Recessive scaffolding — grid and axis text never compete with the marks. */
 export const GRID_STROKE = '#e5e7eb';
+
+/** Surface colour charts punch through with (slice borders, active dots). */
+export const CHART_SURFACE = '#ffffff';
+
+/** Fallback for an unmapped series. */
+export const CHART_MUTED = '#6b7280';
 export const AXIS_TICK = { fill: '#6b7280', fontSize: 12 } as const;
 
 /** Shared tooltip surface, matching the admin card language. */

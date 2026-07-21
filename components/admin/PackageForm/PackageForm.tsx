@@ -42,6 +42,7 @@ const EMPTY_PACKAGE: PackageFormInput = {
   is_featured: false,
   is_trending: false,
   is_new: false,
+  is_group_package: false,
   show_price: true,
   duration_days: 1,
   duration_nights: 0,

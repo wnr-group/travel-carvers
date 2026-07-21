@@ -26,6 +26,9 @@ export const MONTHS = [
   'December',
 ] as const;
 
+/** How many entries a single day may hold. */
+export const MAX_DAY_ENTRIES = 20;
+
 export const WEATHER_CONDITIONS = [
   'Sunny',
   'Pleasant',
@@ -55,6 +58,15 @@ const optionalText = (max = 500, message?: string) =>
     .max(max, message ?? `Must be ${max} characters or fewer`)
     .transform((value) => value || undefined)
     .optional();
+
+/**
+ * A single optional image. The uploader clears to `''`, which must read as "no image"
+ * rather than as an invalid URL.
+ */
+const optionalImageUrl = z
+  .union([z.url({ error: 'Enter a valid image URL' }), z.literal('')])
+  .transform((value) => value || undefined)
+  .optional();
 
 const optionalEnum = <T extends readonly [string, ...string[]]>(values: T, message: string) =>
   z
@@ -86,12 +98,13 @@ export const basicInfoSchema = z.object({
     .string({ error: 'Full description is required' })
     .trim()
     .min(50, 'Full description must be at least 50 characters'),
-  status: z.enum(['draft', 'published', 'archived']).default('draft'),
+  status: z.enum(['draft', 'published', 'archived', 'sold_out']).default('draft'),
 
   // Flags
   is_featured: z.boolean().default(false),
   is_trending: z.boolean().default(false),
   is_new: z.boolean().default(false),
+  is_group_package: z.boolean().default(false),
 });
 
 
@@ -188,13 +201,22 @@ const packageObjectSchema = z.object({
       z.object({
         day_number: z.number().int().positive(),
         title: requiredText('Give this day a title', 200),
-        morning_activity: optionalText(1000),
-        afternoon_activity: optionalText(1000),
-        evening_activity: optionalText(1000),
+        timing: optionalText(200),
         breakfast: z.boolean(),
         lunch: z.boolean(),
         dinner: z.boolean(),
-        images: z.array(z.url({ error: 'Each image needs a valid URL' })).optional(),
+        entries: z
+          .array(
+            z.object({
+              name: requiredText('Name this entry, or remove it', 200),
+              time_label: optionalText(100),
+              description: optionalText(1000),
+              image_url: optionalImageUrl,
+              icon: optionalText(50),
+            })
+          )
+          .max(MAX_DAY_ENTRIES, `A day can have at most ${MAX_DAY_ENTRIES} entries`)
+          .optional(),
       })
     )
     .optional(),
@@ -262,6 +284,28 @@ const packageObjectSchema = z.object({
         entry_fee: optionalText(100),
       })
     )
+    .optional(),
+
+  // Both fall back to the company-wide defaults when left empty — see lib/packageDefaults.ts.
+  cancellation_policy: z
+    .array(
+      z.object({
+        window_label: requiredText('Describe the window, or remove this row', 200),
+        refund_text: requiredText('Say what the refund is, or remove this row', 200),
+        display_order: z.number().int().min(0),
+      })
+    )
+    .max(20, 'You can add at most 20 cancellation rows')
+    .optional(),
+
+  required_documents: z
+    .array(
+      z.object({
+        document_text: requiredText('Name the document, or remove this row', 300),
+        display_order: z.number().int().min(0),
+      })
+    )
+    .max(30, 'You can add at most 30 documents')
     .optional(),
 });
 
@@ -347,6 +391,8 @@ export type PackageRelations = Pick<
   | 'travel_tips'
   | 'best_time_to_visit'
   | 'places_to_visit'
+  | 'cancellation_policy'
+  | 'required_documents'
 >;
 
 export type PackageRecordInput = Omit<
@@ -362,13 +408,15 @@ export type PackageRecordInput = Omit<
   | 'travel_tips'
   | 'best_time_to_visit'
   | 'places_to_visit'
+  | 'cancellation_policy'
+  | 'required_documents'
 >;
 
 /**
  * Query-string filters for the admin package list
  */
 export const packageFiltersSchema = z.object({
-  status: z.enum(['draft', 'published', 'archived']).optional(),
+  status: z.enum(['draft', 'published', 'archived', 'sold_out']).optional(),
   search: z.string().trim().max(100).optional(),
   category: z.uuid({ error: 'Category must be a valid id' }).optional(),
 });

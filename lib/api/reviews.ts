@@ -29,11 +29,6 @@ function reviewImageObjectPath(url: string): string | null {
 
 /**
  * Public: Submit a review.
- *
- * Reviews ALWAYS enter moderation (is_approved = NULL) and are only shown
- * publicly after an admin approves them in /admin/reviews. The client cannot
- * influence approval. Photo URLs must reference our own review-images bucket;
- * foreign URLs are rejected. Uploaded files are cleaned up if the insert fails.
  */
 export async function createReview(
   reviewData: {

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import DynamicIcon from '@/components/ui/DynamicIcon';
+import { ArrowRight } from 'lucide-react';
 
 export interface HomeCategory {
   id: string;
@@ -15,16 +16,18 @@ export interface HomeCategory {
 
 interface HomeCategoryCardProps {
   category: HomeCategory;
+  index?: number;
 }
 
-export function HomeCategoryCard({ category }: HomeCategoryCardProps) {
+export function HomeCategoryCard({ category, index = 0 }: HomeCategoryCardProps) {
+  const isLarge = index === 0 || index === 3;
+
   return (
     <Link
-      // The dedicated category page, matching what the navbar links to. The old
-      // `/packages?category=<slug>` link filtered on category *name*, so passing a slug matched
-      // nothing and the page came up empty.
       href={`/categories/${category.slug}`}
-      className="group relative block h-96 overflow-hidden rounded-2xl shadow-lg transition-all duration-500 hover:-translate-y-2 hover:scale-105 hover:shadow-2xl"
+      className={`group relative overflow-hidden rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md border border-white/80 bg-brand-forest flex flex-col justify-end ${
+        isLarge ? 'md:col-span-2 h-[150px] sm:h-[160px]' : 'h-[150px] sm:h-[160px]'
+      }`}
     >
       {category.cover_image_url ? (
         <>
@@ -32,23 +35,31 @@ export function HomeCategoryCard({ category }: HomeCategoryCardProps) {
             src={category.cover_image_url}
             alt={category.name}
             fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105 filter brightness-100 contrast-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A3C34] via-[#A9B388]/50 to-transparent transition-all group-hover:from-[#A9B388]/90" />
+          {/* Lighter gradient overlay to ensure images are crystal clear and fully visible */}
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-forest/80 via-brand-forest/20 to-transparent transition-opacity duration-300 group-hover:opacity-75" />
         </>
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1A3C34] to-[#A9B388]">
-          <DynamicIcon name={category.icon_name} className="h-16 w-16 text-white/80" />
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-brand-primary">
+          <DynamicIcon name={category.icon_name} className="h-8 w-8 text-white/90" />
         </div>
       )}
 
-      <div className="relative z-10 flex h-full flex-col justify-end p-6">
-        <div className="text-center">
-          <h3 className="mb-2 text-2xl font-bold text-white">{category.name}</h3>
-          {category.description && (
-            <p className="line-clamp-2 text-sm text-white/90">{category.description}</p>
-          )}
+      <div className="relative z-20 p-3.5 sm:p-4 flex flex-col justify-end">
+        <h3 className="mb-0.5 text-sm sm:text-base font-bold text-white drop-shadow-md">
+          {category.name}
+        </h3>
+        {category.description && (
+          <p className="line-clamp-1 text-[10px] text-white/90 font-medium mb-1.5 drop-shadow">
+            {category.description}
+          </p>
+        )}
+
+        <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-pastel-mint transition-all group-hover:text-white">
+          <span>Explore</span>
+          <ArrowRight className="w-2.5 h-2.5 transition-transform group-hover:translate-x-1" />
         </div>
       </div>
     </Link>
@@ -56,5 +67,5 @@ export function HomeCategoryCard({ category }: HomeCategoryCardProps) {
 }
 
 export function HomeCategoryCardSkeleton() {
-  return <div className="h-96 animate-pulse rounded-2xl bg-black/5" />;
+  return <div className="h-[150px] sm:h-[160px] animate-pulse rounded-xl bg-black/10" />;
 }

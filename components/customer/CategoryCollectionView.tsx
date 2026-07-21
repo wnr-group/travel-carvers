@@ -74,7 +74,7 @@ export default function CategoryCollectionView({
               className="object-cover"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1A3C34] to-[#A9B388]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-forest to-brand-sage" />
           )}
           <div className="overlay-brand-primary absolute inset-0" />
           <motion.div
@@ -143,7 +143,7 @@ export default function CategoryCollectionView({
                       ) : (
                         <span
                           aria-hidden="true"
-                          className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1A3C34] to-[#A9B388]"
+                          className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-brand-forest to-brand-sage"
                         >
                           {collection.iconName && isIconName(collection.iconName) ? (
                             <DynamicIcon

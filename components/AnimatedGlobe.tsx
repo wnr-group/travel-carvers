@@ -2,15 +2,15 @@
 
 export default function AnimatedGlobe() {
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-[#5F6F52] via-[#A9B388] to-[#5F6F52]">
+    <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-brand-olive via-brand-sage to-brand-olive">
       {/* Logo */}
       <div className="absolute top-6 left-6 z-20">
         <div className="flex flex-col">
-          <h2 className="text-2xl md:text-3xl font-black italic bg-gradient-to-r from-[#B99470] to-white bg-clip-text text-transparent tracking-tight leading-none">
+          <h2 className="text-2xl md:text-3xl font-black italic bg-gradient-to-r from-brand-clay to-white bg-clip-text text-transparent tracking-tight leading-none">
             Travel
           </h2>
           <div className="flex items-center gap-2 -mt-1">
-            <div className="h-0.5 w-6 bg-gradient-to-r from-[#B99470] to-transparent"></div>
+            <div className="h-0.5 w-6 bg-gradient-to-r from-brand-clay to-transparent"></div>
             <h3 className="text-xl md:text-2xl font-light text-white tracking-[0.2em] uppercase">
               CARVERS
             </h3>

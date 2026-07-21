@@ -56,15 +56,15 @@ export default function WorldMap() {
   return (
     <div className="w-full h-screen relative overflow-hidden flex flex-col">
       {/* Header with Logo */}
-      <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-[#5F6F52] to-transparent py-6 px-6">
+      <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-brand-olive to-transparent py-6 px-6">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           {/* Logo */}
           <div className="flex flex-col">
-            <h2 className="text-3xl md:text-4xl font-black italic bg-gradient-to-r from-[#B99470] to-white bg-clip-text text-transparent tracking-tight leading-none">
+            <h2 className="text-3xl md:text-4xl font-black italic bg-gradient-to-r from-brand-clay to-white bg-clip-text text-transparent tracking-tight leading-none">
               Travel
             </h2>
             <div className="flex items-center gap-2 -mt-1">
-              <div className="h-0.5 w-8 bg-gradient-to-r from-[#B99470] to-transparent"></div>
+              <div className="h-0.5 w-8 bg-gradient-to-r from-brand-clay to-transparent"></div>
               <h3 className="text-2xl md:text-3xl font-light text-white tracking-[0.2em] uppercase">
                 CARVERS
               </h3>
@@ -87,7 +87,7 @@ export default function WorldMap() {
 
       {/* Map Container */}
       <div className="flex-1 flex items-center justify-center p-4 md:p-8 pt-32 md:pt-24 pb-24">
-        <div className="relative w-full max-w-6xl aspect-[2/1] bg-gradient-to-br from-[#5F6F52] to-[#5F6F52] rounded-2xl shadow-2xl border-4 border-[#B99470]/30 overflow-hidden">
+        <div className="relative w-full max-w-6xl aspect-[2/1] bg-gradient-to-br from-brand-olive to-brand-olive rounded-2xl shadow-2xl border-4 border-brand-clay/30 overflow-hidden">
           {/* Map Background Pattern */}
           <div
             className="absolute inset-0 opacity-20"
@@ -138,7 +138,7 @@ export default function WorldMap() {
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   location.isWonder
                     ? 'bg-yellow-400 ring-4 ring-yellow-400/50 shadow-lg shadow-yellow-400/50'
-                    : 'bg-[#B99470] ring-2 ring-[#B99470]/50'
+                    : 'bg-brand-clay ring-2 ring-brand-clay/50'
                 } ${hoveredLocation === location || selectedLocation === location ? 'scale-150' : 'scale-100'} group-hover:scale-150`}
               >
                 {location.isWonder && (
@@ -154,7 +154,7 @@ export default function WorldMap() {
                     : 'opacity-0 translate-y-2 pointer-events-none'
                 }`}
               >
-                <div className="bg-[#5F6F52] text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg border border-[#B99470]/30">
+                <div className="bg-brand-olive text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg border border-brand-clay/30">
                   {location.name}
                 </div>
               </div>
@@ -162,14 +162,14 @@ export default function WorldMap() {
           ))}
 
           {/* Legend */}
-          <div className="absolute bottom-4 right-4 bg-[#5F6F52]/90 backdrop-blur-sm px-4 py-3 rounded-lg border border-[#B99470]/30">
+          <div className="absolute bottom-4 right-4 bg-brand-olive/90 backdrop-blur-sm px-4 py-3 rounded-lg border border-brand-clay/30">
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
                 <span className="text-white">Seven Wonders</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-[#B99470] rounded-full"></div>
+                <div className="w-3 h-3 bg-brand-clay rounded-full"></div>
                 <span className="text-white">Tourist Spots</span>
               </div>
             </div>
@@ -179,14 +179,14 @@ export default function WorldMap() {
 
       {/* Selected Location Info */}
       {selectedLocation && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-[#5F6F52] to-[#5F6F52] text-white px-8 py-4 rounded-xl shadow-2xl border-2 border-[#B99470]/50 z-20 animate-slide-up">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-brand-olive to-brand-olive text-white px-8 py-4 rounded-xl shadow-2xl border-2 border-brand-clay/50 z-20 animate-slide-up">
           <button
             onClick={() => setSelectedLocation(null)}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-[#B99470] text-[#5F6F52] rounded-full flex items-center justify-center text-sm font-bold hover:bg-white transition-colors"
+            className="absolute -top-2 -right-2 w-6 h-6 bg-brand-clay text-brand-olive rounded-full flex items-center justify-center text-sm font-bold hover:bg-white transition-colors"
           >
             ×
           </button>
-          <h2 className="text-2xl font-bold text-[#B99470]">
+          <h2 className="text-2xl font-bold text-brand-clay">
             {selectedLocation.name}
             {selectedLocation.isWonder && ' ⭐'}
           </h2>

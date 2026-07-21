@@ -225,12 +225,31 @@ async function insertPackageRelations(packageId: string, input: PackageRelations
       }))
     ),
 
+    insertRows(
+      'cancellation_policies',
+      (input.cancellation_policy ?? []).map((rule) => ({
+        package_id: packageId,
+        window_label: rule.window_label,
+        refund_text: rule.refund_text,
+        display_order: rule.display_order,
+      }))
+    ),
+
+    insertRows(
+      'required_documents',
+      (input.required_documents ?? []).map((document) => ({
+        package_id: packageId,
+        document_text: document.document_text,
+        display_order: document.display_order,
+      }))
+    ),
+
     insertItineraryDays(packageId, input),
   ]);
 }
 
 /**
- * Itinerary days, then their images.
+ * Itinerary days, then the entries hanging off each one.
  */
 async function insertItineraryDays(packageId: string, input: PackageRelations) {
   const days = input.itinerary_days ?? [];
@@ -243,9 +262,7 @@ async function insertItineraryDays(packageId: string, input: PackageRelations) {
         package_id: packageId,
         day_number: day.day_number,
         title: day.title,
-        morning_activity: day.morning_activity,
-        afternoon_activity: day.afternoon_activity,
-        evening_activity: day.evening_activity,
+        timing: day.timing,
         breakfast: day.breakfast,
         lunch: day.lunch,
         dinner: day.dinner,
@@ -259,18 +276,23 @@ async function insertItineraryDays(packageId: string, input: PackageRelations) {
     (inserted ?? []).map((row) => [row.day_number as number, row.id as string])
   );
 
-  const images = days.flatMap((day) => {
+  // The form holds entries as an ordered list, so their order *is* their array position.
+  const entries = days.flatMap((day) => {
     const dayId = idByDayNumber.get(day.day_number);
     if (!dayId) return [];
 
-    return (day.images ?? []).map((image_url, index) => ({
+    return (day.entries ?? []).map((entry, index) => ({
       itinerary_day_id: dayId,
-      image_url,
+      name: entry.name,
+      time_label: entry.time_label ?? null,
+      description: entry.description ?? null,
+      image_url: entry.image_url ?? null,
+      icon_name: entry.icon ?? null,
       display_order: index,
     }));
   });
 
-  await insertRows('itinerary_day_images', images);
+  await insertRows('itinerary_entries', entries);
 }
 
 /**
@@ -288,6 +310,8 @@ const RELATION_KEYS = [
   'travel_tips',
   'best_time_to_visit',
   'places_to_visit',
+  'cancellation_policy',
+  'required_documents',
 ] as const satisfies readonly (keyof PackageRelations)[];
 
 type RelationKey = (typeof RELATION_KEYS)[number];
@@ -369,6 +393,9 @@ const CHILD_TABLES = [
   'best_time_to_visit',
   'places_to_visit',
   'itinerary_days',
+  // Appended, not inserted: getPackageForEdit destructures this list positionally.
+  'cancellation_policies',
+  'required_documents',
 ] as const;
 
 type ChildRow = Record<string, unknown>;
@@ -399,6 +426,8 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
     seasons,
     places,
     days,
+    cancellationRows,
+    documentRows,
   ] = await Promise.all(
     CHILD_TABLES.map(async (table) => {
       const { data, error: childError } = await supabaseAdmin
@@ -412,16 +441,16 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
   );
 
   const dayIds = days.map((day) => day.id as string);
-  let dayImages: ChildRow[] = [];
+  let dayEntries: ChildRow[] = [];
 
   if (dayIds.length > 0) {
-    const { data, error: imageError } = await supabaseAdmin
-      .from('itinerary_day_images')
+    const { data, error: entryError } = await supabaseAdmin
+      .from('itinerary_entries')
       .select('*')
       .in('itinerary_day_id', dayIds);
 
-    if (imageError) throw imageError;
-    dayImages = (data ?? []) as ChildRow[];
+    if (entryError) throw entryError;
+    dayEntries = (data ?? []) as ChildRow[];
   }
 
   const inclusions = inclusionRows.filter((row) => row.is_included);
@@ -446,6 +475,7 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
     is_featured: pkg.is_featured ?? false,
     is_trending: pkg.is_trending ?? false,
     is_new: pkg.is_new ?? false,
+    is_group_package: pkg.is_group_package ?? false,
 
     // Postgres `numeric` can arrive as a string; the form's number inputs need real numbers.
     price_adult: pkg.price_adult === null ? undefined : Number(pkg.price_adult),
@@ -493,17 +523,24 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
       .map((day) => ({
         day_number: day.day_number as number,
         title: (day.title as string) ?? '',
-        morning_activity: (day.morning_activity as string) ?? '',
-        afternoon_activity: (day.afternoon_activity as string) ?? '',
-        evening_activity: (day.evening_activity as string) ?? '',
+        timing: (day.timing as string) ?? '',
         breakfast: (day.breakfast as boolean) ?? false,
         lunch: (day.lunch as boolean) ?? false,
         dinner: (day.dinner as boolean) ?? false,
-        images: byDisplayOrder(
-          dayImages.filter(
-            (image) => image.itinerary_day_id === day.id
+        entries: byDisplayOrder(
+          dayEntries.filter(
+            (entry) => entry.itinerary_day_id === day.id
           ) as { display_order?: number | null }[]
-        ).map((image) => (image as ChildRow).image_url as string),
+        ).map((row) => {
+          const entry = row as ChildRow;
+          return {
+            name: (entry.name as string) ?? '',
+            time_label: (entry.time_label as string) ?? '',
+            description: (entry.description as string) ?? '',
+            image_url: (entry.image_url as string) ?? '',
+            icon: (entry.icon_name as string) ?? '',
+          };
+        }),
       })),
 
     inclusions: toChecklist(inclusions),
@@ -545,6 +582,27 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
       distance_from_hotel: (place.distance_from_hotel as string) ?? '',
       entry_fee: (place.entry_fee as string) ?? '',
     })),
+
+    cancellation_policy: byDisplayOrder(
+      cancellationRows as { display_order?: number | null }[]
+    ).map((row, index) => {
+      const rule = row as ChildRow;
+      return {
+        window_label: (rule.window_label as string) ?? '',
+        refund_text: (rule.refund_text as string) ?? '',
+        display_order: (rule.display_order as number) ?? index,
+      };
+    }),
+
+    required_documents: byDisplayOrder(
+      documentRows as { display_order?: number | null }[]
+    ).map((row, index) => {
+      const document = row as ChildRow;
+      return {
+        document_text: (document.document_text as string) ?? '',
+        display_order: (document.display_order as number) ?? index,
+      };
+    }),
   };
 }
 
@@ -568,22 +626,22 @@ async function snapshotRelations(packageId: string): Promise<RelationSnapshot> {
   );
 
   const dayIds = (snapshot.itinerary_days ?? []).map((day) => day.id as string);
-  snapshot.itinerary_day_images = [];
+  snapshot.itinerary_entries = [];
 
   if (dayIds.length > 0) {
     const { data, error } = await supabaseAdmin
-      .from('itinerary_day_images')
+      .from('itinerary_entries')
       .select('*')
       .in('itinerary_day_id', dayIds);
 
     if (error) throw error;
-    snapshot.itinerary_day_images = (data ?? []) as ChildRow[];
+    snapshot.itinerary_entries = (data ?? []) as ChildRow[];
   }
 
   return snapshot;
 }
 
-/** Deleting `itinerary_days` cascades to its images, so they need no separate delete. */
+/** Deleting `itinerary_days` cascades to its entries, so they need no separate delete. */
 async function deleteRelations(packageId: string) {
   for (const table of CHILD_TABLES) {
     const { error } = await supabaseAdmin.from(table).delete().eq('package_id', packageId);
@@ -597,7 +655,7 @@ async function restoreRelations(snapshot: RelationSnapshot) {
     await insertRows(table, snapshot[table] ?? []);
   }
 
-  await insertRows('itinerary_day_images', snapshot.itinerary_day_images ?? []);
+  await insertRows('itinerary_entries', snapshot.itinerary_entries ?? []);
 }
 
 export async function updatePackageWithRelations(

@@ -403,11 +403,11 @@ export default function AboutPage() {
                                             className="object-cover transition-transform duration-700 group-hover:scale-105 transform-gpu"
                                         />
                                         {/* Subtle overlay for depth */}
-                                        <div className="absolute inset-0 bg-[#1A3C34]/0 transition-colors duration-500 group-hover:bg-[#1A3C34]/10" />
+                                        <div className="absolute inset-0 bg-brand-forest/0 transition-colors duration-500 group-hover:bg-brand-forest/10" />
 
                                         {/* Elegant slide-up connect button */}
                                         <div className="absolute bottom-4 right-4 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
-                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#1A3C34] shadow-lg hover:bg-[#1A3C34] hover:text-white transition-colors duration-300">
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-brand-forest shadow-lg hover:bg-brand-forest hover:text-white transition-colors duration-300">
                                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                                 </svg>
@@ -417,15 +417,15 @@ export default function AboutPage() {
 
                                     {/* Minimalist Text Area */}
                                     <div className="mt-5 flex flex-col px-1">
-                                        <h3 className="font-[family-name:var(--font-display)] text-xl font-bold text-[#1A3C34] group-hover:text-[#5F6F52] transition-colors duration-300">
+                                        <h3 className="font-[family-name:var(--font-display)] text-xl font-bold text-brand-forest group-hover:text-brand-olive transition-colors duration-300">
                                             {member.name}
                                         </h3>
-                                        <p className="mt-1 text-xs font-semibold tracking-wider text-[#5F6F52]/80 uppercase">
+                                        <p className="mt-1 text-xs font-semibold tracking-wider text-brand-olive/80 uppercase">
                                             {member.role}
                                         </p>
                                         {/* Minimalist extending underline accent */}
                                         <div className="mt-4 flex items-center">
-                                            <span className="h-[2px] w-8 bg-[#A9B388] transition-all duration-500 ease-out group-hover:w-16"></span>
+                                            <span className="h-[2px] w-8 bg-brand-sage transition-all duration-500 ease-out group-hover:w-16"></span>
                                         </div>
                                     </div>
                                 </div>

@@ -1,8 +1,12 @@
 'use client';
 
 import DynamicIcon from '@/components/ui/DynamicIcon';
-import { ICON_NAMES, isIconName } from '@/lib/icons';
+import { ICON_GROUPS, ICON_NAMES, isIconName } from '@/lib/icons';
 import { cn } from '@/lib/utils';
+
+/** Anything the groups forgot still has to be selectable. */
+const GROUPED = new Set(ICON_GROUPS.flatMap((group) => group.icons));
+const UNGROUPED = ICON_NAMES.filter((name) => !GROUPED.has(name));
 
 export default function IconSelect({
   value,
@@ -47,13 +51,29 @@ export default function IconSelect({
         )}
       >
 
+        <option value="">No icon</option>
+
         {value && !isKnown && <option value={value}>{value} (unknown)</option>}
 
-        {ICON_NAMES.map((name) => (
-          <option key={name} value={name}>
-            {name}
-          </option>
+        {ICON_GROUPS.map((group) => (
+          <optgroup key={group.label} label={group.label}>
+            {group.icons.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </optgroup>
         ))}
+
+        {UNGROUPED.length > 0 && (
+          <optgroup label="Other">
+            {UNGROUPED.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </optgroup>
+        )}
       </select>
     </div>
   );

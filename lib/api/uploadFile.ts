@@ -1,26 +1,26 @@
 import type { UploadBucket } from '@/lib/storage/buckets'
 
-export interface UploadedImage {
+export interface UploadedFile {
   url: string
   path: string
+  name: string
+  type: string
+  size: number
 }
 
-interface UploadImageOptions {
+interface UploadFileOptions {
   file: File
   bucket: UploadBucket
   path?: string
   onProgress?: (percent: number) => void
 }
 
-/**
- * POST one image to the admin upload route and resolve with its public URL.
- */
-export function uploadImage({
+export function uploadFile({
   file,
   bucket,
   path,
   onProgress,
-}: UploadImageOptions): Promise<UploadedImage> {
+}: UploadFileOptions): Promise<UploadedFile> {
   return new Promise((resolve, reject) => {
     const formData = new FormData()
     formData.append('file', file)
@@ -58,7 +58,7 @@ export function uploadImage({
 }
 
 interface UploadResponse {
-  data?: UploadedImage
+  data?: UploadedFile
   error?: string
 }
 

@@ -1,14 +1,12 @@
-import type { PackageFormInput } from '@/lib/validations/package.schema'
+import {
+  MAX_DAY_ENTRIES,
+  type PackageFormInput,
+} from '@/lib/validations/package.schema'
 
 export type ItineraryDay = NonNullable<PackageFormInput['itinerary_days']>[number]
+export type ItineraryEntry = NonNullable<ItineraryDay['entries']>[number]
 
-export const MAX_DAY_IMAGES = 5
-
-export const ACTIVITIES = [
-  { name: 'morning_activity', label: 'Morning' },
-  { name: 'afternoon_activity', label: 'Afternoon' },
-  { name: 'evening_activity', label: 'Evening' },
-] as const
+export { MAX_DAY_ENTRIES }
 
 export const MEALS = [
   { name: 'breakfast', label: 'Breakfast' },
@@ -16,17 +14,25 @@ export const MEALS = [
   { name: 'dinner', label: 'Dinner' },
 ] as const
 
+export function createEntry(): ItineraryEntry {
+  return {
+    name: '',
+    time_label: '',
+    description: '',
+    image_url: '',
+    icon: '',
+  }
+}
+
 export function createDay(dayNumber: number): ItineraryDay {
   return {
     day_number: dayNumber,
     title: '',
-    morning_activity: '',
-    afternoon_activity: '',
-    evening_activity: '',
+    timing: '',
     breakfast: false,
     lunch: false,
     dinner: false,
-    images: [],
+    // No seed entry: an entry needs a name, so a blank one would block saving the day.
+    entries: [],
   }
 }
-

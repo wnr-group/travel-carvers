@@ -464,7 +464,7 @@ export default function ContactPage() {
                                     <button
                                         type="submit"
                                         disabled={status === "submitting"}
-                                        className="mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-brand-dark/20 hover:shadow-lg hover:scale-105 disabled:opacity-70 transition-all"
+                                        className="mt-7 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-forest to-brand-sage px-6 py-3 text-sm font-semibold text-white shadow-md shadow-brand-dark/20 hover:shadow-lg hover:scale-105 disabled:opacity-70 transition-all"
                                     >
                                         {status === "submitting" ? (
                                             <>

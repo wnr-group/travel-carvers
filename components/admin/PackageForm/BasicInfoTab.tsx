@@ -2,7 +2,7 @@
 
 import { useFormContext, useWatch } from 'react-hook-form';
 import FieldError from '@/components/admin/FieldError';
-import { PACKAGE_STATUSES } from '@/lib/types/package';
+import { PACKAGE_STATUSES, PACKAGE_STATUS_LABELS } from '@/lib/types/package';
 import { packagePath, slugify } from '@/lib/utils';
 import {
   SHORT_DESCRIPTION_MAX,
@@ -17,6 +17,11 @@ const FLAGS = [
   { name: 'is_featured', label: 'Featured', hint: 'Show in the featured carousel' },
   { name: 'is_trending', label: 'Trending', hint: 'Show in the trending section' },
   { name: 'is_new', label: 'New', hint: 'Badge this package as newly added' },
+  {
+    name: 'is_group_package',
+    label: 'Group Package',
+    hint: 'Shows the group size on the package card, set it under Pricing',
+  },
 ] as const;
 
 export default function BasicInfoTab() {
@@ -139,13 +144,14 @@ export default function BasicInfoTab() {
           </label>
           <select id="status" {...register('status')} className={cn(INPUT_CLASSES, 'bg-white')}>
             {PACKAGE_STATUSES.map((status) => (
-              <option key={status} value={status} className="capitalize">
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+              <option key={status} value={status}>
+                {PACKAGE_STATUS_LABELS[status]}
               </option>
             ))}
           </select>
           <p className="mt-1 text-xs text-gray-500">
-            Only published packages are visible to customers.
+            Published and sold-out packages are visible to customers. A sold-out package is
+            shown with a Sold Out badge and cannot be enquired about.
           </p>
           <FieldError message={errors.status?.message} />
         </div>

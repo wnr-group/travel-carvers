@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { AXIS_TICK, GRID_STROKE, SERIES_COLOR, TOOLTIP_STYLE } from './theme';
+import { AXIS_TICK, CHART_SURFACE, GRID_STROKE, SERIES_COLOR, TOOLTIP_STYLE } from './theme';
 
 export interface TrendPoint {
   /** YYYY-MM-DD */
@@ -48,7 +48,7 @@ export default function TrendLineChart({ data, unit = 'leads' }: { data: TrendPo
           stroke={SERIES_COLOR}
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 4, strokeWidth: 2, stroke: '#ffffff' }}
+          activeDot={{ r: 4, strokeWidth: 2, stroke: CHART_SURFACE }}
         />
       </LineChart>
     </ResponsiveContainer>

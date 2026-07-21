@@ -407,7 +407,7 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
       <button
         type="submit"
         disabled={uploading || createReview.isPending}
-        className="w-full rounded-full bg-gradient-to-r from-[#1A3C34] to-[#A9B388] py-3 text-sm font-semibold text-white shadow transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 cursor-pointer"
+        className="w-full rounded-full bg-gradient-to-r from-brand-forest to-brand-sage py-3 text-sm font-semibold text-white shadow transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 cursor-pointer"
       >
         {uploading ? 'Uploading & Optimizing Photos...' : createReview.isPending ? 'Submitting Review...' : 'Submit Review'}
       </button>

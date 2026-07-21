@@ -3,8 +3,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from '@/lib/api/fetchJson';
 import type { Lead } from '@/lib/types/lead';
+import type { AdminLeadInput } from '@/lib/validations/lead.schema';
 
 export const ADMIN_LEADS_KEY = ['admin-leads'] as const;
+
+/** Record a lead that came in by phone or email rather than through the site. */
+export function useCreateAdminLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AdminLeadInput) =>
+      fetchJson<Lead>('/api/admin/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ADMIN_LEADS_KEY });
+    },
+  });
+}
 
 export function useAdminLeads() {
   return useQuery({
