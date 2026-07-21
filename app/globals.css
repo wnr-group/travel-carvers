@@ -148,6 +148,7 @@ body {
   scrollbar-color: var(--logo-sage) rgba(27, 77, 27, 0.4);
 }
 
+
 /* Floating wave animation for cards */
 @keyframes float {
 
