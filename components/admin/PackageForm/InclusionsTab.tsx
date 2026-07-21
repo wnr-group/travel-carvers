@@ -105,7 +105,7 @@ function PreviewList({
 
             return (
               <li key={index} className="flex items-start gap-2 text-sm">
-                {isIconName(item.icon) ? (
+                {item.icon && isIconName(item.icon) ? (
                   <DynamicIcon name={item.icon} className={iconClasses} />
                 ) : (
                   <FallbackIcon className={iconClasses} />

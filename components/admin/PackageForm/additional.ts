@@ -1,36 +1,14 @@
-import type { PackageFormInput } from '@/lib/validations/package.schema'
+import {
+  MONTHS,
+  WEATHER_CONDITIONS,
+  type PackageFormInput,
+} from '@/lib/validations/package.schema'
+
+export { MONTHS, WEATHER_CONDITIONS }
 
 export type TravelTip = NonNullable<PackageFormInput['travel_tips']>[number]
 export type BestTimePeriod = NonNullable<PackageFormInput['best_time_to_visit']>[number]
 export type PlaceToVisit = NonNullable<PackageFormInput['places_to_visit']>[number]
-
-export const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const
-
-export const WEATHER_CONDITIONS = [
-  'Sunny',
-  'Pleasant',
-  'Hot',
-  'Humid',
-  'Rainy',
-  'Monsoon',
-  'Cool',
-  'Cold',
-  'Snowy',
-  'Windy',
-] as const
 
 export function createTip(displayOrder: number): TravelTip {
   return { tip: '', display_order: displayOrder }

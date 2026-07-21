@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
-import { getAllLeads } from '@/lib/api/leads';
+import { getAllLeads } from '@/lib/api/admin/leads';
 import { toApiError } from '@/lib/api/errors';
 
 export async function GET() {

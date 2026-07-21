@@ -90,6 +90,7 @@ export interface SeoPackage {
   slug: string;
   short_description?: string | null;
   price_adult?: number | string | null;
+  show_price?: boolean | null;
   duration_days?: number | null;
   duration_nights?: number | null;
   destination_name?: string | null;
@@ -137,7 +138,9 @@ export function organizationJsonLd() {
 /** TouristTrip + Offer for a package detail page. */
 export function packageJsonLd(pkg: SeoPackage) {
   const canonical = absoluteUrl(`/packages/${pkg.slug}`);
-  const price = pkg.price_adult == null ? null : Number(pkg.price_adult);
+  // A hidden price must not leak through structured data either.
+  const price =
+    pkg.show_price === false || pkg.price_adult == null ? null : Number(pkg.price_adult);
 
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',

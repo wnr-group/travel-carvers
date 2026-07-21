@@ -1,8 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import DestinationModal, {
+  type DestinationModalData,
+} from '@/components/customer/DestinationModal';
+import {
+  getDestinationMapPins,
+  getPublishedPackagesByDestination,
+} from '@/lib/api/public/destinations';
+import { mapPackage } from '@/lib/packageList';
+import { getDestinationDetail } from '@/lib/data/destinations';
+import type { DestinationMapPin } from '@/lib/types/destination';
+
+/** The modal is a teaser — the destination page lists the rest. */
+const MODAL_PACKAGE_LIMIT = 2;
 
 interface RealWorldMapProps {
   isPreview?: boolean;
@@ -56,6 +69,14 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [selectedLocation, setSelectedLocation] = useState<TouristLocation | null>(null);
+  // Feeds the modal from either source: the hardcoded landmark details or a database destination.
+  const [selectedDestination, setSelectedDestination] = useState<DestinationModalData | null>(null);
+  // Destinations created in the admin panel, pinned on top of the built-in landmark list.
+  const [destinationPins, setDestinationPins] = useState<DestinationMapPin[]>([]);
+  const [pinPackageTotal, setPinPackageTotal] = useState<number | undefined>(undefined);
+  const [isLoadingPinPackages, setIsLoadingPinPackages] = useState(false);
+  /** Slug of the most recently clicked pin, so a stale in-flight fetch can be ignored. */
+  const openRequestRef = useRef<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TouristLocation[]>([]);
   const [showResults, setShowResults] = useState(false);
@@ -220,7 +241,15 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
           clearInterval(autoPanRef.current);
           autoPanRef.current = null;
         }
-        setSelectedLocation(location);
+        const detail = getDestinationDetail(location.name);
+        if (detail) {
+          setSelectedDestination(detail);
+          openRequestRef.current = null;
+          setPinPackageTotal(undefined);
+          setIsLoadingPinPackages(false);
+        } else {
+          setSelectedLocation(location);
+        }
         map.flyTo([location.lat, location.lng], 6, {
           duration: 1.5,
         });
@@ -244,6 +273,113 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
       mapRef.current = null;
     };
   }, []);
+
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getDestinationMapPins()
+      .then((pins) => {
+        if (!cancelled) setDestinationPins(pins);
+      })
+      .catch(() => {
+        // Degraded, not broken: the map still renders its built-in pins.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
+  const openDestinationPin = useCallback((pin: DestinationMapPin) => {
+    openRequestRef.current = pin.slug;
+    setSelectedDestination({
+      name: pin.name,
+      slug: pin.slug,
+      country: pin.country,
+      timezone: pin.timezone,
+      currency: pin.currency,
+      languages: pin.languages,
+      description: pin.description,
+      packages: [],
+    });
+    setPinPackageTotal(pin.package_count);
+    setIsLoadingPinPackages(true);
+
+    getPublishedPackagesByDestination(pin.id)
+      .then((rows) => {
+        if (openRequestRef.current !== pin.slug) return;
+
+        const packages = rows.map(mapPackage).slice(0, MODAL_PACKAGE_LIMIT);
+        setSelectedDestination((current) =>
+          current?.slug === pin.slug ? { ...current, packages } : current
+        );
+      })
+      .catch(() => {
+      })
+      .finally(() => {
+        if (openRequestRef.current === pin.slug) setIsLoadingPinPackages(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || destinationPins.length === 0) return;
+
+    // Brand green, and larger than the landmark pins — these are the places we actually sell.
+    const destinationIcon = L.divIcon({
+      className: 'custom-marker-destination',
+      html: `<div style="
+        width: 16px;
+        height: 16px;
+        background: radial-gradient(circle, var(--logo-forest) 0%, var(--logo-forest-dark) 70%);
+        border: 3px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 15px rgba(45, 95, 45, 0.7), 0 0 25px rgba(27, 77, 27, 0.4);
+        animation: pulse-marker 2s ease-in-out infinite;
+      "></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    });
+
+    const layer = L.layerGroup().addTo(map);
+
+    // The built-in list already pins several of these by name; a second marker on the same spot
+    // would just look like a rendering bug.
+    const builtInNames = new Set(locations.map((location) => location.name.toLowerCase()));
+
+    destinationPins
+      .filter((pin) => !builtInNames.has(pin.name.toLowerCase()))
+      .forEach((pin) => {
+        const marker = L.marker([pin.latitude, pin.longitude], {
+          icon: destinationIcon,
+          title: pin.name,
+        }).addTo(layer);
+
+        marker.on('click', () => {
+          userInteractedRef.current = true;
+          setShowInteractOverlay(false);
+          if (autoPanRef.current) {
+            clearInterval(autoPanRef.current);
+            autoPanRef.current = null;
+          }
+          openDestinationPin(pin);
+          map.flyTo([pin.latitude, pin.longitude], 6, { duration: 1.5 });
+        });
+
+        marker.bindTooltip(pin.name, {
+          permanent: true,
+          direction: 'top',
+          className: 'custom-tooltip',
+          opacity: 1,
+        });
+      });
+
+    return () => {
+      layer.remove();
+    };
+  }, [destinationPins, openDestinationPin]);
 
   // Handle search input
   const handleSearch = (query: string) => {
@@ -420,6 +556,19 @@ export default function RealWorldMap({ isPreview = false }: RealWorldMapProps = 
             </p>
           </div>
         )}
+
+        {/* Rich destination modal (portaled to <body>) — used by both pin kinds. */}
+        <DestinationModal
+          destination={selectedDestination}
+          totalPackages={pinPackageTotal}
+          isLoadingPackages={isLoadingPinPackages}
+          onClose={() => {
+            openRequestRef.current = null;
+            setSelectedDestination(null);
+            setPinPackageTotal(undefined);
+            setIsLoadingPinPackages(false);
+          }}
+        />
 
       <style jsx global>{`
         .leaflet-container {

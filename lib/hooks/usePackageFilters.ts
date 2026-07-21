@@ -1,30 +1,22 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getPublishedPackages } from '@/lib/api/public/packages';
-import { getActiveCategories } from '@/lib/api/public/categories';
+import {
+  mapPackage,
+  formatPrice,
+  type Difficulty,
+  type TravelPackage,
+  type RawListPackage,
+} from '@/lib/packageList';
+import { getActiveCategories } from '../api/public/categories';
 
 /* ============================== Types ============================== */
 
-export type Difficulty = 'Easy' | 'Moderate' | 'Challenging';
-
-export interface TravelPackage {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  categories: string[];
-  price: number; // 0 = "on request"
-  durationDays: number;
-  difficulty: Difficulty | null;
-  rating: number; // 0 = no reviews yet
-  popularity: number;
-  image: string;
-  location: string;
-  createdAt: number; // epoch ms, for "newest" ordering
-  isFeatured: boolean;
-}
+export { mapPackage, formatPrice };
+export type { Difficulty, TravelPackage, RawListPackage };
 
 export interface CategoryOption {
   value: string;
@@ -43,17 +35,10 @@ export interface Filters {
 
 /* ============================ Constants ============================= */
 
-export const PRICE_FLOOR = 5000;
-// INR ceiling that comfortably covers the catalogue; the slider filters within this range.
-export const PRICE_CEIL = 100000;
+export const PRICE_FLOOR = 0;
+export const PRICE_CEIL = 500000;
 
 export const DIFFICULTIES: Difficulty[] = ['Easy', 'Moderate', 'Challenging'];
-
-const DIFFICULTY_MAP: Record<string, Difficulty> = {
-  easy: 'Easy',
-  moderate: 'Moderate',
-  hard: 'Challenging',
-};
 
 export const DURATION_RANGES: Record<string, { label: string; min: number; max: number }> = {
   any: { label: 'Any', min: 0, max: Infinity },
@@ -97,62 +82,24 @@ export const DEFAULT_FILTERS: Filters = {
   sort: 'best-match',
 };
 
-/* ============================== Mapping ============================== */
-
-/** Loosely-typed shape of a published-package row (the Supabase client is untyped). */
-interface RawListPackage {
-  id: string;
-  title: string;
-  slug: string;
-  short_description?: string | null;
-  price_adult?: number | string | null;
-  duration_days?: number | null;
-  difficulty_level?: string | null;
-  destination_name?: string | null;
-  view_count?: number | null;
-  is_featured?: boolean | null;
-  created_at?: string | null;
-  package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
-  package_categories?: { categories: { name: string; slug: string } | null }[] | null;
-  reviews?: { rating: number; is_approved: boolean | null }[] | null;
-}
-
-function mapPackage(row: RawListPackage): TravelPackage {
-  const gallery = row.package_gallery ?? [];
-  const cover = gallery.find((g) => g.is_cover) ?? gallery[0];
-  const categories = (row.package_categories ?? [])
-    .map((pc) => pc.categories?.name)
-    .filter((name): name is string => Boolean(name));
-  const price = row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
-
-  // Calculate average rating
-  const approvedReviews = (row.reviews ?? []).filter((r) => r.is_approved === true);
-  const totalRating = approvedReviews.reduce((sum, r) => sum + r.rating, 0);
-  const rating = approvedReviews.length > 0 ? totalRating / approvedReviews.length : 0;
-
-  return {
-    id: row.id,
-    name: row.title,
-    slug: row.slug,
-    description: row.short_description ?? '',
-    categories,
-    price: Number.isNaN(price) ? 0 : price,
-    durationDays: row.duration_days ?? 0,
-    difficulty: row.difficulty_level ? DIFFICULTY_MAP[row.difficulty_level] ?? null : null,
-    rating,
-    popularity: row.view_count ?? 0,
-    image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
-    location: row.destination_name ?? '',
-    createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
-    isFeatured: !!row.is_featured,
-  };
-}
-
 /* ============================== Helpers ============================== */
 
 export function parseListParam(value: string | null): string[] {
   if (!value) return [];
   return value.split(',').filter(Boolean);
+}
+
+/** Parse a numeric URL param, clamping to [min, max] and falling back when invalid. */
+export function clampParam(value: string | null, fallback: number, min: number, max: number): number {
+  if (value === null || value === '') return fallback;
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
+}
+
+/** Keep a URL param only when it's a known key of `allowed`, else fall back. */
+export function sanitizeKey(value: string | null, allowed: Record<string, unknown>, fallback: string): string {
+  return value && Object.prototype.hasOwnProperty.call(allowed, value) ? value : fallback;
 }
 
 export function filtersToSearchParams(filters: Filters): URLSearchParams {
@@ -172,10 +119,10 @@ export function searchParamsToFilters(params: URLSearchParams): Filters {
     search: params.get('q') ?? '',
     categories: parseListParam(params.get('category')),
     difficulty: parseListParam(params.get('difficulty')) as Difficulty[],
-    priceMin: Number(params.get('price_min') ?? PRICE_FLOOR),
-    priceMax: Number(params.get('price_max') ?? PRICE_CEIL),
-    duration: params.get('duration') ?? 'any',
-    sort: params.get('sort') ?? DEFAULT_FILTERS.sort,
+    priceMin: clampParam(params.get('price_min'), PRICE_FLOOR, PRICE_FLOOR, PRICE_CEIL),
+    priceMax: clampParam(params.get('price_max'), PRICE_CEIL, PRICE_FLOOR, PRICE_CEIL),
+    duration: sanitizeKey(params.get('duration'), DURATION_RANGES, 'any'),
+    sort: sanitizeKey(params.get('sort'), SORT_OPTIONS, DEFAULT_FILTERS.sort),
   };
 }
 
@@ -187,10 +134,6 @@ export function countActiveFilters(filters: Filters): number {
   if (filters.priceMin !== PRICE_FLOOR || filters.priceMax !== PRICE_CEIL) count += 1;
   if (filters.duration !== 'any') count += 1;
   return count;
-}
-
-export function formatPrice(value: number): string {
-  return `₹${value.toLocaleString('en-IN')}`;
 }
 
 /* =============================== Hook ================================ */
@@ -212,7 +155,7 @@ export function usePackageFilters() {
   const debouncedSearch = useDebouncedValue(searchInput, 350);
 
   // ---- Fetch real published packages ----
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ['packages', 'published', 'list'],
     queryFn: () => getPublishedPackages(),
     staleTime: 5 * 60 * 1000,
@@ -239,22 +182,21 @@ export function usePackageFilters() {
     }));
   }, [dbCategoriesData, categoriesError]);
 
-  // ---- Hydrate filters from the URL on mount ----
+  const searchParams = useSearchParams();
+  const didHydrate = useRef(false);
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const initial = searchParamsToFilters(params);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from the URL
+    if (didHydrate.current) return;
+    didHydrate.current = true;
+    const initial = searchParamsToFilters(new URLSearchParams(searchParams.toString()));
     setFilters(initial);
     setSearchInput(initial.search);
     setHydrated(true);
     window.scrollTo(0, 0);
-  }, []);
+  }, [searchParams]);
 
   // ---- Push debounced search text into filters ----
   useEffect(() => {
     if (!hydrated) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- push debounced search into filters
     setFilters((prev) => (prev.search === debouncedSearch ? prev : { ...prev, search: debouncedSearch }));
   }, [debouncedSearch, hydrated]);
 
@@ -264,7 +206,11 @@ export function usePackageFilters() {
     const params = filtersToSearchParams(filters);
     const query = params.toString();
     const newUrl = `${window.location.pathname}${query ? `?${query}` : ''}`;
-    window.history.replaceState(null, '', newUrl);
+    // Only write when the URL actually changes — avoids redundant history churn
+    // (and any feedback into search-param-driven effects).
+    if (newUrl !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(null, '', newUrl);
+    }
   }, [filters, hydrated]);
 
   /* ------------------------------ Derived ------------------------------ */
@@ -280,8 +226,8 @@ export function usePackageFilters() {
       }
       if (filters.categories.length && !pkg.categories.some((c) => filters.categories.includes(c))) return false;
       if (filters.difficulty.length && (!pkg.difficulty || !filters.difficulty.includes(pkg.difficulty))) return false;
-      // "On request" packages (price 0) are exempt from the price-range filter so they always surface.
-      if (pkg.price !== 0 && (pkg.price < filters.priceMin || pkg.price > filters.priceMax)) return false;
+      // "On request" packages (price 0) have no real price — don't drop them on a price filter.
+      if (pkg.price > 0 && (pkg.price < filters.priceMin || pkg.price > filters.priceMax)) return false;
       if (pkg.durationDays < range.min || pkg.durationDays > range.max) return false;
       return true;
     });
@@ -342,6 +288,8 @@ export function usePackageFilters() {
     searchInput,
     setSearchInput,
     loading: isPending || !hydrated,
+    error: isError,
+    refetch,
     hydrated,
     sortedPackages,
     totalCount: packages.length,

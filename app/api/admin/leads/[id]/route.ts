@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
-import { updateLeadStatus, deleteLead } from '@/lib/api/leads';
+import { updateLeadStatus, deleteLead } from '@/lib/api/admin/leads';
 import { toApiError } from '@/lib/api/errors';
 
 type RouteParams = { params: Promise<{ id: string }> };

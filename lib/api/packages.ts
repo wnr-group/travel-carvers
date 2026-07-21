@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import type { AdminPackage, PackageCategoryRef, PackageStatus } from '@/lib/types/package';
+import { MONTHS } from '@/lib/validations/package.schema';
 import type {
   PackageFilters,
   PackageFormInput,
@@ -469,7 +470,6 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
     meta_title: pkg.meta_title ?? '',
     meta_description: pkg.meta_description ?? '',
     meta_keywords: pkg.meta_keywords ?? '',
-    // undefined, never '' — og_image is validated with .url(), which rejects an empty string.
     og_image: pkg.og_image ?? undefined,
 
     category_ids: categories.map((row) => row.category_id as string),
@@ -533,8 +533,8 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
     }),
 
     best_time_to_visit: seasons.map((season) => ({
-      month_start: (season.month_start as string) ?? '',
-      month_end: (season.month_end as string) ?? '',
+      month_start: toMonth(season.month_start, 'January'),
+      month_end: toMonth(season.month_end, 'December'),
       description: (season.description as string) ?? '',
       weather_condition: (season.weather_condition as string) ?? '',
     })),
@@ -549,6 +549,12 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
 }
 
 const DEFAULT_HOTEL_RATING = 3;
+
+type Month = (typeof MONTHS)[number];
+
+function toMonth(value: unknown, fallback: Month): Month {
+  return MONTHS.includes(value as Month) ? (value as Month) : fallback;
+}
 
 async function snapshotRelations(packageId: string): Promise<RelationSnapshot> {
   const snapshot: RelationSnapshot = {};

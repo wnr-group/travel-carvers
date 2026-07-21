@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
-import { approveReview, rejectReview, deleteReview } from '@/lib/api/reviews';
+import { approveReview, rejectReview, deleteReview } from '@/lib/api/admin/reviews';
 import { toApiError } from '@/lib/api/errors';
 
 type RouteParams = { params: Promise<{ id: string }> };

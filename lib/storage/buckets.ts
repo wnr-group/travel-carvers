@@ -8,6 +8,7 @@ export const UPLOAD_BUCKETS = [
   'itinerary-images',
   'hotel-images',
   'testimonial-images',
+  'destination-images',
 ] as const
 
 export type UploadBucket = (typeof UPLOAD_BUCKETS)[number]

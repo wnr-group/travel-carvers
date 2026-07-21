@@ -2,22 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, Package, FolderTree, Mail, 
+import {
+  LayoutDashboard, Package, FolderTree, Mail,
   Settings, Home, MessageSquare, X,
-  Award, Quote
+  Award, BarChart3, MapPin
 } from 'lucide-react';
 import LogoutButton from '@/app/(admin)/admin/dashboard/LogoutButton';
+import { Quote } from 'lucide-react';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/packages', label: 'Packages', icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree },
+  { href: '/admin/destinations', label: 'Destinations', icon: MapPin },
   { href: '/admin/leads', label: 'Leads', icon: Mail },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare },
   { href: '/admin/testimonials', label: 'Testimonials', icon: Quote },
   { href: '/admin/trust-badges', label: 'Trust Badges', icon: Award },
   { href: '/admin/homepage', label: 'Homepage', icon: Home },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
