@@ -123,16 +123,25 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
   if (isSuccess) {
     return (
-      <div role="status" className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in zoom-in duration-500">
-        <div className="w-20 h-20 bg-brand-lightest rounded-full flex items-center justify-center mb-6 shadow-inner animate-bounce">
-          <svg aria-hidden="true" className="w-10 h-10 text-brand-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div role="status" className="flex flex-col items-center justify-center py-10 px-6 text-center animate-in fade-in zoom-in duration-300">
+        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-5 shadow-sm border border-emerald-200">
+          <svg aria-hidden="true" className="w-8 h-8 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-3xl font-extrabold text-brand-darkest mb-2 tracking-tight">Inquiry Received!</h3>
-        <p className="text-brand-medium text-base max-w-sm">
-          Your travel request is locked in. Our travel specialists will customize your experience and reach out in 24 hours.
+        <h3 className="font-display text-2xl font-bold text-brand-darkest mb-2 tracking-tight">
+          Inquiry Received!
+        </h3>
+        <p className="text-slate-600 text-sm max-w-sm leading-relaxed mb-6">
+          Your travel request is confirmed. Our specialists will customize your experience and get back to you within 24 hours.
         </p>
+        <button
+          type="button"
+          onClick={() => onSuccess?.()}
+          className="rounded-full bg-brand-dark px-8 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-darkest hover:shadow-md cursor-pointer"
+        >
+          Close
+        </button>
       </div>
     );
   }
@@ -140,11 +149,13 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {/* Header */}
-      <div className="border-b border-brand-lightest pb-4">
-        <h2 className="text-brand-darkest text-3xl font-extrabold tracking-tight mb-1">
+      <div className="border-b border-brand-light/70 pb-4">
+        <h2 className="text-brand-darkest font-display text-2xl font-semibold tracking-tight uppercase">
           Craft Your Journey
         </h2>
-        <p className="text-brand-medium text-sm">Fill in your preferences, and let our experts handle the rest.</p>
+        <p className="text-slate-600 text-sm font-normal mt-1">
+          Fill in your preferences, and let our experts handle the rest.
+        </p>
       </div>
 
       {errors.submit && (
@@ -413,7 +424,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       <button
         type="submit"
         disabled={createLead.isPending}
-        className="w-full bg-gradient-brand-dark text-white py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex justify-center items-center gap-2 cursor-pointer shadow-lg"
+        className="w-full rounded-full bg-brand-dark py-3.5 px-6 text-base font-semibold text-white shadow-sm transition-all duration-300 hover:bg-brand-darkest hover:shadow-md active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none flex justify-center items-center gap-2 cursor-pointer group"
       >
         {createLead.isPending ? (
           <>
@@ -425,17 +436,10 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
           </>
         ) : (
           <>
-            Send Inquiry <ChevronRight aria-hidden="true" className="w-5 h-5" />
+            Send Inquiry <ChevronRight aria-hidden="true" className="w-5 h-5 transition-transform group-hover:translate-x-0.5" />
           </>
         )}
       </button>
-
-      <p className="text-[10px] text-brand-medium text-center flex items-center justify-center gap-1.5 opacity-80">
-        <svg className="w-4 h-4 text-brand-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-        Secure & Confidentially Handled in Accordance with Privacy Rules
-      </p>
     </form>
   );
 }
