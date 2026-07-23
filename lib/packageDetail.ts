@@ -260,16 +260,18 @@ export function formatReviewDate(iso: string): string {
   return date.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
 }
 
-export function toReviewVM(review: RawReview): ReviewVM {
+/** Map a raw DB review row to the review view model used by the UI. */
+export function toReviewVM(r: RawReview): ReviewVM {
   return {
-    name: review.reviewer_name,
-    rating: review.rating,
-    date: formatReviewDate(review.created_at),
-    text: review.review_text,
-    images: (review.review_photos ?? []).map((p) => p.image_url).filter(Boolean),
+    name: r.reviewer_name,
+    rating: r.rating,
+    date: formatReviewDate(r.created_at),
+    text: r.review_text,
+    images: r.review_photos?.map((p) => p.image_url) ?? [],
   };
 }
 
+/** Meal booleans on an itinerary day, in the order the admin editor lists them. */
 const MEAL_LABELS: { key: 'breakfast' | 'lunch' | 'dinner'; label: string }[] = [
   { key: 'breakfast', label: 'Breakfast' },
   { key: 'lunch', label: 'Lunch' },

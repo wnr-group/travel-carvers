@@ -176,6 +176,10 @@ export async function getSimilarPackages(
         image_url,
         is_cover
       ),
+      reviews (
+        rating,
+        is_approved
+      ),
       package_categories!inner (
         category_id,
         categories (
@@ -294,6 +298,10 @@ export async function getPackagesByCategory(categoryId: string) {
       package_gallery (
         image_url,
         is_cover
+      ),
+      reviews (
+        rating,
+        is_approved
       ),
       package_categories!inner (
         category_id

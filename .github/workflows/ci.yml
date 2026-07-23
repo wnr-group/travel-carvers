@@ -1,0 +1,52 @@
+name: CI
+
+# Type-check and production build on every PR to main (and pushes to main).
+# This is the gate that catches the class of breakages that reached main before:
+# type errors, missing imports, corrupted files, and invalid JSX — all of which
+# `tsc` / `next build` fail on, but `next dev` silently ignores.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: type-check & build
+    runs-on: ubuntu-latest
+
+    # Placeholder values so module-load and `next build` don't fail on missing
+    # env. No real database is contacted during the build: customer pages fetch
+    # at runtime, and sitemap.ts uses Promise.allSettled so build-time fetches
+    # degrade gracefully. (Verified: `next build` against a placeholder Supabase
+    # URL succeeds with no fetch errors.)
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key-placeholder-service-role-key-placeholder-1234567890
+      NEXT_PUBLIC_SITE_URL: https://example.com
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build

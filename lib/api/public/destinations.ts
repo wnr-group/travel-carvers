@@ -122,6 +122,10 @@ export async function getPublishedPackagesByDestination(
           image_url,
           is_cover
         ),
+        reviews (
+          rating,
+          is_approved
+        ),
         package_categories (
           categories (
             name,
@@ -131,7 +135,6 @@ export async function getPublishedPackagesByDestination(
       )
     `)
     .eq('destination_id', destinationId)
-    .order('created_at', { referencedTable: 'packages', ascending: false })
     .overrideTypes<LinkedPackageRow[], { merge: false }>();
 
   if (error) throw error;

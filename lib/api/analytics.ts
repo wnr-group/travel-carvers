@@ -74,7 +74,11 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
       .from('leads')
       .select('created_at, status, packages ( title )')
       .overrideTypes<LeadRow[], { merge: false }>(),
-    supabaseAdmin.from('reviews').select('rating').overrideTypes<ReviewRow[], { merge: false }>(),
+    supabaseAdmin
+      .from('reviews')
+      .select('rating')
+      .eq('is_approved', true)
+      .overrideTypes<ReviewRow[], { merge: false }>(),
   ]);
 
   if (leadsRes.error) throw leadsRes.error;

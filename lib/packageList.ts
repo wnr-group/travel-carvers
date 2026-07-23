@@ -18,7 +18,7 @@ export interface TravelPackage {
   image: string;
   location: string;
   createdAt: number; // epoch ms, for "newest" ordering
-  isFeatured: boolean; // drives the "Best Match" ordering
+  isFeatured: boolean; // admin-flagged; floats to the top of "best match"
   isSoldOut: boolean;
   groupSize: string | null;
 }
@@ -47,6 +47,7 @@ export interface RawListPackage {
   status?: string | null;
   view_count?: number | null;
   created_at?: string | null;
+  reviews?: { rating: number | null; is_approved: boolean | null }[] | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
   package_categories?: { categories: { name: string; slug: string } | null }[] | null;
 }
@@ -73,6 +74,15 @@ export function mapPackage(row: RawListPackage): TravelPackage {
   const price =
     priceHidden || row.price_adult == null || row.price_adult === '' ? 0 : Number(row.price_adult);
 
+  // Average rating over *approved* reviews only (mirrors toPackageDetail); 0 = no reviews yet.
+  const approvedRatings = (row.reviews ?? [])
+    .filter((r) => r.is_approved === true && r.rating != null)
+    .map((r) => r.rating as number);
+  const rating =
+    approvedRatings.length > 0
+      ? Math.round((approvedRatings.reduce((sum, r) => sum + r, 0) / approvedRatings.length) * 10) / 10
+      : 0;
+
   return {
     id: row.id,
     name: row.title,
@@ -82,7 +92,7 @@ export function mapPackage(row: RawListPackage): TravelPackage {
     price: Number.isNaN(price) ? 0 : price,
     durationDays: row.duration_days ?? 0,
     difficulty: row.difficulty_level ? DIFFICULTY_MAP[row.difficulty_level] ?? null : null,
-    rating: 0,
+    rating,
     popularity: row.view_count ?? 0,
     image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
     location: row.destination_name ?? '',
