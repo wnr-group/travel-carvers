@@ -144,13 +144,19 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
 
     if (!result.success) {
       const errors: Record<string, string> = {};
+      const RENDERED = new Set(['rating', 'reviewer_name', 'reviewer_email', 'review_text']);
+
       result.error.issues.forEach((err) => {
-        if (err.path[0]) {
-          errors[err.path[0] as string] = err.message;
+        const field = err.path[0] as string | undefined;
+        if (field && RENDERED.has(field)) {
+          errors[field] = err.message;
+        } else {
+          errors.submit = err.message;
         }
       });
+
       if (rating === 0) {
-        errors.rating = 'Please select a rating between 1 and 5 stars';
+        errors.rating = 'Please select a rating between 1 and 5 stars.';
       }
       setValidationErrors(errors);
       return;
@@ -395,13 +401,18 @@ export function ReviewForm({ packageId, onSuccess }: ReviewFormProps) {
             {validationErrors.photo}
           </p>
         )}
-        {validationErrors.submit && (
-          <p className="mt-1 flex items-center gap-1 text-xs text-rose-600">
-            <AlertCircle className="h-3.5 w-3.5" />
-            {validationErrors.submit}
-          </p>
-        )}
       </div>
+
+      {/* Form-level error, next to the button that triggered it. */}
+      {validationErrors.submit && (
+        <p
+          role="alert"
+          className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700"
+        >
+          <AlertCircle aria-hidden="true" className="h-4 w-4 shrink-0" />
+          {validationErrors.submit}
+        </p>
+      )}
 
       {/* Submit Button */}
       <button

@@ -9,14 +9,13 @@ import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import PackageForm from '@/components/admin/PackageForm/PackageForm';
 import { fetchJson } from '@/lib/api/fetchJson';
 import { useAdminPackage } from '@/lib/hooks/useAdminPackage';
-import { ADMIN_PACKAGES_KEY } from '@/lib/queryKeys';
+import { ADMIN_DESTINATIONS_KEY, ADMIN_PACKAGES_KEY } from '@/lib/queryKeys';
 import { packagePath } from '@/lib/utils';
 import type { PackageFormOutput } from '@/lib/validations/package.schema';
 
 export default function EditPackagePage({
   params,
 }: {
-  // Route params are a promise in Next 16; `use()` unwraps it in a client component.
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
@@ -37,6 +36,9 @@ export default function EditPackagePage({
       toast.success('Package updated');
 
       queryClient.invalidateQueries({ queryKey: ADMIN_PACKAGES_KEY });
+      // Saving can create a destination, so the picker list and the map pins are stale.
+      queryClient.invalidateQueries({ queryKey: ADMIN_DESTINATIONS_KEY });
+      queryClient.invalidateQueries({ queryKey: ['destinations'] });
 
       router.push('/admin/packages');
     },

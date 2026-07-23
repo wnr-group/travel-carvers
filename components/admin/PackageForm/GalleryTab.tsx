@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Reorder, useDragControls } from 'framer-motion';
 import { useController, useFormContext } from 'react-hook-form';
 import { GripVertical, ImageOff, Pencil, Star, Trash2, Video } from 'lucide-react';
@@ -137,7 +138,7 @@ function GalleryRow({
       </span>
 
       <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded bg-gray-100">
-        <img src={image.url} alt="" className="h-full w-full object-cover" />
+        <Image src={image.url} alt="" fill sizes="96px" className="object-cover" />
       </div>
 
       {image.is_cover && (

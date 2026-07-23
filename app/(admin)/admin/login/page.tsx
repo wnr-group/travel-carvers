@@ -18,14 +18,18 @@ export default function AdminLoginPage() {
 
       if (result.success) {
         toast.success('Login successful!')
-        router.push('/admin/dashboard') 
-      } else {
-        toast.error(result.error || 'Login failed')
+        // `replace`, so Back does not return to the login screen of an active session.
+        router.replace('/admin/dashboard')
+        // Deliberately stays loading: the navigation is still in flight, and re-enabling
+        // the button here makes the form look idle while the dashboard is loading.
+        return
       }
+
+      toast.error(result.error || 'Login failed')
+      setIsLoading(false)
     } catch (e) {
       toast.error('An error occurred. Please try again.')
       console.error(e)
-    } finally {
       setIsLoading(false)
     }
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import { ImageOff, Loader2, UploadCloud, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -198,7 +199,7 @@ export default function ImageUploader({
               key={url}
               className="group relative aspect-square overflow-hidden rounded-lg border bg-gray-100"
             >
-              <img src={url} alt="" className="h-full w-full object-cover" />
+              <Image src={url} alt="" fill sizes="200px" className="object-cover" />
 
               <button
                 type="button"
@@ -217,6 +218,9 @@ export default function ImageUploader({
               key={upload.id}
               className="relative aspect-square overflow-hidden rounded-lg border bg-gray-100"
             >
+              {/* A local `blob:` object URL for the in-flight upload — next/image cannot
+                  optimize those, so this one stays a plain <img>. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={upload.previewUrl}
                 alt=""

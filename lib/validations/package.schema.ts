@@ -180,9 +180,36 @@ const packageObjectSchema = z.object({
 
   // Related data (arrays)
   category_ids: z
-    .array(z.uuid({ error: 'Category must be a valid id' }))
+    .array(z.guid({ error: 'Category must be a valid id' }))
     .min(1, 'Select at least one category'),
-  subcategory_ids: z.array(z.uuid({ error: 'Subcategory must be a valid id' })).optional(),
+  subcategory_ids: z.array(z.guid({ error: 'Subcategory must be a valid id' })).optional(),
+
+  //destination
+  destination_id: z.guid({ error: 'Destination must be a valid id' }).optional().nullable(),
+  new_destination: z
+    .object({
+      name: z
+        .string()
+        .trim()
+        .min(2, 'Destination name must be at least 2 characters')
+        .max(200, 'Destination name must be 200 characters or fewer'),
+      country: z
+        .string()
+        .trim()
+        .min(2, 'Country must be at least 2 characters')
+        .max(100, 'Country must be 100 characters or fewer'),
+      latitude: z
+        .number({ error: 'Latitude is required to pin this destination on the map' })
+        .min(-90, 'Latitude must be between -90 and 90')
+        .max(90, 'Latitude must be between -90 and 90'),
+      longitude: z
+        .number({ error: 'Longitude is required to pin this destination on the map' })
+        .min(-180, 'Longitude must be between -180 and 180')
+        .max(180, 'Longitude must be between -180 and 180'),
+    })
+    .optional()
+    .nullable(),
+
   gallery_images: z
     .array(
       z.object({
@@ -253,6 +280,14 @@ const packageObjectSchema = z.object({
         image_url: z.url({ error: 'Enter a valid image URL' }).optional(),
         check_in_date: optionalText(50),
         check_out_date: optionalText(50),
+        display_order: z.number().int().min(0),
+      })
+    )
+    .optional(),
+  highlights: z
+    .array(
+      z.object({
+        highlight: requiredText('Write the highlight, or remove this row', 500),
         display_order: z.number().int().min(0),
       })
     )
@@ -382,12 +417,15 @@ export type PackageRelations = Pick<
   PackageFormOutput,
   | 'category_ids'
   | 'subcategory_ids'
+  | 'destination_id'
+  | 'new_destination'
   | 'gallery_images'
   | 'video_urls'
   | 'itinerary_days'
   | 'inclusions'
   | 'exclusions'
   | 'stay_details'
+  | 'highlights'
   | 'travel_tips'
   | 'best_time_to_visit'
   | 'places_to_visit'
@@ -399,12 +437,15 @@ export type PackageRecordInput = Omit<
   PackageFormData,
   | 'category_ids'
   | 'subcategory_ids'
+  | 'destination_id'
+  | 'new_destination'
   | 'gallery_images'
   | 'video_urls'
   | 'itinerary_days'
   | 'inclusions'
   | 'exclusions'
   | 'stay_details'
+  | 'highlights'
   | 'travel_tips'
   | 'best_time_to_visit'
   | 'places_to_visit'
@@ -418,7 +459,7 @@ export type PackageRecordInput = Omit<
 export const packageFiltersSchema = z.object({
   status: z.enum(['draft', 'published', 'archived', 'sold_out']).optional(),
   search: z.string().trim().max(100).optional(),
-  category: z.uuid({ error: 'Category must be a valid id' }).optional(),
+  category: z.guid({ error: 'Category must be a valid id' }).optional(),
 });
 
 export type PackageFilters = z.output<typeof packageFiltersSchema>;

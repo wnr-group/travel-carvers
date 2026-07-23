@@ -5,7 +5,7 @@ import { Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateAdminLead } from '@/lib/hooks/useAdminLeads';
 import { useAdminPackages } from '@/lib/hooks/useAdminPackages';
-import { LEAD_STATUSES } from '@/lib/validations/lead.schema';
+import { LEAD_STATUSES, adminLeadSchema } from '@/lib/validations/lead.schema';
 
 const INPUT =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-medium';
@@ -33,12 +33,13 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
   const createMutation = useCreateAdminLead();
   const packagesQuery = useAdminPackages({});
   const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
 
-    firstFieldRef.current?.focus();
+    firstFieldRef.current?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
@@ -52,29 +53,59 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
 
   if (!open) return null;
 
-  const set = <K extends keyof typeof EMPTY>(key: K, value: (typeof EMPTY)[K]) =>
+  const set = <K extends keyof typeof EMPTY>(key: K, value: (typeof EMPTY)[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
+    // Clear a field's error as soon as the admin starts correcting it.
+    setErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setErrors({});
+
+    const payload = {
+      ...form,
+      message: form.message.trim() || undefined,
+      package_id: form.package_id || undefined,
+      travel_start_date: form.travel_start_date || undefined,
+      travel_end_date: form.travel_end_date || undefined,
+    };
+
+    const parsed = adminLeadSchema.safeParse(payload);
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const field = issue.path[0] as string | undefined;
+        if (field && !fieldErrors[field]) fieldErrors[field] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast.error('Please fix the highlighted fields.');
+      return;
+    }
 
     try {
-      await createMutation.mutateAsync({
-        ...form,
-        // The server turns blank optionals into NULLs; sending '' would fail validation.
-        message: form.message.trim() || undefined,
-        package_id: form.package_id || undefined,
-        travel_start_date: form.travel_start_date || undefined,
-        travel_end_date: form.travel_end_date || undefined,
-      });
+      await createMutation.mutateAsync(payload);
 
       toast.success(`Lead added for ${form.name.trim()}`);
       setForm(EMPTY);
+      setErrors({});
       onClose();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Could not add this lead');
     }
   };
+
+  const fieldError = (key: string) =>
+    errors[key] ? (
+      <p role="alert" className="mt-1 text-xs font-medium text-rose-600">
+        {errors[key]}
+      </p>
+    ) : null;
 
   const packages = packagesQuery.data ?? [];
 
@@ -121,8 +152,10 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
                 maxLength={100}
                 value={form.name}
                 onChange={(event) => set('name', event.target.value)}
+                aria-invalid={errors.name ? true : undefined}
                 className={INPUT}
               />
+              {fieldError('name')}
             </div>
 
             <div>
@@ -136,8 +169,10 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
                 maxLength={20}
                 value={form.phone}
                 onChange={(event) => set('phone', event.target.value)}
+                aria-invalid={errors.phone ? true : undefined}
                 className={INPUT}
               />
+              {fieldError('phone')}
             </div>
           </div>
 
@@ -152,8 +187,10 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
               maxLength={100}
               value={form.email}
               onChange={(event) => set('email', event.target.value)}
+              aria-invalid={errors.email ? true : undefined}
               className={INPUT}
             />
+            {fieldError('email')}
           </div>
 
           <div>
@@ -164,6 +201,7 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
               id="lead-package"
               value={form.package_id}
               onChange={(event) => set('package_id', event.target.value)}
+              aria-invalid={errors.package_id ? true : undefined}
               className={INPUT}
             >
               <option value="">No specific package</option>
@@ -173,6 +211,7 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
                 </option>
               ))}
             </select>
+            {fieldError('package_id')}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -194,8 +233,10 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
                   max={99}
                   value={form[key]}
                   onChange={(event) => set(key, Number(event.target.value))}
+                  aria-invalid={errors[key] ? true : undefined}
                   className={INPUT}
                 />
+                {fieldError(key)}
               </div>
             ))}
           </div>
@@ -224,8 +265,10 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
                 min={form.travel_start_date || undefined}
                 value={form.travel_end_date}
                 onChange={(event) => set('travel_end_date', event.target.value)}
+                aria-invalid={errors.travel_end_date ? true : undefined}
                 className={INPUT}
               />
+              {fieldError('travel_end_date')}
             </div>
           </div>
 

@@ -6,10 +6,13 @@ import { getPublicTrustBadges } from '@/lib/api/public/trustBadges';
 
 export const TRUST_BADGES_KEY = ['trust-badges'] as const;
 
+export type TrustBadgeType = 'stat' | 'text';
+
 export interface TrustBadge {
   id: string;
   text: string;
   icon: string;
+  badge_type: TrustBadgeType;
   display_order: number;
   created_at: string;
 }

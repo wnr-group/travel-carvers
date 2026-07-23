@@ -31,6 +31,12 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
   
   const [errors, setErrors] = useState<Record<string, string | string[] | undefined>>({});
 
+  const errorFor = (field: string): string | null => {
+    const value = errors[field];
+    if (!value) return null;
+    return Array.isArray(value) ? value[0] ?? null : value;
+  };
+
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setErrors({});
@@ -119,9 +125,9 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
         <p className="text-brand-medium text-sm">Fill in your preferences, and let our experts handle the rest.</p>
       </div>
 
-      {errors.submit && (
+      {errorFor('submit') && (
         <div role="alert" className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-semibold">
-          {errors.submit}
+          {errorFor('submit')}
         </div>
       )}
 
@@ -164,11 +170,11 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 placeholder="Enter your full name"
                 required
                 aria-required="true"
-                aria-invalid={errors.name ? true : undefined}
-                aria-describedby={errors.name ? 'lead-name-error' : undefined}
+                aria-invalid={errorFor('name') ? true : undefined}
+                aria-describedby={errorFor('name') ? 'lead-name-error' : undefined}
               />
             </div>
-            {errors.name && <p id="lead-name-error" className="text-red-500 text-xs mt-1 ml-1">{errors.name}</p>}
+            {errorFor('name') && <p id="lead-name-error" className="text-red-500 text-xs mt-1 ml-1">{errorFor('name')}</p>}
           </div>
 
           <div>
@@ -188,11 +194,11 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 placeholder="name@domain.com"
                 required
                 aria-required="true"
-                aria-invalid={errors.email ? true : undefined}
-                aria-describedby={errors.email ? 'lead-email-error' : undefined}
+                aria-invalid={errorFor('email') ? true : undefined}
+                aria-describedby={errorFor('email') ? 'lead-email-error' : undefined}
               />
             </div>
-            {errors.email && <p id="lead-email-error" className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
+            {errorFor('email') && <p id="lead-email-error" className="text-red-500 text-xs mt-1 ml-1">{errorFor('email')}</p>}
           </div>
 
           <div>
@@ -212,11 +218,11 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 placeholder="+91 XXXXX XXXXX"
                 required
                 aria-required="true"
-                aria-invalid={errors.phone ? true : undefined}
-                aria-describedby={errors.phone ? 'lead-phone-error' : undefined}
+                aria-invalid={errorFor('phone') ? true : undefined}
+                aria-describedby={errorFor('phone') ? 'lead-phone-error' : undefined}
               />
             </div>
-            {errors.phone && <p id="lead-phone-error" className="text-red-500 text-xs mt-1 ml-1">{errors.phone}</p>}
+            {errorFor('phone') && <p id="lead-phone-error" className="text-red-500 text-xs mt-1 ml-1">{errorFor('phone')}</p>}
           </div>
         </div>
       </div>
@@ -244,8 +250,16 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 className={inputClasses}
                 required
                 aria-required="true"
+                min={new Date().toISOString().slice(0, 10)}
+                aria-invalid={errorFor('travel_start_date') ? true : undefined}
+                aria-describedby={errorFor('travel_start_date') ? 'lead-start-error' : undefined}
               />
             </div>
+            {errorFor('travel_start_date') && (
+              <p id="lead-start-error" className="text-red-500 text-xs mt-1 ml-1">
+                {errorFor('travel_start_date')}
+              </p>
+            )}
           </div>
 
           <div>
@@ -262,8 +276,16 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 value={formData.travel_end_date}
                 onChange={(e) => setFormData({ ...formData, travel_end_date: e.target.value })}
                 className={inputClasses}
+                min={formData.travel_start_date || undefined}
+                aria-invalid={errorFor('travel_end_date') ? true : undefined}
+                aria-describedby={errorFor('travel_end_date') ? 'lead-end-error' : undefined}
               />
             </div>
+            {errorFor('travel_end_date') && (
+              <p id="lead-end-error" className="text-red-500 text-xs mt-1 ml-1">
+                {errorFor('travel_end_date')}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -375,7 +397,12 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
           rows={3}
           className="w-full px-4 py-3 bg-[var(--background)] border border-brand-medium rounded-xl focus:outline-none focus:ring-4 focus:ring-brand-lightest/40 focus:border-brand-dark transition-all duration-300 text-brand-darkest placeholder-brand-medium/50 shadow-sm text-sm resize-none"
           placeholder="Specify room preferences, dietary requirements, or flight timings if any..."
+          maxLength={2000}
+          aria-invalid={errorFor('message') ? true : undefined}
         />
+        {errorFor('message') && (
+          <p className="text-red-500 text-xs mt-1 ml-1">{errorFor('message')}</p>
+        )}
       </div>
 
       {/* Submit Button */}

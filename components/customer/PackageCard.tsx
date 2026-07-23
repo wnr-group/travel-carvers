@@ -28,8 +28,10 @@ export function PackageCard({ pkg }: PackageCardProps) {
   const category = pkg.categories[0];
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)] transition hover:-translate-y-1 hover:shadow-lg">
-      <div className="relative h-44 w-full overflow-hidden">
+    // `h-full` + column flex so every card in a grid or rail matches its tallest sibling
+    // instead of shrink-wrapping its own text.
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)] transition hover:-translate-y-1 hover:shadow-lg">
+      <div className="relative h-44 w-full shrink-0 overflow-hidden">
         <Image
           src={pkg.image}
           alt={pkg.name}
@@ -67,13 +69,16 @@ export function PackageCard({ pkg }: PackageCardProps) {
         )}
       </div>
 
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <div className="mb-1 flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold leading-snug text-brand-darkest">{pkg.name}</h3>
+          {/* Fixed two-line box: titles of different lengths must not shift the rows below. */}
+          <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-brand-darkest">
+            {pkg.name}
+          </h3>
         </div>
-        <p className="mb-3 line-clamp-2 text-xs text-brand-medium">{pkg.description}</p>
+        <p className="mb-3 line-clamp-2 min-h-[2rem] text-xs text-brand-medium">{pkg.description}</p>
 
-        <div className="mb-3 flex items-center gap-3 text-xs text-brand-medium">
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-brand-medium">
           {pkg.durationDays > 0 && (
             <span className="flex items-center gap-1">
               <Clock3 className="h-3.5 w-3.5" />
@@ -94,7 +99,8 @@ export function PackageCard({ pkg }: PackageCardProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-brand-lightest pt-3">
+        {/* mt-auto pins the price/CTA row to the bottom of every card. */}
+        <div className="mt-auto flex items-center justify-between border-t border-brand-lightest pt-3">
           <div>
             {pkg.price > 0 ? (
               <>

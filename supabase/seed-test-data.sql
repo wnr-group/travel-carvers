@@ -305,6 +305,28 @@ INSERT INTO stay_details (package_id, hotel_name, location, rating, room_type, a
 -- =====================================================================
 --  TRAVEL TIPS (rendered as highlights)
 -- =====================================================================
+INSERT INTO package_highlights (package_id, highlight_text, display_order) VALUES
+ ('11111111-0000-0000-0000-000000000001','Sunset cruise along the Mandovi river.',0),
+ ('11111111-0000-0000-0000-000000000001','Two nights beachfront in North Goa.',1),
+ ('11111111-0000-0000-0000-000000000001','Guided walk through Old Goa''s heritage churches.',2),
+ ('11111111-0000-0000-0000-000000000002','Snow activities at Solang Valley.',0),
+ ('11111111-0000-0000-0000-000000000002','Drive through the Atal Tunnel to Sissu.',1),
+ ('11111111-0000-0000-0000-000000000002','Riverside stay on the banks of the Beas.',2),
+ ('11111111-0000-0000-0000-000000000003','Overnight on a private Alleppey houseboat.',0),
+ ('11111111-0000-0000-0000-000000000003','Kathakali and Kalaripayattu performance in Kochi.',1),
+ ('11111111-0000-0000-0000-000000000003','Tea garden walk in the Munnar hills.',2),
+ ('11111111-0000-0000-0000-000000000004','Stay in a restored heritage haveli.',0),
+ ('11111111-0000-0000-0000-000000000004','Sunrise at Amber Fort before the crowds.',1),
+ ('11111111-0000-0000-0000-000000000004','Camel ride across the Thar dunes at dusk.',2),
+ ('11111111-0000-0000-0000-000000000005','Snorkelling over the reefs at Elephant Beach.',0),
+ ('11111111-0000-0000-0000-000000000005','Sunset at Radhanagar, Asia''s top-rated beach.',1),
+ ('11111111-0000-0000-0000-000000000006','Drive over Khardung La, one of the world''s highest passes.',0),
+ ('11111111-0000-0000-0000-000000000006','Camp overnight beside Pangong Lake.',1),
+ ('11111111-0000-0000-0000-000000000007','Shikara ride on Dal Lake at first light.',0),
+ ('11111111-0000-0000-0000-000000000007','Gondola to Apharwat Peak in Gulmarg.',1),
+ ('11111111-0000-0000-0000-000000000008','Hike to the Tiger''s Nest monastery.',0),
+ ('11111111-0000-0000-0000-000000000008','Private audience with a monk in Punakha Dzong.',1);
+
 INSERT INTO travel_tips (package_id, tip_text, display_order) VALUES
  ('11111111-0000-0000-0000-000000000001','Carry light cotton clothes, sunscreen and flip-flops.',0),
  ('11111111-0000-0000-0000-000000000001','Rent a scooter to explore hidden beaches at your own pace.',1),

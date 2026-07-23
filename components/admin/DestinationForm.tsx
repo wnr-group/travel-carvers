@@ -1,9 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MapPin, Search, X } from 'lucide-react';
+import { toast } from 'sonner';
 import FieldError from '@/components/admin/FieldError';
 import ImageUploader from '@/components/admin/ImageUploader';
 import { useAdminPackages } from '@/lib/hooks/useAdminPackages';
@@ -42,6 +43,40 @@ const EMPTY_DESTINATION: DestinationFormInput = {
 const numberField = {
   setValueAs: (value: unknown) =>
     value === '' || value === null || value === undefined ? undefined : Number(value),
+};
+
+function errorMessage(error: unknown): string {
+  if (!error) return 'Please check this field.';
+
+  if (Array.isArray(error)) {
+    for (const item of error) {
+      const nested = errorMessage(item);
+      if (nested !== 'Please check this field.') return nested;
+    }
+    return 'One or more entries are invalid.';
+  }
+
+  const message = (error as { message?: unknown }).message;
+  return typeof message === 'string' && message ? message : 'Please check this field.';
+}
+
+/** Human labels for the toast, so "latitude" reads as "Latitude" and not a raw key. */
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Name',
+  country: 'Country',
+  city: 'City',
+  slug: 'Slug',
+  description: 'Description',
+  hero_image_url: 'Hero image',
+  latitude: 'Latitude',
+  longitude: 'Longitude',
+  timezone: 'Time zone',
+  currency: 'Currency',
+  languages: 'Languages',
+  meta_title: 'Meta title',
+  meta_description: 'Meta description',
+  og_image: 'OG image',
+  package_ids: 'Packages',
 };
 
 interface DestinationFormProps {
@@ -119,8 +154,23 @@ export default function DestinationForm({
   const hasCoordinates = typeof latitude === 'number' && !Number.isNaN(latitude) &&
     typeof longitude === 'number' && !Number.isNaN(longitude);
 
+
+  const handleInvalid = (formErrors: FieldErrors<DestinationFormInput>) => {
+    const [field, error] = Object.entries(formErrors)[0] ?? [];
+    const label = field ? FIELD_LABELS[field] ?? field : null;
+    const message = errorMessage(error);
+
+    toast.error(label ? `${label}: ${message}` : 'Please fix the highlighted fields.');
+
+    if (field) {
+      document
+        .getElementById(field)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, handleInvalid)} noValidate className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label htmlFor="name" className="mb-1 block text-sm font-medium text-brand-darkest">
@@ -447,6 +497,33 @@ export default function DestinationForm({
           </div>
         </div>
       </fieldset>
+
+      {Object.keys(errors).length > 0 && (
+        <div
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+        >
+          <p className="font-semibold">This destination could not be saved yet:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {Object.entries(errors).map(([field, error]) => (
+              <li key={field}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    document
+                      .getElementById(field)
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  }
+                  className="underline hover:no-underline"
+                >
+                  {FIELD_LABELS[field] ?? field}
+                </button>
+                {` — ${errorMessage(error)}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-200 pt-4">
         <button

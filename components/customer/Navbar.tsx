@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { Search, Sparkles } from 'lucide-react'
 import SearchModal from './SearchModal'
 import { useNavCategories } from '@/lib/hooks/useNavCategories'
+import { useMapOverlay } from './MapOverlayContext'
 
 const NAV_ITEMS = [
   { label: 'Home', href: '/' },
@@ -31,11 +32,14 @@ export default function Navbar() {
   const insertAt = packagesIndex === -1 ? NAV_ITEMS.length : packagesIndex + 1
   const navItems = [...NAV_ITEMS.slice(0, insertAt), ...categoryItems, ...NAV_ITEMS.slice(insertAt)]
 
+  const { isMapExpanded } = useMapOverlay()
+
   // Only the home page has a full-bleed hero for the bar to float over. Everywhere else a
   // transparent bar would be white-on-white, and `fixed` would hide the top of the page
   // under it — so those pages get a solid bar that occupies layout space.
+  // The expanded world map is the same white-on-white problem, so it forces solid too.
   const isOverHero = pathname === '/'
-  const isSolid = isScrolled || !isOverHero
+  const isSolid = isScrolled || !isOverHero || isMapExpanded
 
   /** Highlight the section, not just the exact URL, so /packages/<slug> still lights up. */
   const isActive = (href: string) =>
@@ -59,7 +63,7 @@ export default function Navbar() {
       } ${
         isSolid
           ? 'bg-brand-forest/95 backdrop-blur-md shadow-lg py-3'
-          : 'bg-transparent py-5'
+          : 'bg-brand-forest/30 backdrop-blur-md border-b border-white/10 py-3.5 shadow-sm'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,8 +77,8 @@ export default function Navbar() {
               className="h-11 w-11 rounded-full object-cover border-2 border-white/50 shadow-md"
             />
             <div>
-              <span className="block text-lg font-black text-white tracking-wide">Travel Carvers</span>
-              <p className="text-[11px] text-white/80 font-medium">Explore Your Next Adventure</p>
+              <span className="block text-lg font-black text-white tracking-wide drop-shadow-sm">Travel Carvers</span>
+              <p className="text-[11px] text-white/90 font-medium drop-shadow-sm">Explore Your Next Adventure</p>
             </div>
           </Link>
 
@@ -87,11 +91,11 @@ export default function Navbar() {
                   href={item.href}
                   className={`relative px-4 py-2 font-semibold text-sm transition-all duration-300 group ${
                     item.highlight 
-                      ? 'text-white bg-white/15 rounded-full border border-white/30 shadow-inner hover:bg-white/25' 
+                      ? 'text-white bg-white/15 rounded-full border border-white/35 shadow-inner hover:bg-white/25' 
                       : 'text-white hover:scale-105'
                   } ${active ? 'scale-105' : ''}`}
                 >
-                  <span className="relative z-10 flex items-center gap-1.5">
+                  <span className="relative z-10 flex items-center gap-1.5 drop-shadow-sm">
                     {item.highlight && <Sparkles className="w-3.5 h-3.5 text-brand-accent animate-pulse" />}
                     {item.label}
                   </span>
@@ -110,7 +114,7 @@ export default function Navbar() {
               className="p-2.5 text-white rounded-lg hover:bg-white/10 hover:scale-110 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Search packages, categories and destinations"
             >
-              <Search aria-hidden="true" className="w-5 h-5" />
+              <Search aria-hidden="true" className="w-5 h-5 drop-shadow-sm" />
             </button>
 
             <Link
@@ -207,4 +211,3 @@ export default function Navbar() {
     </nav>
   )
 }
-

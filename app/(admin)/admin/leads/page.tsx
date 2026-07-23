@@ -17,7 +17,8 @@ import {
   Copy,
   ChevronDown,
   Check,
-  Plus
+  Plus,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -36,12 +37,14 @@ export default function AdminLeadsPage() {
   const [sortField, setSortField] = useState<'name' | 'email' | 'phone' | 'created_at' | 'status'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // Rows per page — 10 is cramped once a few dozen enquiries land.
+  const [pageSize, setPageSize] = useState(10);
+
   // Dropdown menus state
   const [openStatusMenuId, setOpenStatusMenuId] = useState<string | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
 
   // Pending delete (drives the confirmation dialog)
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
@@ -76,6 +79,20 @@ export default function AdminLeadsPage() {
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${type} copied to clipboard`);
+  };
+  
+  const statusCounts = leads.reduce<Record<string, number>>((acc, lead) => {
+    const key = lead.status || 'new';
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setCurrentPage(1);
   };
 
   // Filter leads
@@ -160,7 +177,7 @@ export default function AdminLeadsPage() {
       link.click();
       document.body.removeChild(link);
       toast.success('Leads exported successfully');
-    } catch (e) {
+    } catch {
       toast.error('Failed to export leads');
     }
   };
@@ -246,23 +263,75 @@ export default function AdminLeadsPage() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Status:</span>
+            <label htmlFor="lead-rows" className="text-xs text-gray-500 font-medium whitespace-nowrap">
+              Rows:
+            </label>
             <select
-              value={statusFilter}
+              id="lead-rows"
+              value={pageSize}
               onChange={(e) => {
-                setStatusFilter(e.target.value as 'all' | 'new' | 'contacted' | 'qualified' | 'converted');
+                setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="w-full sm:w-auto px-3 py-2 border border-gray-200 rounded-lg text-base lg:text-sm bg-white text-gray-700 focus:ring-1 focus:ring-brand-medium"
+              className="px-3 py-2 border border-gray-200 rounded-lg text-base lg:text-sm bg-white text-gray-700 focus:ring-1 focus:ring-brand-medium"
             >
-              <option value="all">All Stages</option>
-              <option value="new">New Inquiries</option>
-              <option value="contacted">Contacted</option>
-              <option value="qualified">Qualified</option>
-              <option value="converted">Converted</option>
+              {[10, 25, 50].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
             </select>
           </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand-darkest"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+              Clear filters
+            </button>
+          )}
         </div>
+      </div>
+
+      {/* Stage chips — a filter and an at-a-glance pipeline summary in one. */}
+      <div className="flex flex-wrap gap-2 border-x border-gray-100 bg-white px-5 pb-4">
+        {(
+          [
+            ['all', 'All', leads.length],
+            ['new', 'New', statusCounts.new ?? 0],
+            ['contacted', 'Contacted', statusCounts.contacted ?? 0],
+            ['qualified', 'Qualified', statusCounts.qualified ?? 0],
+            ['converted', 'Converted', statusCounts.converted ?? 0],
+          ] as const
+        ).map(([value, label, count]) => {
+          const isActive = statusFilter === value;
+          return (
+            <button
+              key={value}
+              onClick={() => {
+                setStatusFilter(value as typeof statusFilter);
+                setCurrentPage(1);
+              }}
+              aria-pressed={isActive}
+              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                isActive
+                  ? 'border-brand-dark bg-brand-dark text-white'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-brand-medium hover:text-brand-darkest'
+              }`}
+            >
+              {label}
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Table */}
@@ -278,21 +347,45 @@ export default function AdminLeadsPage() {
             <p className="text-sm text-gray-500 mt-2">{error instanceof Error ? error.message : 'Unknown error'}</p>
           </div>
         ) : filteredLeads.length === 0 ? (
+          /* "Nothing yet" and "nothing matches" need different advice. */
           <div className="p-16 text-center text-gray-500">
             <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="font-semibold text-base">No leads found</p>
-            <p className="text-sm text-gray-400 mt-1">Try adjusting your filters or search criteria.</p>
+            {leads.length === 0 ? (
+              <>
+                <p className="font-semibold text-base">No leads yet</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Enquiries from the website land here. You can also add one manually.
+                </p>
+                <button
+                  onClick={() => setIsAddOpen(true)}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-dark px-4 py-2 text-sm font-semibold text-white hover:bg-brand-darkest"
+                >
+                  <Plus className="h-4 w-4" /> Add Lead
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold text-base">No leads match these filters</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  Try a different search term or stage.
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 text-sm font-medium text-brand-dark underline hover:text-brand-darkest"
+                >
+                  Clear filters
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto w-full">
-            <table className="w-full min-w-[1100px] border-collapse text-left text-[15px]">
+            <table className="w-full min-w-[900px] border-collapse text-left text-[15px]">
               <thead className="bg-brand-lightest/40 border-b text-brand-darkest">
                 <tr>
-                  <th className="px-6 py-4 w-[15%]">{renderSortHeader('name', 'Name')}</th>
-                  <th className="px-6 py-4 w-[18%]">{renderSortHeader('email', 'Email')}</th>
-                  <th className="px-6 py-4 w-[15%]">{renderSortHeader('phone', 'Phone')}</th>
-                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[15%]">Requested Package</th>
-                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[18%]">Message</th>
+                  <th className="px-6 py-4 w-[28%]">{renderSortHeader('name', 'Lead')}</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[18%]">Requested Package</th>
+                  <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[22%]">Message</th>
                   <th className="px-6 py-4 w-[12%]">{renderSortHeader('created_at', 'Date')}</th>
                   <th className="px-6 py-4 w-[12%]">{renderSortHeader('status', 'Status Stage')}</th>
                   <th className="px-6 py-4 font-semibold text-sm uppercase tracking-wider w-[5%] text-right">Actions</th>
@@ -301,41 +394,50 @@ export default function AdminLeadsPage() {
               <tbody className="divide-y divide-gray-100">
                 {paginatedLeads.map((lead, idx) => (
                   <tr key={lead.id} className="transition-colors hover:bg-brand-lightest/10 duration-200">
-                    {/* Name */}
-                    <td className="px-6 py-4 text-base font-semibold text-gray-900 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <User className="w-5 h-5 text-brand-medium flex-shrink-0" />
-                        <span>{lead.name}</span>
-                      </div>
-                    </td>
+                    {/* Lead — name with its contact details stacked beneath, so the row
+                        stays narrow and each detail is one click to act on. */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-lightest/50 text-brand-dark">
+                          <User className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-base font-semibold text-gray-900">{lead.name}</p>
 
-                    {/* Email */}
-                    <td className="px-6 py-4 text-[15px] text-gray-600">
-                      <div className="flex items-center gap-2 group/copy">
-                        <Mail className="w-4.5 h-4.5 text-brand-medium flex-shrink-0" />
-                        <span>{lead.email}</span>
-                        <button 
-                          onClick={() => handleCopy(lead.email, 'Email')}
-                          className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-brand-dark focus:outline-none cursor-pointer"
-                          title="Copy Email"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+                          <div className="mt-1 flex items-center gap-1.5 group/copy">
+                            <Mail className="h-3.5 w-3.5 flex-shrink-0 text-brand-medium" />
+                            <a
+                              href={`mailto:${lead.email}`}
+                              className="truncate text-sm text-gray-600 hover:text-brand-dark hover:underline"
+                            >
+                              {lead.email}
+                            </a>
+                            <button
+                              onClick={() => handleCopy(lead.email, 'Email')}
+                              className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-0.5 hover:bg-gray-100 rounded text-gray-400 hover:text-brand-dark focus:outline-none cursor-pointer"
+                              title="Copy email"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </div>
 
-                    {/* Phone */}
-                    <td className="px-6 py-4 text-[15px] text-gray-600 whitespace-nowrap">
-                      <div className="flex items-center gap-2 group/copy">
-                        <Phone className="w-4.5 h-4.5 text-brand-medium flex-shrink-0" />
-                        <span>{lead.phone}</span>
-                        <button 
-                          onClick={() => handleCopy(lead.phone, 'Phone number')}
-                          className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-brand-dark focus:outline-none cursor-pointer"
-                          title="Copy Phone Number"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
+                          <div className="mt-0.5 flex items-center gap-1.5 group/copy">
+                            <Phone className="h-3.5 w-3.5 flex-shrink-0 text-brand-medium" />
+                            <a
+                              href={`tel:${lead.phone}`}
+                              className="text-sm text-gray-600 hover:text-brand-dark hover:underline"
+                            >
+                              {lead.phone}
+                            </a>
+                            <button
+                              onClick={() => handleCopy(lead.phone, 'Phone number')}
+                              className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-0.5 hover:bg-gray-100 rounded text-gray-400 hover:text-brand-dark focus:outline-none cursor-pointer"
+                              title="Copy phone number"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </td>
 

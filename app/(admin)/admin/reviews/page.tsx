@@ -35,9 +35,18 @@ export default function AdminReviewsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [ratingFilter, setRatingFilter] = useState<number | 'all'>('all');
 
+  const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all' || ratingFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setRatingFilter('all');
+    setCurrentPage(1);
+  };
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
 
   // Selected Review for Modal View
   const [selectedReviewText, setSelectedReviewText] = useState<string | null>(null);
@@ -230,6 +239,16 @@ export default function AdminReviewsPage() {
               <option value="1">1 Star</option>
             </select>
           </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand-darkest"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+              Clear filters
+            </button>
+          )}
         </div>
       </div>
 

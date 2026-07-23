@@ -40,6 +40,7 @@ export async function createLead(input: LeadFormData) {
       travel_start_date: leadData.travel_start_date,
       travel_end_date: leadData.travel_end_date || null,
       package_id: actualPackageId,
+      source: leadData.source,
     })
     .select(`
       *,

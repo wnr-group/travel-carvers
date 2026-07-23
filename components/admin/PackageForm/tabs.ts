@@ -64,10 +64,12 @@ export const PACKAGE_FORM_TABS: readonly PackageFormTab[] = [
   },
   {
     id: 'categories',
-    label: 'Categories & Location',
+    label: 'Categories & Destinations',
     fields: [
       'category_ids',
       'subcategory_ids',
+      'destination_id',
+      'new_destination',
       'destination_name',
     ],
     Component: CategoriesTab,
@@ -100,6 +102,7 @@ export const PACKAGE_FORM_TABS: readonly PackageFormTab[] = [
     id: 'additional',
     label: 'Additional',
     fields: [
+      'highlights',
       'travel_tips',
       'best_time_to_visit',
       'places_to_visit',

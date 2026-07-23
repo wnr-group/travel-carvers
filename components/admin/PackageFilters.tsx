@@ -1,6 +1,6 @@
 'use client'
 
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { PACKAGE_STATUSES, PACKAGE_STATUS_LABELS, type PackageStatus } from '@/lib/types/package'
 import type { Category } from '@/lib/types/category'
 
@@ -20,12 +20,17 @@ interface PackageFiltersProps {
 const SELECT_CLASSES =
   'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-medium'
 
+export const EMPTY_PACKAGE_FILTERS: PackageFilterState = { search: '', status: '', category: '' }
+
 export default function PackageFilters({
   filters,
   onChange,
   categories,
   isLoadingCategories,
 }: PackageFiltersProps) {
+  const hasActiveFilters =
+    filters.search !== '' || filters.status !== '' || filters.category !== ''
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <div className="relative flex-1 sm:max-w-xs">
@@ -68,6 +73,18 @@ export default function PackageFilters({
           </option>
         ))}
       </select>
+
+      {/* Only offered when there is something to clear, so it never reads as a dead button. */}
+      {hasActiveFilters && (
+        <button
+          type="button"
+          onClick={() => onChange(EMPTY_PACKAGE_FILTERS)}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand-darkest"
+        >
+          <X aria-hidden="true" className="h-4 w-4" />
+          Clear filters
+        </button>
+      )}
     </div>
   )
 }

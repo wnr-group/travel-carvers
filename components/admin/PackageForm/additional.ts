@@ -10,11 +10,16 @@ import {
 
 export { MONTHS, WEATHER_CONDITIONS }
 
+export type Highlight = NonNullable<PackageFormInput['highlights']>[number]
 export type TravelTip = NonNullable<PackageFormInput['travel_tips']>[number]
 export type BestTimePeriod = NonNullable<PackageFormInput['best_time_to_visit']>[number]
 export type PlaceToVisit = NonNullable<PackageFormInput['places_to_visit']>[number]
 export type CancellationRow = NonNullable<PackageFormInput['cancellation_policy']>[number]
 export type DocumentRow = NonNullable<PackageFormInput['required_documents']>[number]
+
+export function createHighlight(displayOrder: number): Highlight {
+  return { highlight: '', display_order: displayOrder }
+}
 
 export function createTip(displayOrder: number): TravelTip {
   return { tip: '', display_order: displayOrder }

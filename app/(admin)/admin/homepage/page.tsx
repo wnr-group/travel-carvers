@@ -1,7 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useHomepageSections, useUpdateHomepageSections } from '@/lib/hooks/useHomepageSections';
+import { useState } from 'react';
+import {
+  useHomepageSections,
+  useUpdateHomepageSections,
+  type HomepageSections,
+} from '@/lib/hooks/useHomepageSections';
 import {
   Save,
   Sparkles,
@@ -14,53 +18,6 @@ import { toast } from 'sonner';
 
 export default function HomepageManagerPage() {
   const { data, isPending, isError, error } = useHomepageSections();
-  const updateMutation = useUpdateHomepageSections();
-
-  // Form states
-  const [id, setId] = useState('');
-  const [heroTitle, setHeroTitle] = useState('');
-  const [heroSubtitle, setHeroSubtitle] = useState('');
-  const [heroCtaText, setHeroCtaText] = useState('');
-  
-  const [featuredTitle, setFeaturedTitle] = useState('');
-  const [featuredDescription, setFeaturedDescription] = useState('');
-  
-  const [trendingTitle, setTrendingTitle] = useState('');
-  const [trendingDescription, setTrendingDescription] = useState('');
-
-  // Sync form states with retrieved query data. One-time initialisation of editable fields from
-  // the fetched record — intentional, so the cascading-render lint rule is not applicable here.
-  useEffect(() => {
-    if (data) {
-      setId(data.id || '');
-      setHeroTitle(data.hero_title || '');
-      setHeroSubtitle(data.hero_subtitle || '');
-      setHeroCtaText(data.hero_cta_text || '');
-      setFeaturedTitle(data.featured_title || '');
-      setFeaturedDescription(data.featured_description || '');
-      setTrendingTitle(data.trending_title || '');
-      setTrendingDescription(data.trending_description || '');
-    }
-  }, [data]);
-
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    try {
-      await updateMutation.mutateAsync({
-        id: id || undefined,
-        hero_title: heroTitle,
-        hero_subtitle: heroSubtitle,
-        hero_cta_text: heroCtaText,
-        featured_title: featuredTitle,
-        featured_description: featuredDescription,
-        trending_title: trendingTitle,
-        trending_description: trendingDescription,
-      });
-      toast.success('Homepage sections updated successfully!');
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Failed to update sections');
-    }
-  };
 
   if (isPending) {
     return (
@@ -81,6 +38,46 @@ export default function HomepageManagerPage() {
       </div>
     );
   }
+
+  // `key` remounts the form when the underlying record changes, which is React's own
+  // way to reset state from new data. The previous approach copied `data` into state
+  // inside an effect, which triggers a second render pass on every fetch.
+  return <HomepageSectionsForm key={data?.id ?? 'new'} initial={data ?? null} />;
+}
+
+function HomepageSectionsForm({ initial }: { initial: HomepageSections | null }) {
+  const updateMutation = useUpdateHomepageSections();
+
+  // Seeded once at mount from the fetched record — no effect, no cascading render.
+  const [id] = useState(initial?.id ?? '');
+  const [heroTitle, setHeroTitle] = useState(initial?.hero_title ?? '');
+  const [heroSubtitle, setHeroSubtitle] = useState(initial?.hero_subtitle ?? '');
+  const [heroCtaText, setHeroCtaText] = useState(initial?.hero_cta_text ?? '');
+
+  const [featuredTitle, setFeaturedTitle] = useState(initial?.featured_title ?? '');
+  const [featuredDescription, setFeaturedDescription] = useState(initial?.featured_description ?? '');
+
+  const [trendingTitle, setTrendingTitle] = useState(initial?.trending_title ?? '');
+  const [trendingDescription, setTrendingDescription] = useState(initial?.trending_description ?? '');
+
+  const handleSubmit = async (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    try {
+      await updateMutation.mutateAsync({
+        id: id || undefined,
+        hero_title: heroTitle,
+        hero_subtitle: heroSubtitle,
+        hero_cta_text: heroCtaText,
+        featured_title: featuredTitle,
+        featured_description: featuredDescription,
+        trending_title: trendingTitle,
+        trending_description: trendingDescription,
+      });
+      toast.success('Homepage sections updated successfully!');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Failed to update sections');
+    }
+  };
 
   return (
     <div className="py-4 max-w-5xl">

@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -96,13 +94,6 @@ function LinkedinIcon({ className, strokeWidth = 1.75 }: IconProps) {
 }
 
 
-
-/* -------------------------------------------------------------------------
-   Replace these with real values before shipping:
-   - PHONE_DISPLAY / PHONE_TEL: real support number
-   - ADDRESS_*: real HQ address
-   - MAP_BBOX / MAP_MARKER: real lat/lon for the office
-------------------------------------------------------------------------- */
 const PHONE_DISPLAY = "+91 98765 43210";
 const PHONE_TEL = "+919876543210";
 const EMAIL = "info@travelcarvers.com";
@@ -257,12 +248,12 @@ export default function ContactPage() {
                     : formData.message,
                 // No specific package - general contact inquiry
                 package_id: '',
-                // Contact form doesn't collect travel dates/counts
                 number_of_adults: 1,
                 number_of_children: 0,
                 number_of_infants: 0,
                 travel_start_date: today,
                 travel_end_date: '',
+                source: 'contact',
             });
 
             setStatus("success");

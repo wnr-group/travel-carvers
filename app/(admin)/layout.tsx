@@ -1,4 +1,4 @@
-'use client'; // This must be a client component to use usePathname
+'use client';
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -41,7 +41,7 @@ export default function AdminLayout({
       <div 
         className={
           !isLoginPage 
-            ? `flex-1 min-w-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'} ml-0` 
+            ? `flex-1 min-w-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:ml-16' : 'lg:ml-60'} ml-0`
             : "w-full"
         }
       >

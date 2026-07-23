@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Users, Clock3, Star } from 'lucide-react';
+import { Users, Star } from 'lucide-react';
 import { groupSizeLabel } from '@/lib/packageList';
 
 export interface HomePackage {
@@ -20,6 +20,7 @@ export interface HomePackage {
   group_size_min?: number | null;
   group_size_max?: number | null;
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
+  reviews?: { rating: number | null; is_approved: boolean | null }[] | null;
 }
 
 function coverImage(pkg: HomePackage): string {
@@ -33,6 +34,20 @@ function formatPrice(pkg: HomePackage): string {
   const value = pkg.price_adult;
   if (value === null || value === undefined || value === '') return 'On request';
   return `₹${Number(value).toLocaleString('en-IN')}`;
+}
+
+function averageRating(pkg: HomePackage): { value: number; count: number } | null {
+  const approved = (pkg.reviews ?? [])
+    .filter((review) => review.is_approved === true && review.rating != null)
+    .map((review) => review.rating as number);
+
+  if (approved.length === 0) return null;
+
+  const total = approved.reduce((sum, rating) => sum + rating, 0);
+  return {
+    value: Math.round((total / approved.length) * 10) / 10,
+    count: approved.length,
+  };
 }
 
 function formatDuration(pkg: HomePackage): string {
@@ -49,6 +64,7 @@ interface HomePackageCardProps {
 
 export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
   const groupSize = groupSizeLabel(pkg);
+  const rating = averageRating(pkg);
 
   return (
     <Link
@@ -81,13 +97,24 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
 
       <div className="p-4 flex flex-col justify-between flex-grow bg-white">
         <div>
-          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-1">
-            <span>{formatDuration(pkg)}</span>
-            <span className="flex items-center gap-1 text-amber-500 font-bold">
-              <Star className="w-3.5 h-3.5 fill-current" /> 4.8
-            </span>
+          <div className="flex items-center justify-between gap-2 text-xs text-gray-500 font-semibold mb-1">
+            <span className="truncate">{formatDuration(pkg)}</span>
+            {rating ? (
+              <span
+                className="flex shrink-0 items-center gap-1 text-amber-500 font-bold"
+                title={`${rating.value} out of 5 from ${rating.count} review${rating.count === 1 ? '' : 's'}`}
+              >
+                <Star aria-hidden="true" className="w-3.5 h-3.5 fill-current" />
+                {rating.value.toFixed(1)}
+                <span className="font-medium text-gray-400">({rating.count})</span>
+              </span>
+            ) : (
+              <span className="shrink-0 rounded-full bg-brand-forest/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-forest/70">
+                New
+              </span>
+            )}
           </div>
-          <h3 className="line-clamp-1 text-base font-bold text-brand-forest group-hover:text-brand-dark transition-colors">
+          <h3 className="line-clamp-2 min-h-[2.75rem] text-base font-bold leading-snug text-brand-forest group-hover:text-brand-dark transition-colors">
             {pkg.title}
           </h3>
           <p className="text-xs text-gray-500 truncate mt-0.5">{pkg.destination_name || 'Global Destination'}</p>
