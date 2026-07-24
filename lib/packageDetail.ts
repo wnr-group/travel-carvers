@@ -238,15 +238,11 @@ function byOrder<T extends { display_order?: number | null }>(rows: T[]): T[] {
   return [...rows].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
 }
 
-/** Cover image: explicit cover → first gallery image → deterministic placeholder. */
-function coverOf(
-  gallery: RawGalleryImage[] | null | undefined,
-  slug: string,
-  size = '1800/1000',
-): string {
+/** Cover image: explicit cover → first gallery image → branded placeholder. */
+function coverOf(gallery: RawGalleryImage[] | null | undefined): string {
   const images = gallery ?? [];
   const cover = images.find((image) => image.is_cover) ?? images[0];
-  return cover?.image_url ?? `https://picsum.photos/seed/${slug}/${size}`;
+  return cover?.image_url ?? '/package-placeholder.jpg';
 }
 
 function durationLabel(days?: number | null, nights?: number | null): string {
@@ -421,7 +417,7 @@ export function toPackageDetail(
     // Hidden price ⇒ null, so every "From ₹…" surface falls back to "On request".
     startingPrice: showPrice ? priceAdult : null,
     showPrice,
-    cover: coverOf(raw.package_gallery, raw.slug),
+    cover: coverOf(raw.package_gallery),
     rating,
     reviewCount,
     highlights,
