@@ -111,7 +111,7 @@ const SECTIONS = [
             <strong>Supabase:</strong> We use Supabase as our primary backend infrastructure and database provider. Your user credentials, booking history, and profile data are securely stored in Supabase databases, which comply with strict international security standards.
           </li>
           <li>
-            <strong>Mailgun:</strong> We use Mailgun to manage and deliver our transactional emails (like booking confirmations and password resets) as well as marketing newsletters. Your email address and name are shared with Mailgun solely for the purpose of email delivery.
+            <strong>Mailgun:</strong> We use Mailgun to deliver transactional emails relating to your enquiries (such as confirmations and follow-ups about the trips you ask us about). We do not send marketing newsletters. Your email address and name are shared with Mailgun solely for the purpose of delivering these emails.
           </li>
           <li>
             <strong>Travel Partners:</strong> Airlines, hotels, and local tour operators require your details to fulfill your actual travel itinerary.
@@ -133,7 +133,7 @@ const SECTIONS = [
           <li>The right to request access to the data we have collected about you.</li>
           <li>The right to request that we correct any inaccurate or incomplete personal information.</li>
           <li>The right to request the deletion of your personal data (&quot;Right to be Forgotten&quot;).</li>
-          <li>The right to opt-out of marketing communications at any time by clicking the &quot;unsubscribe&quot; link in our emails.</li>
+          <li>The right to ask us to stop contacting you at any time by replying to any of our emails or contacting us directly.</li>
         </ul>
       </>
     ),
