@@ -94,7 +94,7 @@ export function mapPackage(row: RawListPackage): TravelPackage {
     difficulty: row.difficulty_level ? DIFFICULTY_MAP[row.difficulty_level] ?? null : null,
     rating,
     popularity: row.view_count ?? 0,
-    image: cover?.image_url ?? `https://picsum.photos/seed/${row.slug}/480/320`,
+    image: cover?.image_url ?? '/package-placeholder.jpg',
     location: row.destination_name ?? '',
     createdAt: row.created_at ? new Date(row.created_at).getTime() : 0,
     isFeatured: row.is_featured ?? false,

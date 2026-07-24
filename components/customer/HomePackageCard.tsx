@@ -26,7 +26,7 @@ export interface HomePackage {
 function coverImage(pkg: HomePackage): string {
   const gallery = pkg.package_gallery ?? [];
   const cover = gallery.find((image) => image.is_cover) ?? gallery[0];
-  return cover?.image_url ?? `https://picsum.photos/seed/${pkg.slug}/800/600`;
+  return cover?.image_url ?? '/package-placeholder.jpg';
 }
 
 function formatPrice(pkg: HomePackage): string {
