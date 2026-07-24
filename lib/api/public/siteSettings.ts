@@ -35,6 +35,36 @@ export function clearPricingVisibilityCache() {
   cache = null;
 }
 
+/** Admin-managed contact details, surfaced across the customer site. */
+export interface PublicSiteSettings {
+  company_name: string;
+  contact_email: string;
+  contact_phone: string;
+  address: string;
+  facebook_url: string;
+  instagram_url: string;
+  twitter_url: string;
+  linkedin_url: string;
+}
+
+/**
+ * Public read of the single site-settings row — the source of truth for the
+ * contact details a client edits in Admin → Settings. Returns null on error or
+ * when no row exists, so callers fall back gracefully rather than crash.
+ */
+export async function getSiteSettings(): Promise<PublicSiteSettings | null> {
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select(
+      'company_name, contact_email, contact_phone, address, facebook_url, instagram_url, twitter_url, linkedin_url'
+    )
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as PublicSiteSettings;
+}
+
 type PricedRow = { show_price?: boolean | null };
 
 /**

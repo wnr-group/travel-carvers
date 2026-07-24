@@ -2,6 +2,20 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchJson } from '@/lib/api/fetchJson';
+import { getSiteSettings } from '@/lib/api/public/siteSettings';
+
+/**
+ * Public read of admin-managed contact details, for customer-facing surfaces
+ * (footer, contact page). Reads the anon-visible site-settings row directly,
+ * unlike {@link useSiteSettings} which hits the admin-guarded API.
+ */
+export function usePublicSiteSettings() {
+  return useQuery({
+    queryKey: ['site-settings', 'public'],
+    queryFn: getSiteSettings,
+    staleTime: 10 * 60 * 1000,
+  });
+}
 
 export const SITE_SETTINGS_KEY = ['site-settings'] as const;
 

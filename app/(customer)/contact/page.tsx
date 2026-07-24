@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePublicSiteSettings } from "@/lib/hooks/useSiteSettings";
 import {
     MapPin,
     Phone,
@@ -94,13 +95,6 @@ function LinkedinIcon({ className, strokeWidth = 1.75 }: IconProps) {
 }
 
 
-const PHONE_DISPLAY = "+91 98765 43210";
-const PHONE_TEL = "+919876543210";
-const EMAIL = "info@travelcarvers.com";
-const ADDRESS_LINE1 = "Travel Carvers HQ";
-const ADDRESS_LINE2 = "3rd Floor, Brigade Towers, Brigade Road";
-const ADDRESS_LINE3 = "Bengaluru, Karnataka 560001, India";
-
 const MAP_LON = 77.5946;
 const MAP_LAT = 12.9716;
 const MAP_BBOX = `${MAP_LON - 0.02}%2C${MAP_LAT - 0.015}%2C${MAP_LON + 0.02}%2C${MAP_LAT + 0.015
@@ -170,6 +164,14 @@ export default function ContactPage() {
     const [errors, setErrors] = useState<FormErrors>({});
     const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
     const [currentSlide, setCurrentSlide] = useState(0);
+
+    // Admin-managed contact details (Admin → Settings), the single source of truth.
+    const { data: siteSettings } = usePublicSiteSettings();
+    const companyName = siteSettings?.company_name || "Travel Carvers";
+    const phoneDisplay = siteSettings?.contact_phone ?? "";
+    const phoneTel = phoneDisplay.replace(/[^\d+]/g, "");
+    const email = siteSettings?.contact_email ?? "";
+    const address = siteSettings?.address ?? "";
 
     const slides = [
         {
@@ -484,31 +486,37 @@ export default function ContactPage() {
 
                             <InfoStop icon={MapPin} title="Visit us">
                                 <address className="not-italic text-secondary leading-relaxed">
-                                    {ADDRESS_LINE1}
-                                    <br />
-                                    {ADDRESS_LINE2}
-                                    <br />
-                                    {ADDRESS_LINE3}
+                                    {companyName}
+                                    {address && (
+                                        <>
+                                            <br />
+                                            {address}
+                                        </>
+                                    )}
                                 </address>
                             </InfoStop>
 
-                            <InfoStop icon={Phone} title="Call us">
-                                <a
-                                    href={`tel:${PHONE_TEL}`}
-                                    className="text-brand-dark font-medium hover:underline underline-offset-4"
-                                >
-                                    {PHONE_DISPLAY}
-                                </a>
-                            </InfoStop>
+                            {phoneDisplay && (
+                                <InfoStop icon={Phone} title="Call us">
+                                    <a
+                                        href={`tel:${phoneTel}`}
+                                        className="text-brand-dark font-medium hover:underline underline-offset-4"
+                                    >
+                                        {phoneDisplay}
+                                    </a>
+                                </InfoStop>
+                            )}
 
-                            <InfoStop icon={Mail} title="Email us">
-                                <a
-                                    href={`mailto:${EMAIL}`}
-                                    className="text-brand-dark font-medium hover:underline underline-offset-4"
-                                >
-                                    {EMAIL}
-                                </a>
-                            </InfoStop>
+                            {email && (
+                                <InfoStop icon={Mail} title="Email us">
+                                    <a
+                                        href={`mailto:${email}`}
+                                        className="text-brand-dark font-medium hover:underline underline-offset-4"
+                                    >
+                                        {email}
+                                    </a>
+                                </InfoStop>
+                            )}
 
                             <InfoStop icon={Clock} title="Office hours" last>
                                 <ul className="text-secondary space-y-0.5">

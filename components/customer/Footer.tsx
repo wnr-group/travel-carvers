@@ -4,6 +4,7 @@ import { useState, type ComponentType, type SVGProps } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { usePublicSiteSettings } from '@/lib/hooks/useSiteSettings';
 import { useNavCategories } from '@/lib/hooks/useNavCategories';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDestinations } from '@/lib/hooks/useDestinations';
@@ -47,23 +48,21 @@ const LinkedinIcon: IconType = (props) => (
   </svg>
 );
 
-const YoutubeIcon: IconType = (props) => (
+const TwitterIcon: IconType = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-    <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
 );
 
-interface SocialLink {
-  label: string;
-  href: string;
-  Icon: IconType;
-}
+type SocialKey = 'facebook_url' | 'instagram_url' | 'twitter_url' | 'linkedin_url';
 
-const SOCIAL_LINKS: SocialLink[] = [
-  { label: 'Facebook', href: 'https://facebook.com', Icon: FacebookIcon },
-  { label: 'Instagram', href: 'https://instagram.com', Icon: InstagramIcon },
-  { label: 'LinkedIn', href: 'https://linkedin.com', Icon: LinkedinIcon },
-  { label: 'YouTube', href: 'https://youtube.com', Icon: YoutubeIcon },
+/** Social channels, in display order. Each maps to a site-settings column and
+ *  is only rendered when the admin has set a URL for it. */
+const SOCIAL_DEFS: { key: SocialKey; label: string; Icon: IconType }[] = [
+  { key: 'facebook_url', label: 'Facebook', Icon: FacebookIcon },
+  { key: 'instagram_url', label: 'Instagram', Icon: InstagramIcon },
+  { key: 'twitter_url', label: 'Twitter', Icon: TwitterIcon },
+  { key: 'linkedin_url', label: 'LinkedIn', Icon: LinkedinIcon },
 ];
 
 interface ContactItem {
@@ -72,13 +71,6 @@ interface ContactItem {
   value: string;
   href?: string;
 }
-
-const CONTACT_DETAILS: ContactItem[] = [
-  { Icon: Phone, label: 'Phone', value: '+91 98765 43210', href: 'tel:+919876543210' },
-  { Icon: Mail, label: 'Email', value: 'info@travelcarvers.com', href: 'mailto:info@travelcarvers.com' },
-  { Icon: MapPin, label: 'Office', value: 'MG Road, Bengaluru, Karnataka 560001, India' },
-  { Icon: Clock, label: 'Working Hours', value: 'Mon – Sat: 9:00 AM – 7:00 PM' },
-];
 
 
 function ColumnHeading({ children }: { children: React.ReactNode }) {
@@ -165,6 +157,37 @@ function ExploreRow({
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
+  // Contact details + social links are admin-managed (Admin → Settings) and read
+  // from the single site-settings row, so the footer stays in sync with them.
+  const { data: siteSettings } = usePublicSiteSettings();
+
+  const socialLinks = SOCIAL_DEFS
+    .map(({ key, label, Icon }) => ({ label, Icon, href: siteSettings?.[key]?.trim() ?? '' }))
+    .filter((link) => link.href.length > 0);
+
+  const contactDetails: ContactItem[] = ([
+    siteSettings?.contact_phone
+      ? {
+          Icon: Phone,
+          label: 'Phone',
+          value: siteSettings.contact_phone,
+          href: `tel:${siteSettings.contact_phone.replace(/[^\d+]/g, '')}`,
+        }
+      : null,
+    siteSettings?.contact_email
+      ? {
+          Icon: Mail,
+          label: 'Email',
+          value: siteSettings.contact_email,
+          href: `mailto:${siteSettings.contact_email}`,
+        }
+      : null,
+    siteSettings?.address
+      ? { Icon: MapPin, label: 'Office', value: siteSettings.address }
+      : null,
+    { Icon: Clock, label: 'Working Hours', value: 'Mon – Sat: 9:00 AM – 7:00 PM' },
+  ] as (ContactItem | null)[]).filter((item): item is ContactItem => item !== null);
+
   // The same categories the navbar shows, so the two menus never drift apart.
   const { data: navCategories, isLoading: categoriesLoading } = useNavCategories();
   const { data: destinations, isLoading: destinationsLoading } = useDestinations();
@@ -224,7 +247,7 @@ export default function Footer() {
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-amber-300 mb-3">Connect With Us</p>
               <ul className="flex items-center gap-2.5">
-                {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                {socialLinks.map(({ label, href, Icon }) => (
                   <li key={label}>
                     <a
                       href={href}
@@ -257,7 +280,7 @@ export default function Footer() {
           <div className="lg:col-span-4">
             <ColumnHeading>Get In Touch</ColumnHeading>
             <ul className="flex flex-col gap-3 text-xs text-white/80 mt-2 font-medium">
-              {CONTACT_DETAILS.map(({ Icon, label, value, href }) => (
+              {contactDetails.map(({ Icon, label, value, href }) => (
                 <li key={value} className="flex items-start gap-2.5">
                   <Icon className="h-3.5 w-3.5 text-amber-300 shrink-0 mt-0.5" />
                   <span>
