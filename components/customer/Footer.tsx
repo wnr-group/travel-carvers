@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, type ComponentType, type SyntheticEvent, type SVGProps } from 'react';
+import { useState, type ComponentType, type SVGProps } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { toast } from 'sonner';
-import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { useNavCategories } from '@/lib/hooks/useNavCategories';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { useDestinations } from '@/lib/hooks/useDestinations';
@@ -81,7 +80,6 @@ const CONTACT_DETAILS: ContactItem[] = [
   { Icon: Clock, label: 'Working Hours', value: 'Mon – Sat: 9:00 AM – 7:00 PM' },
 ];
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function ColumnHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -166,8 +164,6 @@ function ExploreRow({
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState<string | null>(null);
 
   // The same categories the navbar shows, so the two menus never drift apart.
   const { data: navCategories, isLoading: categoriesLoading } = useNavCategories();
@@ -190,24 +186,6 @@ export default function Footer() {
       label: destination.name,
       href: `/destinations/${destination.slug}`,
     }));
-
-  const handleSubscribe = (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setError('Please enter your email address.');
-      return;
-    }
-    if (!EMAIL_PATTERN.test(trimmed)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
-    setError(null);
-    setEmail('');
-    toast.success('Thanks for subscribing! Check your inbox to confirm.');
-  };
 
   return (
     <footer aria-labelledby="footer-heading" className="bg-brand-footer text-white relative overflow-hidden border-t border-white/10">
@@ -263,8 +241,8 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* ---------------- Column 2: Quick Links (2 Cols) ---------------- */}
-          <nav aria-label="Quick links" className="lg:col-span-2">
+          {/* ---------------- Column 2: Quick Links (4 Cols) ---------------- */}
+          <nav aria-label="Quick links" className="lg:col-span-4">
             <ColumnHeading>Quick Links</ColumnHeading>
             <ul className="flex flex-col gap-2.5 mt-2">
               {QUICK_LINKS.map((link) => (
@@ -275,54 +253,8 @@ export default function Footer() {
             </ul>
           </nav>
 
-          {/* ---------------- Column 3: Newsletter (3 Cols) ---------------- */}
-          <div className="lg:col-span-3 space-y-6">
-            <div>
-              <ColumnHeading>Newsletter</ColumnHeading>
-              <p className="text-xs text-white/80 mb-3 font-medium">
-                Get travel inspiration and exclusive deals delivered right to your inbox.
-              </p>
-
-              <form onSubmit={handleSubscribe} noValidate className="relative">
-                <label htmlFor="newsletter-email" className="sr-only">
-                  Email address
-                </label>
-                <div className="flex flex-col gap-2">
-                  <div className="relative">
-                    <input
-                      id="newsletter-email"
-                      type="email"
-                      value={email}
-                      onChange={(event) => {
-                        setEmail(event.target.value);
-                        if (error) setError(null);
-                      }}
-                      placeholder="Enter your email"
-                      aria-invalid={error ? true : undefined}
-                      aria-describedby={error ? 'newsletter-error' : undefined}
-                      className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/50 transition focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30 backdrop-blur-md"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-brand-accent-soft px-4 py-3 text-xs font-bold uppercase tracking-widest text-brand-forest transition-all shadow-md hover:scale-[1.02]"
-                  >
-                    <span>Subscribe Now</span>
-                    <Send className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                {error && (
-                  <p id="newsletter-error" role="alert" className="mt-1.5 text-xs text-red-300 font-medium">
-                    {error}
-                  </p>
-                )}
-              </form>
-            </div>
-
-          </div>
-
-          {/* ---------------- Column 4: Contact (3 Cols) ---------------- */}
-          <div className="lg:col-span-3">
+          {/* ---------------- Column 3: Contact (4 Cols) ---------------- */}
+          <div className="lg:col-span-4">
             <ColumnHeading>Get In Touch</ColumnHeading>
             <ul className="flex flex-col gap-3 text-xs text-white/80 mt-2 font-medium">
               {CONTACT_DETAILS.map(({ Icon, label, value, href }) => (
