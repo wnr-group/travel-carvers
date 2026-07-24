@@ -82,7 +82,7 @@ BEGIN
   INSERT INTO admin_notifications (type, title, body, link, entity_id)
   VALUES (
     'review',
-    NEW.reviewer_name || ' reviewed ' || COALESCE(package_title, 'a package'),
+    LEFT(NEW.reviewer_name || ' reviewed ' || COALESCE(package_title, 'a package'), 200),
     COALESCE(NEW.rating::text || '★ — ', '') || LEFT(COALESCE(NEW.review_text, ''), 160),
     '/admin/reviews',
     NEW.id
