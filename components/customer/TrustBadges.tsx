@@ -19,17 +19,6 @@ import {
 const MAX_STAT_CARDS = 4;
 const MAX_TEXT_BADGES = 6;
 
-const FALLBACK_BADGES: TrustBadge[] = [
-  { id: 'fb-1', text: '10,000+ Happy Travellers', icon: 'Smile', badge_type: 'stat', display_order: 1, created_at: '' },
-  { id: 'fb-2', text: '50+ Destinations', icon: 'Globe2', badge_type: 'stat', display_order: 2, created_at: '' },
-  { id: 'fb-3', text: '15+ Years Experience', icon: 'Award', badge_type: 'stat', display_order: 3, created_at: '' },
-  { id: 'fb-4', text: '24/7 Support', icon: 'Clock', badge_type: 'stat', display_order: 4, created_at: '' },
-  { id: 'fb-5', text: 'Best Price Guarantee', icon: 'Shield', badge_type: 'text', display_order: 5, created_at: '' },
-  { id: 'fb-6', text: 'Secure Booking', icon: 'Shield', badge_type: 'text', display_order: 6, created_at: '' },
-  { id: 'fb-7', text: 'Expert Local Guides', icon: 'Compass', badge_type: 'text', display_order: 7, created_at: '' },
-  { id: 'fb-8', text: 'Tailor-made Itineraries', icon: 'Heart', badge_type: 'text', display_order: 8, created_at: '' },
-];
-
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Shield,
   Award,
@@ -124,7 +113,9 @@ export default function TrustBadges() {
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const source = badges.length > 0 ? badges : FALLBACK_BADGES;
+  // Show only real, admin-managed badges; when there are none the section
+  // hides itself entirely (guard below) — no fabricated fallbacks.
+  const source = badges;
 
   const statBadges: PreparedBadge[] = source
     .filter((badge) => badge.badge_type === 'stat')

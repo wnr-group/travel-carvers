@@ -6,15 +6,6 @@ import { motion, useMotionValue, animate, useInView, Variants } from 'framer-mot
 import { Star, ChevronRight, ChevronLeft } from 'lucide-react';
 import { usePublicTestimonials } from '@/lib/hooks/useTestimonials';
 
-const FALLBACK_TESTIMONIALS = [
-  { id: 'fb1', customer_name: 'Arjun Menon', customer_role: 'Photographer, Kochi', review_text: 'The Kerala houseboat experience was unforgettable. Great value and genuinely warm service.', rating: 5, photo_url: null },
-  { id: 'fb2', customer_name: 'Aditya Rao', customer_role: 'Adventurer, Pune', review_text: 'Leh-Ladakh was the trip of a lifetime. The team handled permits, altitude and logistics like pros.', rating: 5, photo_url: null },
-  { id: 'fb3', customer_name: 'Sara Thomas', customer_role: 'Travel Blogger, Chennai', review_text: 'From booking to the final transfer, everything was seamless. Travel Carvers is now my go-to for holidays.', rating: 5, photo_url: null },
-  { id: 'fb4', customer_name: 'Ananya Sharma', customer_role: 'Honeymooner, Mumbai', review_text: 'Carvers planned our dream Goa honeymoon down to the last detail. We just showed up and enjoyed.', rating: 5, photo_url: null },
-  { id: 'fb5', customer_name: 'Vikram Singh', customer_role: 'Family Traveler, Delhi', review_text: 'Our Manali family trip was flawless. The kids still talk about paragliding at Solang. Highly recommended.', rating: 5, photo_url: null },
-  { id: 'fb6', customer_name: 'Meera Iyer', customer_role: 'Solo Explorer, Bengaluru', review_text: 'The Andaman islands were pure magic and everything was perfectly organised. I felt safe and cared for throughout.', rating: 5, photo_url: null },
-];
-
 const AUTOPLAY_INTERVAL = 4500;
 const CARD_GAP = 20;
 
@@ -47,8 +38,7 @@ export default function TestimonialsCarousel() {
 
   const dbTestimonials = testimonialsQuery.data || [];
   const featuredTestimonials = dbTestimonials.filter((t) => t.is_featured);
-  const testimonialsToUse = featuredTestimonials.length > 0 ? featuredTestimonials : dbTestimonials;
-  const activeTestimonials = testimonialsToUse.length > 0 ? testimonialsToUse : FALLBACK_TESTIMONIALS;
+  const activeTestimonials = featuredTestimonials.length > 0 ? featuredTestimonials : dbTestimonials;
   const count = activeTestimonials.length;
 
   if (count !== prevCount) {
@@ -87,6 +77,9 @@ export default function TestimonialsCarousel() {
   const handleDotClick = (index: number) => setActiveIndex(index);
   const handlePrev = () => setActiveIndex((prev) => (prev - 1 + count) % count);
   const handleNext = () => setActiveIndex((prev) => (prev + 1) % count);
+
+  // No real testimonials yet → hide the whole section (no fabricated fallbacks).
+  if (count === 0) return null;
 
   return (
     <section
