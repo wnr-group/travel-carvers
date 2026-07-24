@@ -1,7 +1,7 @@
 'use client';
 
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { CalendarRange, FileCheck, Lightbulb, MapPin, Plus, Trash2, Wallet } from 'lucide-react';
+import { CalendarRange, FileCheck, Lightbulb, MapPin, Plus, Sparkles, Trash2, Wallet } from 'lucide-react';
 import FieldError from '@/components/admin/FieldError';
 import { cn } from '@/lib/utils';
 import type {
@@ -15,6 +15,7 @@ import {
   WEATHER_CONDITIONS,
   createCancellationRow,
   createDocumentRow,
+  createHighlight,
   createPeriod,
   createPlace,
   createTip,
@@ -27,6 +28,7 @@ import { useOrderedFieldArray } from './useOrderedFieldArray';
 export default function AdditionalTab() {
   return (
     <div className="space-y-6">
+      <HighlightsSection />
       <TravelTipsSection />
       <BestTimeSection />
       <PlacesSection />
@@ -73,7 +75,68 @@ function RemoveButton({ onClick, label }: { onClick: () => void; label: string }
 }
 
 /**
- * Travel tips 
+ * Highlights — the selling points shown at the top of the package Overview tab.
+ */
+function HighlightsSection() {
+  const { register, formState } = useFormContext<
+    PackageFormInput,
+    unknown,
+    PackageFormOutput
+  >();
+
+  const { fields, append, removeAt } = useOrderedFieldArray('highlights');
+
+  return (
+    <FormSection
+      title="Highlights"
+      description="What makes this trip worth booking. Shown as a check-marked list on the package page, in the order below."
+    >
+      {fields.length === 0 ? (
+        <Empty icon={Sparkles}>No highlights yet.</Empty>
+      ) : (
+        <ul className="space-y-2">
+          {fields.map((field, index) => (
+            <li
+              key={field.id}
+              className="flex items-start gap-2 rounded-lg border border-gray-200 bg-white p-2"
+            >
+              <span className="mt-2 w-5 shrink-0 text-center text-xs font-medium tabular-nums text-gray-400">
+                {index + 1}
+              </span>
+
+              <div className="flex-1">
+                <input
+                  type="text"
+                  aria-label={`Highlight ${index + 1}`}
+                  placeholder="e.g. Sunset cruise through the Alleppey backwaters"
+                  {...register(`highlights.${index}.highlight`)}
+                  className={INPUT_CLASSES}
+                />
+                <FieldError message={formState.errors.highlights?.[index]?.highlight?.message} />
+              </div>
+
+              <input
+                type="hidden"
+                {...register(`highlights.${index}.display_order`, { valueAsNumber: true })}
+              />
+
+              <RemoveButton
+                onClick={() => removeAt(index)}
+                label={`Remove highlight ${index + 1}`}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <AddButton onClick={() => append(createHighlight(fields.length))}>Add highlight</AddButton>
+    </FormSection>
+  );
+}
+
+/**
+ * Travel tips — optional practical advice, shown as its own list below the
+ * highlights.
  */
 function TravelTipsSection() {
   const { register, formState } = useFormContext<
@@ -86,8 +149,8 @@ function TravelTipsSection() {
 
   return (
     <FormSection
-      title="Travel Tips"
-      description="Short pieces of advice shown as a list. They appear in the order below."
+      title="Travel Tips (optional)"
+      description="Practical advice for travellers — what to pack, what to book ahead. Shown as a separate list below the highlights, in the order below."
     >
       {fields.length === 0 ? (
         <Empty icon={Lightbulb}>No travel tips yet.</Empty>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, AlertTriangle, ImageOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -101,8 +102,7 @@ export default function SubcategoriesSection() {
                     <td className="p-4 text-gray-600">{sub.display_order}</td>
                     <td className="p-4">
                       {sub.cover_image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- small admin thumbnail, matches the categories table
-                        <img src={sub.cover_image_url} alt={sub.name} className="w-10 h-10 rounded object-cover" />
+                        <Image src={sub.cover_image_url} alt={sub.name} width={40} height={40} className="w-10 h-10 rounded object-cover" />
                       ) : (
                         <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-400">
                           <ImageOff className="w-4 h-4" />

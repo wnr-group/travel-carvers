@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { DestinationMapPin, DestinationSummary } from '@/lib/types/destination';
 import type { RawListPackage } from '@/lib/packageList';
+import { applyGlobalPricing } from './siteSettings';
 
 const SUMMARY_FIELDS = `
   id,
@@ -41,6 +42,32 @@ export async function getActiveDestinations(): Promise<DestinationSummary[]> {
     latitude: toNumber(row.latitude),
     longitude: toNumber(row.longitude),
   })) as DestinationSummary[];
+}
+
+export interface DestinationWithCount extends DestinationSummary {
+  package_count: number;
+}
+
+export async function getActiveDestinationsWithCounts(): Promise<DestinationWithCount[]> {
+  const { data, error } = await supabase
+    .from('destinations')
+    .select(`${SUMMARY_FIELDS}, package_destinations ( package_id )`)
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => {
+    const { package_destinations, ...summary } = row as Record<string, unknown> & {
+      package_destinations?: { package_id: string }[] | null;
+    };
+
+    return {
+      ...(summary as unknown as DestinationSummary),
+      latitude: toNumber((summary as { latitude: number | string | null }).latitude),
+      longitude: toNumber((summary as { longitude: number | string | null }).longitude),
+      package_count: (package_destinations ?? []).length,
+    };
+  });
 }
 
 /**
@@ -112,15 +139,11 @@ export async function getPublishedPackagesByDestination(
 
   if (error) throw error;
 
-  // Ordering a to-one embed (`packages`) can't reorder the top-level
-  // package_destinations rows, so sort newest-first in JS after mapping.
-  return (data ?? [])
-    .map((row) => row.packages)
-    .filter((pkg): pkg is RawListPackage => pkg !== null)
-    .sort(
-      (a, b) =>
-        new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime(),
-    );
+  return applyGlobalPricing(
+    (data ?? [])
+      .map((row) => row.packages)
+      .filter((pkg): pkg is RawListPackage => pkg !== null)
+  );
 }
 
 export async function getDestinationMapPins(): Promise<DestinationMapPin[]> {

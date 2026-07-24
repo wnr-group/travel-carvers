@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, ImageOff } from 'lucide-react';
 import { toast } from 'sonner';
@@ -118,7 +119,7 @@ export default function CategoriesPage() {
                   <td className="p-4 text-gray-600">{cat.display_order}</td>
                   <td className="p-4">
                     {cat.cover_image_url ? (
-                      <img src={cat.cover_image_url} alt={cat.name} className="w-10 h-10 rounded object-cover" />
+                      <Image src={cat.cover_image_url} alt={cat.name} width={40} height={40} className="w-10 h-10 rounded object-cover" />
                     ) : (
                       <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-400">
                         <ImageOff className="w-4 h-4" />

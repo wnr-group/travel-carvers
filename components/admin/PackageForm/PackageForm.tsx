@@ -15,13 +15,6 @@ import { PACKAGE_FORM_TABS, type PackageTabId } from './tabs';
 
 export type PackageFormMode = 'create' | 'edit';
 
-/**
- * Whether this form is creating a package or editing an existing one.
- *
- * A context rather than a prop because the tabs take no props — they reach the form through
- * `useFormContext`, and BasicInfoTab is the one that needs to know (it must stop mirroring the
- * title into the slug once the package has a real, published URL).
- */
 const PackageFormModeContext = createContext<PackageFormMode>('create');
 
 export const usePackageFormMode = () => useContext(PackageFormModeContext);
@@ -47,6 +40,8 @@ const EMPTY_PACKAGE: PackageFormInput = {
   duration_days: 1,
   duration_nights: 0,
   category_ids: [],
+  destination_id: null,
+  new_destination: null,
 };
 
 export default function PackageForm({
@@ -69,7 +64,6 @@ export default function PackageForm({
   const current = PACKAGE_FORM_TABS.find((tab) => tab.id === activeTab);
   const ActiveTab = current?.Component;
 
-  /** Jump to the first tab that has an error, or a failure on a hidden tab looks like nothing happened. */
   const goToFirstBrokenTab = (validationErrors: Record<string, unknown>) => {
     const firstBrokenTab = PACKAGE_FORM_TABS.find((tab) =>
       tab.fields.some((field) => field in validationErrors)
@@ -77,18 +71,10 @@ export default function PackageForm({
     if (firstBrokenTab) setActiveTab(firstBrokenTab.id);
   };
 
-  /**
-   * Creating: the button you press decides the status, applied to a *copy* of the validated data
-   * rather than written back into the form with setValue (which is async relative to this
-   * handler, and would silently rewrite the Status dropdown the admin can see).
-   */
+
   const submitWith = (status: PackageFormOutput['status']) =>
     form.handleSubmit((data) => onSubmit?.({ ...data, status }), goToFirstBrokenTab)();
 
-  /**
-   * Editing: the status is whatever the Status dropdown says. Forcing draft-or-published on save
-   * would make it impossible to archive a package, and would quietly un-archive one.
-   */
   const submitAsIs = () => form.handleSubmit((data) => onSubmit?.(data), goToFirstBrokenTab)();
 
   const tabHasErrors = (fields: readonly (keyof PackageFormInput)[]) =>
@@ -149,8 +135,6 @@ export default function PackageForm({
           </Link>
 
           {isEditing ? (
-            // One button when editing. The status comes from the Status dropdown on Basic Info,
-            // so archiving (or un-archiving) a package works exactly as you'd expect.
             <button
               type="button"
               onClick={submitAsIs}

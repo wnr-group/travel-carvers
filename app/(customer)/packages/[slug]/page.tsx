@@ -48,7 +48,11 @@ export async function generateMetadata({
     description: pkg.short_description ?? undefined,
     path: `/packages/${slug}`,
     keywords,
-    images: [packageCoverImage(pkg)],
+    // Undefined when the package has no imagery, so the generated default card is used.
+    images: (() => {
+      const cover = packageCoverImage(pkg);
+      return cover ? [cover] : undefined;
+    })(),
   });
 }
 

@@ -172,6 +172,9 @@ export default function SEOTab() {
 
           {ogImage && (
             <div className="mt-2 h-32 w-full max-w-sm overflow-hidden rounded-lg border bg-gray-100">
+              {/* An arbitrary URL the admin typed. next/image would throw for any host not
+                  in next.config remotePatterns, so this preview stays a plain <img>. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={ogImage} alt="" className="h-full w-full object-cover" />
             </div>
           )}
@@ -189,7 +192,7 @@ export default function SEOTab() {
           </div>
 
           <p className="mt-0.5 text-xs text-gray-500">
-            {slug ? packagePath(slug) : '/package/…'}
+            {slug ? packagePath(slug) : '/packages/…'}
           </p>
 
           <p className="mt-1 truncate text-lg text-serp-link">

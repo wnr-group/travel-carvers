@@ -51,9 +51,8 @@ async function getRecentLeads(): Promise<RecentLead[]> {
 export default async function AdminDashboardPage() {
   const session = await getAdminUser();
   if (!session) redirect('/admin/login');
-
-  const stats = await getDashboardStats();
-  const recentLeads = await getRecentLeads();
+  
+  const [stats, recentLeads] = await Promise.all([getDashboardStats(), getRecentLeads()]);
   
   return (
     <div className="py-4">

@@ -1,6 +1,7 @@
 'use client';
 
-import { Bell, Search, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import NotificationBell from '@/components/admin/NotificationBell';
 
 interface AdminHeaderProps {
   isCollapsed: boolean;
@@ -10,54 +11,44 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ isCollapsed, onToggleCollapse, onOpenMobile }: AdminHeaderProps) {
   return (
-    <header className="h-16 bg-white border-b border-brand-medium/20 flex items-center justify-between px-4 sm:px-8 mb-8 sticky top-0 z-20">
-      <div className="flex items-center gap-2 sm:gap-4">
+    <header className="sticky top-0 z-20 mb-6 flex h-14 items-center justify-between border-b border-brand-medium/20 bg-white px-3 sm:px-6">
+      <div className="flex items-center gap-1 sm:gap-2">
         {/* Mobile Hamburger Menu */}
-        <button 
+        <button
           onClick={onOpenMobile}
-          className="lg:hidden text-brand-dark hover:text-brand-darkest transition-colors p-2 hover:bg-brand-medium/10 rounded-lg"
+          className="rounded-lg p-2 text-brand-dark transition-colors hover:bg-brand-medium/10 hover:text-brand-darkest lg:hidden"
           aria-label="Open navigation menu"
         >
-          <Menu className="w-6 h-6" />
+          <Menu className="h-5 w-5" />
         </button>
 
         {/* Desktop Collapse/Expand Toggle */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:block text-brand-dark hover:text-brand-darkest transition-colors p-2 hover:bg-brand-medium/10 rounded-lg relative group"
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="relative group hidden rounded-lg p-2 text-brand-dark transition-colors hover:bg-brand-medium/10 hover:text-brand-darkest lg:block"
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? (
-            <PanelLeftOpen className="w-5 h-5" />
+            <PanelLeftOpen className="h-5 w-5" />
           ) : (
-            <PanelLeftClose className="w-5 h-5" />
+            <PanelLeftClose className="h-5 w-5" />
           )}
-          <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1.5 admin-tooltip text-xs font-semibold rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-            {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          </div>
+          <span className="admin-tooltip pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded px-2.5 py-1.5 text-xs font-semibold opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          </span>
         </button>
-
-        {/* Search Bar */}
-        <div className="relative w-40 sm:w-64 md:w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-medium" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full pl-10 pr-4 py-2 rounded-full border border-brand-lightest bg-brand-lightest/30 text-base lg:text-sm focus:outline-none focus:ring-2 focus:ring-brand-medium/50"
-          />
-        </div>
       </div>
 
-      {/* User Actions */}
-      <div className="flex items-center gap-3 sm:gap-6">
-        <button className="text-brand-dark hover:text-brand-darkest transition-colors">
-          <Bell className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-8 h-8 rounded-full bg-brand-medium flex items-center justify-center text-white font-bold text-sm">
+      {/* Right cluster: identical on every admin page. */}
+      <div className="flex items-center gap-1.5 sm:gap-3">
+        <NotificationBell />
+
+        {/* Logout lives in the sidebar; the header keeps identity only. */}
+        <div className="flex items-center gap-2 border-l border-gray-200 pl-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-medium text-sm font-bold text-white">
             A
-          </div>
-          <span className="text-brand-darkest font-medium text-sm hidden sm:inline">Admin User</span>
+          </span>
+          <span className="hidden text-sm font-medium text-brand-darkest sm:inline">Admin User</span>
         </div>
       </div>
     </header>

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { PUBLIC_PACKAGE_STATUSES } from '@/lib/types/package';
+import { applyGlobalPricing } from './siteSettings';
 
 /**
  * Public, client-safe package reads.
@@ -30,7 +31,7 @@ export async function getPublishedPackages() {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
 }
 
 /**
@@ -73,6 +74,10 @@ export async function getPackageBySlug(slug: string) {
       stay_details (
         *
       ),
+      package_highlights (
+        highlight_text,
+        display_order
+      ),
       travel_tips (
         tip_text,
         display_order
@@ -98,7 +103,7 @@ export async function getPackageBySlug(slug: string) {
     .single();
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
 }
 
 /**
@@ -124,7 +129,7 @@ export async function getFeaturedPackages() {
     .limit(6);
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
 }
 
 /**
@@ -150,7 +155,7 @@ export async function getTrendingPackages() {
     .limit(6);
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
 }
 
 /**
@@ -190,7 +195,96 @@ export async function getSimilarPackages(
     .limit(limit);
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
+}
+
+
+export async function getPackagesByCategorySlug(slug: string, limit?: number) {
+  let query = supabase
+    .from('packages')
+    .select(`
+      *,
+      package_gallery (
+        image_url,
+        is_cover
+      ),
+      reviews (
+        rating,
+        is_approved
+      ),
+      package_categories!inner (
+        categories!inner (
+          slug
+        )
+      )
+    `)
+    .in('status', PUBLIC_PACKAGE_STATUSES)
+    .eq('package_categories.categories.slug', slug)
+    .order('created_at', { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return applyGlobalPricing(data);
+}
+
+interface GroupPackageRow {
+  id: string;
+  created_at?: string | null;
+  [key: string]: unknown;
+}
+
+/**
+ * Published packages carrying the `is_group_package` flag (Public).
+ */
+export async function getFlaggedGroupPackages(limit?: number) {
+  let query = supabase
+    .from('packages')
+    .select(`
+      *,
+      package_gallery (
+        image_url,
+        is_cover
+      ),
+      reviews (
+        rating,
+        is_approved
+      )
+    `)
+    .in('status', PUBLIC_PACKAGE_STATUSES)
+    .eq('is_group_package', true)
+    .order('created_at', { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return applyGlobalPricing(data);
+}
+
+export async function getGroupPackages(
+  categorySlug: string,
+  limit?: number
+): Promise<GroupPackageRow[]> {
+  const [byCategory, byFlag] = await Promise.all([
+    getPackagesByCategorySlug(categorySlug, limit).catch(() => []),
+    getFlaggedGroupPackages(limit).catch(() => []),
+  ]);
+
+  const merged = new Map<string, GroupPackageRow>();
+  for (const row of [...(byCategory ?? []), ...(byFlag ?? [])] as GroupPackageRow[]) {
+    if (!merged.has(row.id)) merged.set(row.id, row);
+  }
+
+  const rows = Array.from(merged.values()).sort(
+    (a, b) =>
+      new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+  );
+
+  return limit ? rows.slice(0, limit) : rows;
 }
 
 /**
@@ -218,5 +312,5 @@ export async function getPackagesByCategory(categoryId: string) {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
 }

@@ -4,9 +4,17 @@ import { slugify } from '@/lib/utils';
 export const DESTINATION_META_TITLE_MAX = 200;
 export const DESTINATION_META_DESCRIPTION_MAX = 300;
 
+/**
+ * Optional text fields arrive from the form as '' rather than undefined. Store them as NULL.
+ *
+ * `null` is accepted as input too: this schema runs twice per save — once in the
+ * browser, then again on the API route over the payload the first parse already
+ * produced. Without it, every empty optional field round-trips as null and is
+ * rejected server-side.
+ */
 const emptyToNull = <T extends z.ZodType<string>>(schema: T) =>
   z
-    .union([schema, z.literal('')])
+    .union([schema, z.literal(''), z.null()])
     .optional()
     .transform((value) => (value ? value : null));
 
@@ -59,8 +67,7 @@ export const destinationSchema = z.object({
       )
   ),
   og_image: emptyToNull(z.url({ error: 'OG image must be a valid URL' })),
-
-  package_ids: z.array(z.uuid({ error: 'Package must be a valid id' })).default([]),
+  package_ids: z.array(z.guid({ error: 'Package must be a valid id' })).default([]),
 });
 
 export const destinationUpdateSchema = destinationSchema.omit({ slug: true });

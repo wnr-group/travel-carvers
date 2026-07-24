@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useTrustBadges, useCreateTrustBadge, useDeleteTrustBadge } from '@/lib/hooks/useTrustBadges';
+import {
+  useTrustBadges,
+  useCreateTrustBadge,
+  useDeleteTrustBadge,
+  type TrustBadgeType,
+} from '@/lib/hooks/useTrustBadges';
 import { 
   Plus, 
   Trash2, 
@@ -21,7 +26,27 @@ import {
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
-// A map of selectable Lucide icons for Trust Badges
+const BADGE_TYPE_OPTIONS: {
+  value: TrustBadgeType;
+  label: string;
+  hint: string;
+  example: string;
+}[] = [
+  {
+    value: 'stat',
+    label: 'Stat badge',
+    hint: 'Icon + a big leading number, then a short label.',
+    example: 'e.g. “10,000+ Happy Travellers”',
+  },
+  {
+    value: 'text',
+    label: 'Text badge',
+    hint: 'A compact button-sized pill. Text only — no icon, no card.',
+    example: 'e.g. “Best Price Guarantee”',
+  },
+];
+
+// A map of selectable Lucide icons for Trust Badges (stat badges only).
 const ICON_OPTIONS = [
   { value: 'Shield', label: 'Shield / Security', icon: Shield },
   { value: 'Award', label: 'Award / Trust', icon: Award },
@@ -42,6 +67,7 @@ export default function TrustBadgesPage() {
   // Form states
   const [text, setText] = useState('');
   const [icon, setIcon] = useState('Shield');
+  const [badgeType, setBadgeType] = useState<TrustBadgeType>('stat');
   const [displayOrder, setDisplayOrder] = useState(0);
 
   // Pending delete (drives the confirmation dialog)
@@ -53,11 +79,13 @@ export default function TrustBadgesPage() {
       await createMutation.mutateAsync({
         text,
         icon,
+        badge_type: badgeType,
         display_order: Number(displayOrder),
       });
       toast.success('Trust badge created successfully!');
       setText('');
       setIcon('Shield');
+      setBadgeType('stat');
       setDisplayOrder(0);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Failed to create trust badge');
@@ -138,21 +166,58 @@ export default function TrustBadgesPage() {
               />
             </div>
 
-            <div>
-              <label htmlFor="badgeIcon" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Select Icon</label>
-              <select
-                id="badgeIcon"
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 bg-white text-gray-900 cursor-pointer"
-              >
-                {ICON_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
+            <fieldset>
+              <legend className="block text-[15px] font-semibold text-gray-700 mb-1.5">
+                Badge Style
+              </legend>
+              <div className="space-y-2">
+                {BADGE_TYPE_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 transition-colors ${
+                      badgeType === option.value
+                        ? 'border-brand-medium bg-brand-lightest/30'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="badgeType"
+                      value={option.value}
+                      checked={badgeType === option.value}
+                      onChange={() => setBadgeType(option.value)}
+                      className="mt-0.5 accent-[color:var(--logo-forest)]"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-gray-900">
+                        {option.label}
+                      </span>
+                      <span className="block text-xs text-gray-500">{option.hint}</span>
+                      <span className="block text-xs text-gray-400 italic">{option.example}</span>
+                    </span>
+                  </label>
                 ))}
-              </select>
-            </div>
+              </div>
+            </fieldset>
+
+            {/* Text badges render as plain pills, so an icon choice would be a dead control. */}
+            {badgeType === 'stat' && (
+              <div>
+                <label htmlFor="badgeIcon" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Select Icon</label>
+                <select
+                  id="badgeIcon"
+                  value={icon}
+                  onChange={(e) => setIcon(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 bg-white text-gray-900 cursor-pointer"
+                >
+                  {ICON_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label htmlFor="displayOrder" className="block text-[15px] font-semibold text-gray-700 mb-1.5">Display Order</label>
@@ -194,7 +259,9 @@ export default function TrustBadgesPage() {
             <div className="space-y-1">
               <h3 className="font-bold text-sm text-amber-900">Placement Note</h3>
               <p className="text-xs leading-relaxed text-amber-800">
-                These trust badges are automatically rendered in the website footer on all pages. They reassure visitors about checkout safety, booking support, and service quality.
+                These badges render in the “Trusted by Thousands” section on the homepage, sorted by
+                display order. Stat badges appear first as number cards, text badges follow in the
+                same card style — pick the style that fits the wording.
               </p>
             </div>
           </div>
@@ -213,12 +280,31 @@ export default function TrustBadgesPage() {
                   className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-brand-lightest/20 rounded-lg">
-                      {renderBadgeIcon(badge.icon)}
-                    </div>
+                    {/* Mirrors the homepage: stat badges get the icon chip, text badges
+                        get the pill they actually render as. */}
+                    {badge.badge_type === 'stat' ? (
+                      <div className="p-2.5 bg-brand-lightest/20 rounded-lg">
+                        {renderBadgeIcon(badge.icon)}
+                      </div>
+                    ) : (
+                      <span className="rounded-full border border-brand-medium/30 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-medium">
+                        Pill
+                      </span>
+                    )}
                     <div>
                       <h3 className="font-semibold text-base text-gray-900">{badge.text}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">Order: {badge.display_order}</p>
+                      <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
+                        <span
+                          className={`rounded px-1.5 py-0.5 font-semibold ${
+                            badge.badge_type === 'stat'
+                              ? 'bg-brand-lightest/60 text-brand-darkest'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {badge.badge_type === 'stat' ? 'Stat' : 'Text'}
+                        </span>
+                        <span>Order: {badge.display_order}</span>
+                      </p>
                     </div>
                   </div>
 

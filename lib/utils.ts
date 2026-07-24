@@ -22,7 +22,7 @@ export function slugify(value: string) {
  * Public URL of a package.
  */
 export function packagePath(slug: string) {
-  return `/package/${slug}`
+  return `/packages/${slug}`
 }
 
 const YOUTUBE_HOSTS = new Set([

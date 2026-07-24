@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { PUBLIC_PACKAGE_STATUSES } from '@/lib/types/package';
+import { applyGlobalPricing } from './siteSettings';
 
 /**
  * Public, client-safe category reads.
@@ -192,7 +193,7 @@ export async function getPublishedPackagesByCategory(categoryId: string) {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
 }
 
 /**
@@ -217,7 +218,7 @@ export async function getPublishedPackagesBySubcategory(subcategoryId: string) {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return applyGlobalPricing(data);
 }
 
 /**

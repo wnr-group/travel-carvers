@@ -14,15 +14,13 @@ const STATIC_ROUTES: {
 }[] = [
   { path: '/', changeFrequency: 'weekly', priority: 1.0 },
   { path: '/packages', changeFrequency: 'daily', priority: 0.9 },
+  { path: '/destinations', changeFrequency: 'daily', priority: 0.8 },
   { path: '/visa', changeFrequency: 'weekly', priority: 0.5 },
   { path: '/about', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/contact', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/terms', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/privacy', changeFrequency: 'yearly', priority: 0.2 },
 ];
-
-// Destinations used to be a hardcoded list pointing at /packages?destination=<slug>. They are
-// real records now, so the sitemap reads them and links the dedicated pages instead.
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

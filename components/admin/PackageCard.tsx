@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { Edit, Eye, ImageOff } from 'lucide-react'
 import StatusBadge from './StatusBadge'
@@ -11,10 +12,12 @@ export default function PackageCard({ pkg }: { pkg: AdminPackage }) {
     <article className="flex flex-col overflow-hidden rounded-xl bg-white shadow transition-shadow hover:shadow-lg">
       <div className="relative h-40 bg-gray-100">
         {pkg.cover_image_url ? (
-          <img
+          <Image
             src={pkg.cover_image_url}
             alt={pkg.title}
-            className="h-full w-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 320px"
+            className="object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-gray-400">

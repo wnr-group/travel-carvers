@@ -3,7 +3,10 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { LayoutGrid, List, Plus } from 'lucide-react';
-import PackageFilters, { type PackageFilterState } from '@/components/admin/PackageFilters';
+import PackageFilters, {
+  EMPTY_PACKAGE_FILTERS,
+  type PackageFilterState,
+} from '@/components/admin/PackageFilters';
 import PackageTable from '@/components/admin/PackageTable';
 import PackageCard from '@/components/admin/PackageCard';
 import { useAdminPackages } from '@/lib/hooks/useAdminPackages';
@@ -20,7 +23,7 @@ const VIEW_MODE_STORAGE_KEY = 'admin:packages:view';
 const isViewMode = (value: string): value is ViewMode =>
   value === 'table' || value === 'grid';
 
-const EMPTY_FILTERS: PackageFilterState = { search: '', status: '', category: '' };
+const EMPTY_FILTERS: PackageFilterState = EMPTY_PACKAGE_FILTERS;
 
 export default function PackagesPage() {
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(

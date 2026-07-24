@@ -29,10 +29,17 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { text, icon, display_order } = body;
+    const { text, icon, badge_type, display_order } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required.' }, { status: 400 });
+    }
+
+    if (badge_type !== undefined && badge_type !== 'stat' && badge_type !== 'text') {
+      return NextResponse.json(
+        { error: 'Badge type must be either "stat" or "text".' },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabaseAdmin
@@ -40,6 +47,7 @@ export async function POST(req: Request) {
       .insert({
         text,
         icon: icon || 'Shield',
+        badge_type: badge_type ?? 'stat',
         display_order: display_order || 0,
       })
       .select()

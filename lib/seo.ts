@@ -53,9 +53,12 @@ export function createMetadata({
 }: CreateMetadataInput = {}): Metadata {
   const canonical = absoluteUrl(path);
   const resolvedTitle = title ?? SITE.defaultTitle;
-  const ogImages = (images && images.length ? images : [SITE.defaultOgImage]).map((url) => ({
-    url,
-  }));
+
+  // When a page supplies no image we deliberately omit `images` so Next falls back to the
+  // generated card in app/opengraph-image.tsx. Naming a default here instead would point
+  // every share preview at a single static file — which is exactly how the previous
+  // default silently became a broken HTML error page.
+  const ogImages = images && images.length ? images.map((url) => ({ url })) : undefined;
 
   return {
     title: resolvedTitle,
@@ -75,7 +78,7 @@ export function createMetadata({
       card: 'summary_large_image',
       title: resolvedTitle,
       description,
-      images: ogImages.map((image) => image.url),
+      images: ogImages?.map((image) => image.url),
       creator: SITE.twitterHandle,
       site: SITE.twitterHandle,
     },
@@ -97,11 +100,16 @@ export interface SeoPackage {
   package_gallery?: { image_url: string; is_cover?: boolean | null }[] | null;
 }
 
-/** Cover image for a package: explicit cover → first gallery image → site default OG image. */
-export function packageCoverImage(pkg: SeoPackage): string {
+/**
+ * Cover image for a package: explicit cover → first gallery image → undefined.
+ *
+ * Undefined rather than a hardcoded default, so `createMetadata` omits `images` and the
+ * generated card in app/opengraph-image.tsx is used instead.
+ */
+export function packageCoverImage(pkg: SeoPackage): string | undefined {
   const gallery = pkg.package_gallery ?? [];
   const cover = gallery.find((image) => image.is_cover) ?? gallery[0];
-  return cover?.image_url ?? absoluteUrl(SITE.defaultOgImage);
+  return cover?.image_url ?? undefined;
 }
 
 /** Organization / TravelAgency + WebSite graph for the homepage. */

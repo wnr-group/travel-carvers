@@ -12,7 +12,7 @@ import { firstZodIssue } from '@/lib/utils';
 type RouteParams = { params: Promise<{ id: string }> };
 
 const linkSchema = z.object({
-  package_id: z.uuid({ error: 'Package must be a valid id' }),
+  package_id: z.guid({ error: 'Package must be a valid id' }),
 });
 
 export async function GET(_req: Request, { params }: RouteParams) {

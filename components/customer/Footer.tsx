@@ -4,33 +4,29 @@ import { useState, type ComponentType, type SyntheticEvent, type SVGProps } from
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
-import { Phone, Mail, MapPin, Clock, Send, Compass, ArrowUpRight } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, Send } from 'lucide-react';
+import { useNavCategories } from '@/lib/hooks/useNavCategories';
+import { useCategories } from '@/lib/hooks/useCategories';
+import { useDestinations } from '@/lib/hooks/useDestinations';
+import AllCategoriesModal from '@/components/customer/AllCategoriesModal';
 
 interface FooterLink {
   label: string;
   href: string;
 }
 
+const MAX_FOOTER_CATEGORIES = 6;
+const MAX_FOOTER_DESTINATIONS = 6;
+
 const QUICK_LINKS: FooterLink[] = [
   { label: 'About Us', href: '/about' },
   { label: 'Contact Us', href: '/contact' },
   { label: 'Packages', href: '/packages' },
-  { label: 'India Tours', href: '/packages?region=india' },
-  { label: 'International Tours', href: '/packages?region=international' },
+  { label: 'Destinations', href: '/destinations' },
+  { label: 'Visa Services', href: '/visa' },
   { label: 'Terms & Conditions', href: '/terms' },
   { label: 'Privacy Policy', href: '/privacy' },
 ];
-
-const POPULAR_DESTINATIONS: FooterLink[] = [
-  'Bali',
-  'Thailand',
-  'Vietnam',
-  'Singapore',
-  'Malaysia',
-  'Dubai',
-  'Europe',
-  'Kashmir',
-].map((name) => ({ label: name, href: `/packages?destination=${name.toLowerCase()}` }));
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -108,10 +104,92 @@ function FooterNavLink({ link }: { link: FooterLink }) {
   );
 }
 
+function ExploreRow({
+  label,
+  links,
+  isLoading,
+  viewAll,
+  onViewAll,
+}: {
+  label: string;
+  links: FooterLink[];
+  isLoading: boolean;
+  viewAll: FooterLink;
+  onViewAll?: () => void;
+}) {
+  const viewAllClasses =
+    'ml-1 text-xs font-bold uppercase tracking-wider text-amber-300 transition-colors hover:text-amber-200';
+
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:gap-4">
+      <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-300 sm:w-28">
+        {label}
+      </span>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {isLoading ? (
+          <span className="sr-only">Loading {label.toLowerCase()}</span>
+        ) : (
+          links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/85 transition-colors hover:border-amber-400/60 hover:bg-white/15 hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))
+        )}
+
+        {isLoading &&
+          Array.from({ length: 5 }).map((_, index) => (
+            <span
+              key={index}
+              aria-hidden="true"
+              className="h-7 w-24 animate-pulse rounded-full bg-white/10"
+            />
+          ))}
+
+        {onViewAll ? (
+          <button type="button" onClick={onViewAll} className={viewAllClasses}>
+            {viewAll.label} →
+          </button>
+        ) : (
+          <Link href={viewAll.href} className={viewAllClasses}>
+            {viewAll.label} →
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // The same categories the navbar shows, so the two menus never drift apart.
+  const { data: navCategories, isLoading: categoriesLoading } = useNavCategories();
+  const { data: destinations, isLoading: destinationsLoading } = useDestinations();
+
+  const { data: allCategories } = useCategories();
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  const categoryLinks: FooterLink[] = (navCategories ?? [])
+    .slice(0, MAX_FOOTER_CATEGORIES)
+    .map((category) => ({
+      label: category.name,
+      href: `/categories/${category.slug}`,
+    }));
+
+  // Real destination pages, not the query-string filter the old hardcoded list used.
+  const destinationLinks: FooterLink[] = (destinations ?? [])
+    .slice(0, MAX_FOOTER_DESTINATIONS)
+    .map((destination) => ({
+      label: destination.name,
+      href: `/destinations/${destination.slug}`,
+    }));
 
   const handleSubscribe = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -197,19 +275,7 @@ export default function Footer() {
             </ul>
           </nav>
 
-          {/* ---------------- Column 3: Popular Destinations (3 Cols) ---------------- */}
-          <nav aria-label="Popular destinations" className="lg:col-span-3">
-            <ColumnHeading>Top Destinations</ColumnHeading>
-            <ul className="grid grid-cols-2 gap-x-3 gap-y-2.5 mt-2">
-              {POPULAR_DESTINATIONS.map((link) => (
-                <li key={link.href}>
-                  <FooterNavLink link={link} />
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* ---------------- Column 4: Newsletter + Contact Info (3 Cols) ---------------- */}
+          {/* ---------------- Column 3: Newsletter (3 Cols) ---------------- */}
           <div className="lg:col-span-3 space-y-6">
             <div>
               <ColumnHeading>Newsletter</ColumnHeading>
@@ -253,27 +319,59 @@ export default function Footer() {
               </form>
             </div>
 
-            {/* Quick Contact snippet */}
-            <div>
-              <ColumnHeading>Quick Contact</ColumnHeading>
-              <ul className="flex flex-col gap-2 text-xs text-white/80 mt-2 font-medium">
-                {CONTACT_DETAILS.slice(0, 2).map(({ Icon, value, href }) => (
-                  <li key={value} className="flex items-center gap-2.5">
-                    <Icon className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+          </div>
+
+          {/* ---------------- Column 4: Contact (3 Cols) ---------------- */}
+          <div className="lg:col-span-3">
+            <ColumnHeading>Get In Touch</ColumnHeading>
+            <ul className="flex flex-col gap-3 text-xs text-white/80 mt-2 font-medium">
+              {CONTACT_DETAILS.map(({ Icon, label, value, href }) => (
+                <li key={value} className="flex items-start gap-2.5">
+                  <Icon className="h-3.5 w-3.5 text-amber-300 shrink-0 mt-0.5" />
+                  <span>
+                    <span className="block text-[10px] uppercase tracking-wider text-white/50">
+                      {label}
+                    </span>
                     {href ? (
-                      <a href={href} className="hover:text-white transition-colors underline decoration-white/30">
+                      <a
+                        href={href}
+                        className="hover:text-white transition-colors underline decoration-white/30"
+                      >
                         {value}
                       </a>
                     ) : (
                       <span>{value}</span>
                     )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
 
+        </div>
+
+        {/* -------- Explore band: a taste of what we run, not the whole index -------- */}
+        <div className="mt-12 border-t border-white/10 pt-8">
+          <p className="mb-5 text-xs font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            Explore
+          </p>
+
+          <div className="flex flex-col gap-4">
+            <ExploreRow
+              label="Categories"
+              links={categoryLinks}
+              isLoading={categoriesLoading}
+              viewAll={{ label: 'All categories', href: '/packages' }}
+              onViewAll={() => setShowAllCategories(true)}
+            />
+            <ExploreRow
+              label="Destinations"
+              links={destinationLinks}
+              isLoading={destinationsLoading}
+              viewAll={{ label: 'All destinations', href: '/destinations' }}
+            />
+          </div>
         </div>
       </div>
 
@@ -299,6 +397,13 @@ export default function Footer() {
           </nav>
         </div>
       </div>
+
+      {/* Portals to <body>, so the dark footer's stacking context doesn't trap it. */}
+      <AllCategoriesModal
+        open={showAllCategories}
+        categories={allCategories ?? []}
+        onClose={() => setShowAllCategories(false)}
+      />
     </footer>
   );
 }

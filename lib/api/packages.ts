@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
 import type { AdminPackage, PackageCategoryRef, PackageStatus } from '@/lib/types/package';
+import { slugify } from '@/lib/utils';
 import { MONTHS } from '@/lib/validations/package.schema';
 import type {
   PackageFilters,
@@ -195,6 +196,15 @@ async function insertPackageRelations(packageId: string, input: PackageRelations
     ),
 
     insertRows(
+      'package_highlights',
+      (input.highlights ?? []).map((highlight) => ({
+        package_id: packageId,
+        highlight_text: highlight.highlight,
+        display_order: highlight.display_order,
+      }))
+    ),
+
+    insertRows(
       'travel_tips',
       (input.travel_tips ?? []).map((tip) => ({
         package_id: packageId,
@@ -295,18 +305,124 @@ async function insertItineraryDays(packageId: string, input: PackageRelations) {
   await insertRows('itinerary_entries', entries);
 }
 
+/** What the package row needs to mirror once its destination is known. */
+interface ResolvedDestination {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+async function resolveDestination(
+  input: Pick<PackageRelations, 'destination_id' | 'new_destination'>
+): Promise<ResolvedDestination | null> {
+  if (input.new_destination) {
+    const { name, country, latitude, longitude } = input.new_destination;
+    const slug = slugify(name);
+
+    const { data: existing, error: lookupError } = await supabaseAdmin
+      .from('destinations')
+      .select('id, name, latitude, longitude')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (lookupError) throw lookupError;
+
+    if (existing) {
+      return {
+        id: existing.id as string,
+        name: existing.name as string,
+        latitude: Number(existing.latitude),
+        longitude: Number(existing.longitude),
+      };
+    }
+
+    const { data: created, error: insertError } = await supabaseAdmin
+      .from('destinations')
+      .insert({ name, country, slug, latitude, longitude, is_active: true })
+      .select('id, name, latitude, longitude')
+      .single();
+
+    if (insertError) throw insertError;
+
+    return {
+      id: created.id as string,
+      name: created.name as string,
+      latitude: Number(created.latitude),
+      longitude: Number(created.longitude),
+    };
+  }
+
+  if (input.destination_id) {
+    const { data, error } = await supabaseAdmin
+      .from('destinations')
+      .select('id, name, latitude, longitude')
+      .eq('id', input.destination_id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error('The selected destination no longer exists.');
+
+    return {
+      id: data.id as string,
+      name: data.name as string,
+      latitude: Number(data.latitude),
+      longitude: Number(data.longitude),
+    };
+  }
+
+  return null;
+}
+
+async function linkPackageToDestination(packageId: string, destinationId: string | null) {
+  const { error: deleteError } = await supabaseAdmin
+    .from('package_destinations')
+    .delete()
+    .eq('package_id', packageId);
+
+  if (deleteError) throw deleteError;
+
+  if (!destinationId) return;
+
+  const { error: insertError } = await supabaseAdmin
+    .from('package_destinations')
+    .upsert(
+      { package_id: packageId, destination_id: destinationId },
+      { onConflict: 'package_id,destination_id', ignoreDuplicates: true }
+    );
+
+  if (insertError) throw insertError;
+}
+
+function withDestinationColumns<T extends Record<string, unknown>>(
+  row: T,
+  destination: ResolvedDestination | null
+): T {
+  if (!destination) return row;
+
+  return {
+    ...row,
+    destination_name: destination.name,
+    main_destination_lat: destination.latitude,
+    main_destination_lng: destination.longitude,
+  };
+}
+
 /**
  * The form fields that live in other tables. Everything else is a column on `packages`.
  */
 const RELATION_KEYS = [
   'category_ids',
   'subcategory_ids',
+  'destination_id',
+  'new_destination',
   'gallery_images',
   'video_urls',
   'itinerary_days',
   'inclusions',
   'exclusions',
   'stay_details',
+  'highlights',
   'travel_tips',
   'best_time_to_visit',
   'places_to_visit',
@@ -331,7 +447,8 @@ function stripRelations<T extends PackageRelations>(input: T): Omit<T, RelationK
 export async function createPackageWithRelations(
   input: PackageFormOutput
 ): Promise<{ id: string }> {
-  const packageRow = stripRelations(input);
+  const destination = await resolveDestination(input);
+  const packageRow = withDestinationColumns(stripRelations(input), destination);
 
   const { data, error } = await supabaseAdmin
     .from('packages')
@@ -345,6 +462,7 @@ export async function createPackageWithRelations(
 
   try {
     await insertPackageRelations(packageId, input);
+    await linkPackageToDestination(packageId, destination?.id ?? null);
   } catch (relationError) {
     await supabaseAdmin.from('packages').delete().eq('id', packageId);
     throw relationError;
@@ -393,9 +511,9 @@ const CHILD_TABLES = [
   'best_time_to_visit',
   'places_to_visit',
   'itinerary_days',
-  // Appended, not inserted: getPackageForEdit destructures this list positionally.
   'cancellation_policies',
   'required_documents',
+  'package_highlights',
 ] as const;
 
 type ChildRow = Record<string, unknown>;
@@ -428,6 +546,7 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
     days,
     cancellationRows,
     documentRows,
+    highlightRows,
   ] = await Promise.all(
     CHILD_TABLES.map(async (table) => {
       const { data, error: childError } = await supabaseAdmin
@@ -439,6 +558,14 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
       return (data ?? []) as ChildRow[];
     })
   );
+
+  const { data: destinationLinks, error: destinationError } = await supabaseAdmin
+    .from('package_destinations')
+    .select('destination_id')
+    .eq('package_id', id)
+    .limit(1);
+
+  if (destinationError) throw destinationError;
 
   const dayIds = days.map((day) => day.id as string);
   let dayEntries: ChildRow[] = [];
@@ -504,6 +631,8 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
 
     category_ids: categories.map((row) => row.category_id as string),
     subcategory_ids: subcategories.map((row) => row.subcategory_id as string),
+    destination_id: (destinationLinks?.[0]?.destination_id as string | undefined) ?? null,
+    new_destination: null,
 
     gallery_images: byDisplayOrder(gallery as { display_order?: number | null }[]).map((row) => {
       const image = row as ChildRow;
@@ -558,6 +687,14 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
         check_in_date: (hotel.check_in_date as string) ?? '',
         check_out_date: (hotel.check_out_date as string) ?? '',
         display_order: (hotel.display_order as number) ?? 0,
+      };
+    }),
+
+    highlights: byDisplayOrder(highlightRows as { display_order?: number | null }[]).map((row) => {
+      const highlight = row as ChildRow;
+      return {
+        highlight: (highlight.highlight_text as string) ?? '',
+        display_order: (highlight.display_order as number) ?? 0,
       };
     }),
 
@@ -662,7 +799,8 @@ export async function updatePackageWithRelations(
   id: string,
   input: PackageUpdateOutput
 ): Promise<{ id: string }> {
-  const packageRow = stripRelations(input);
+  const destination = await resolveDestination(input);
+  const packageRow = withDestinationColumns(stripRelations(input), destination);
 
   const snapshot = await snapshotRelations(id);
 
@@ -679,6 +817,7 @@ export async function updatePackageWithRelations(
   try {
     await deleteRelations(id);
     await insertPackageRelations(id, input);
+    await linkPackageToDestination(id, destination?.id ?? null);
   } catch (relationError) {
     try {
       await deleteRelations(id);

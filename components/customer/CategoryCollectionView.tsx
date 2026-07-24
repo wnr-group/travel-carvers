@@ -115,8 +115,9 @@ export default function CategoryCollectionView({
               initial={initial}
               whileInView="visible"
               viewport={{ once: true, amount: 0.15 }}
-              // max-w-7xl and gap-6 to match the package grid below, so the two grids share a
-              // width and their columns line up.
+              // Three up against the package grid's four, so a collection card stays
+              // visibly wider than a package card at every desktop size without going so
+              // wide that a long list of subcategories looks sparse.
               className="mx-auto mt-8 grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
             >
               {collections.map((collection) => (
@@ -126,16 +127,15 @@ export default function CategoryCollectionView({
                     className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)] transition duration-300 hover:-translate-y-1 hover:border-brand-medium hover:shadow-lg"
                   >
                     {/* Cover — image when set, brand gradient + icon/monogram otherwise */}
-                    <span className="relative block h-56 w-full overflow-hidden">
+                    <span className="relative block h-64 w-full overflow-hidden sm:h-72">
                       {collection.imageUrl ? (
                         <>
                           <Image
                             src={collection.imageUrl}
                             alt=""
                             fill
-                            // The grid caps at max-w-7xl, so a 3-up card tops out near 400px —
-                            // 33vw would over-request on wide screens.
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+                            // The grid caps at max-w-7xl, so a 3-up card tops out near 410px.
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 410px"
                             className="object-cover transition duration-500 group-hover:scale-105"
                           />
                           <span className="overlay-brand-primary absolute inset-0" aria-hidden="true" />
@@ -158,7 +158,7 @@ export default function CategoryCollectionView({
                         </span>
                       )}
 
-                      <span className="absolute bottom-4 left-5 right-4 text-xl font-semibold text-white drop-shadow sm:text-2xl">
+                      <span className="absolute bottom-5 left-5 right-4 text-xl font-semibold text-white drop-shadow sm:text-2xl">
                         {collection.label}
                       </span>
 
@@ -171,13 +171,13 @@ export default function CategoryCollectionView({
                       )}
                     </span>
 
-                    <span className="flex flex-1 items-center justify-between gap-4 p-5 text-left">
-                      <span className="text-sm leading-relaxed text-brand-medium line-clamp-2">
+                    <span className="flex flex-1 items-center justify-between gap-4 p-6 text-left">
+                      <span className="text-base leading-relaxed text-brand-medium line-clamp-2">
                         {collection.description ?? `Explore ${collection.label} trips`}
                       </span>
                       <ArrowRight
                         aria-hidden="true"
-                        className="h-5 w-5 shrink-0 text-brand-medium transition duration-300 group-hover:translate-x-1 group-hover:text-brand-dark"
+                        className="h-6 w-6 shrink-0 text-brand-medium transition duration-300 group-hover:translate-x-1 group-hover:text-brand-dark"
                       />
                     </span>
                   </Link>
@@ -218,7 +218,9 @@ export default function CategoryCollectionView({
               initial={initial}
               whileInView="visible"
               viewport={{ once: true, amount: 0.1 }}
-              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              // Four up — one more than the collections grid above, which is what keeps a
+              // collection card the larger of the two.
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
             >
               {packages.map((pkg) => (
                 <motion.div

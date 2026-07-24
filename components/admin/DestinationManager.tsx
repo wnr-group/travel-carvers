@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Edit, ImageOff, MapPin, Plus, Search, Trash2 } from 'lucide-react';
+import { Edit, ImageOff, MapPin, Plus, Search, Trash2, X } from 'lucide-react';
 import DestinationForm from '@/components/admin/DestinationForm';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import {
@@ -11,17 +11,10 @@ import {
   useDeleteDestination,
   useUpdateDestination,
 } from '@/lib/hooks/useAdminDestinations';
-import { cn } from '@/lib/utils';
 import type { Destination } from '@/lib/types/destination';
 import type { DestinationFormOutput } from '@/lib/validations/destination.schema';
 
 type ToggleFilter = 'all' | 'yes' | 'no';
-
-const TOGGLE_OPTIONS: { value: ToggleFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'yes', label: 'Yes' },
-  { value: 'no', label: 'No' },
-];
 
 const PAGE_SIZE = 10;
 
@@ -69,6 +62,9 @@ export default function DestinationManager() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const hasActiveFilters =
+    search !== '' || country !== 'all' || featured !== 'all' || popular !== 'all';
 
   const resetFilters = () => {
     setSearch('');
@@ -163,7 +159,7 @@ export default function DestinationManager() {
           />
         </div>
 
-        <div>
+        <div className="flex items-center gap-3">
           <label htmlFor="country-filter" className="sr-only">
             Filter by country
           </label>
@@ -183,39 +179,19 @@ export default function DestinationManager() {
               </option>
             ))}
           </select>
-        </div>
 
-        {/* {(
-          [
-            { label: 'Featured', value: featured, set: setFeatured },
-            { label: 'Popular', value: popular, set: setPopular },
-          ] as const
-        ).map((group) => (
-          <div key={group.label}>
-            <span className="mb-1 block text-xs font-medium text-gray-500">{group.label}</span>
-            <div role="group" aria-label={`Filter by ${group.label}`} className="flex gap-1">
-              {TOGGLE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={group.value === option.value}
-                  onClick={() => {
-                    group.set(option.value);
-                    setPage(1);
-                  }}
-                  className={cn(
-                    'flex-1 rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors',
-                    group.value === option.value
-                      ? 'border-brand-dark bg-brand-lightest/60 text-brand-darkest'
-                      : 'border-gray-300 text-gray-500 hover:bg-gray-50'
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))} */}
+          {/* Reachable whenever a filter is on, not just from the "no matches" state. */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-brand-darkest"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {isPending ? (

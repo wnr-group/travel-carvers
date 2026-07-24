@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { Compass, Globe2, MapPin, Package as PackageIcon } from 'lucide-react';
 import Breadcrumb from '@/components/customer/Breadcrumb';
+import DestinationsExplorer from '@/components/customer/DestinationsExplorer';
 import EmptyState from '@/components/ui/EmptyState';
 import { createMetadata, SITE } from '@/lib/seo';
-import { getActiveDestinations } from '@/lib/api/public/destinations';
+import { getActiveDestinationsWithCounts } from '@/lib/api/public/destinations';
 
 export const revalidate = 3600;
 
@@ -16,72 +16,91 @@ export const metadata: Metadata = createMetadata({
 });
 
 
+const BANNER_IMAGE ='/destination-image.jpg';
+
+function Stat({ icon: Icon, value, label }: { icon: typeof Globe2; value: number; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-sm">
+        <Icon aria-hidden="true" className="h-5 w-5" />
+      </span>
+      <span>
+        <span className="block text-xl font-black leading-none text-white">{value}</span>
+        <span className="block text-[11px] font-semibold uppercase tracking-wider text-white/70">
+          {label}
+        </span>
+      </span>
+    </div>
+  );
+}
+
 export default async function DestinationsPage() {
-  const destinations = await getActiveDestinations().catch(() => []);
+  const destinations = await getActiveDestinationsWithCounts().catch(() => []);
+
+  // Banner stats only — the listing itself groups and filters client-side.
+  const countryCount = new Set(destinations.map((item) => item.country)).size;
+  const totalPackages = destinations.reduce((sum, item) => sum + item.package_count, 0);
 
   return (
-    <div className="min-h-screen bg-brand-tint-light pb-16">
-      <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Destinations' }]} />
+    <div className="min-h-screen bg-brand-tint-light pb-20">
+      {/* ------------------------------- Banner ------------------------------- */}
+      <header className="relative isolate overflow-hidden">
+        <Image
+          src={BANNER_IMAGE}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/80 via-brand-forest/45 to-brand-darkest/20" />
 
-      <header className="mx-auto mt-6 max-w-7xl px-5 text-center sm:px-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-medium">
-          Where we go
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-brand-darkest sm:text-5xl">Destinations</h1>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-brand-medium sm:text-base">
-          {destinations.length > 0
-            ? `${destinations.length} ${destinations.length === 1 ? 'destination' : 'destinations'} across our tours.`
-            : 'Our destination list is on its way.'}
-        </p>
+        <div className="relative mx-auto max-w-7xl px-5 pb-14 pt-10 sm:px-8 sm:pb-16 sm:pt-12">
+          <Breadcrumb
+            tone="light"
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Destinations' },
+            ]}
+          />
+
+          <div className="mt-6 max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+              <Compass aria-hidden="true" className="h-3.5 w-3.5 text-amber-300" />
+              Where we go
+            </span>
+
+            <h1 className="mt-4 text-4xl font-black leading-tight text-white drop-shadow sm:text-5xl lg:text-6xl">
+              Every corner of our map
+            </h1>
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+              {destinations.length > 0
+                ? 'From backwaters and beaches to skylines and snow — browse the places we plan trips to, and the packages that go there.'
+                : 'Our destination list is on its way. In the meantime, browse all of our packages.'}
+            </p>
+
+            {destinations.length > 0 && (
+              <div className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-4">
+                <Stat icon={MapPin} value={destinations.length} label="Destinations" />
+                <Stat icon={Globe2} value={countryCount} label="Countries" />
+                {totalPackages > 0 && (
+                  <Stat icon={PackageIcon} value={totalPackages} label="Packages" />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </header>
 
-      <main className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
+      {/* ------------------------------ Listing ------------------------------- */}
+      <main className="mx-auto mt-12 max-w-7xl px-5 sm:px-8">
         {destinations.length === 0 ? (
           <EmptyState
             variant="destinations"
             description="We are still adding destinations. Please check back soon, or browse all our packages."
           />
         ) : (
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {destinations.map((destination) => (
-              <li key={destination.id}>
-                <Link
-                  href={`/destinations/${destination.slug}`}
-                  className="group relative block h-64 overflow-hidden rounded-2xl shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-dark focus-visible:ring-offset-2"
-                >
-                  {destination.hero_image_url ? (
-                    <Image
-                      src={destination.hero_image_url}
-                      alt=""
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-                      className="object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[var(--logo-forest-dark)] to-[var(--logo-sage)]"
-                    >
-                      <MapPin className="h-12 w-12 text-white/70" />
-                    </span>
-                  )}
-
-                  <span className="absolute inset-0 bg-gradient-to-t from-brand-darkest via-brand-darkest/30 to-transparent" />
-
-                  <span className="absolute inset-x-0 bottom-0 p-5">
-                    <span className="block text-xl font-semibold text-white drop-shadow">
-                      {destination.name}
-                    </span>
-                    <span className="mt-0.5 block text-sm text-white/85">
-                      {destination.city
-                        ? `${destination.city}, ${destination.country}`
-                        : destination.country}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <DestinationsExplorer destinations={destinations} />
         )}
       </main>
     </div>

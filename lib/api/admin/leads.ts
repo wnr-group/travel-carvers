@@ -26,6 +26,7 @@ export async function createLeadAsAdmin(input: AdminLeadOutput) {
       travel_start_date: input.travel_start_date ?? null,
       travel_end_date: input.travel_end_date ?? null,
       status: input.status,
+      source: input.source,
     })
     .select(`
       *,

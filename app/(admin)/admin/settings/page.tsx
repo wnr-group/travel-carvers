@@ -1,7 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSiteSettings, useUpdateSiteSettings } from '@/lib/hooks/useSiteSettings';
+import { useState } from 'react';
+import {
+  useSiteSettings,
+  useUpdateSiteSettings,
+  type SiteSettings,
+} from '@/lib/hooks/useSiteSettings';
 import {
   Save,
   Building2,
@@ -13,37 +17,50 @@ import { toast } from 'sonner';
 
 export default function SiteSettingsPage() {
   const { data, isPending, isError, error } = useSiteSettings();
+
+  if (isPending) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center min-h-[400px]">
+        <Loader2 className="w-10 h-10 animate-spin text-brand-dark" />
+        <p className="text-gray-500 mt-4 text-sm font-medium">Fetching site configurations...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="py-8 text-center max-w-md mx-auto">
+        <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-6">
+          <h3 className="font-bold text-lg mb-2">Error Loading Settings</h3>
+          <p className="text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // `key` remounts the form when the record changes — React's own way to reset state
+  // from new data, instead of copying `data` into state inside an effect.
+  return <SiteSettingsForm key={data?.id ?? 'new'} initial={data ?? null} />;
+}
+
+function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
   const updateMutation = useUpdateSiteSettings();
 
-  // Form states
-  const [id, setId] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [showPricesGlobally, setShowPricesGlobally] = useState(true);
-  
-  const [facebookUrl, setFacebookUrl] = useState('');
-  const [instagramUrl, setInstagramUrl] = useState('');
-  const [twitterUrl, setTwitterUrl] = useState('');
-  const [linkedinUrl, setLinkedinUrl] = useState('');
+  // Seeded once at mount from the fetched record — no effect, no cascading render.
+  const [id] = useState(initial?.id ?? '');
+  const [companyName, setCompanyName] = useState(initial?.company_name ?? '');
+  const [contactEmail, setContactEmail] = useState(initial?.contact_email ?? '');
+  const [contactPhone, setContactPhone] = useState(initial?.contact_phone ?? '');
+  const [address, setAddress] = useState(initial?.address ?? '');
+  // Absent means "show prices" — only an explicit false turns it off.
+  const [showPricesGlobally, setShowPricesGlobally] = useState(
+    initial?.show_prices_globally !== false
+  );
 
-  // Sync form states with query data. Initialising editable form fields from fetched data is an
-  // intentional effect here; the cascading-render lint rule doesn't apply to this one-time sync.
-  useEffect(() => {
-    if (data) {
-      setId(data.id || '');
-      setCompanyName(data.company_name || '');
-      setContactEmail(data.contact_email || '');
-      setContactPhone(data.contact_phone || '');
-      setAddress(data.address || '');
-      setShowPricesGlobally(data.show_prices_globally !== false); // default to true
-      setFacebookUrl(data.facebook_url || '');
-      setInstagramUrl(data.instagram_url || '');
-      setTwitterUrl(data.twitter_url || '');
-      setLinkedinUrl(data.linkedin_url || '');
-    }
-  }, [data]);
+  const [facebookUrl, setFacebookUrl] = useState(initial?.facebook_url ?? '');
+  const [instagramUrl, setInstagramUrl] = useState(initial?.instagram_url ?? '');
+  const [twitterUrl, setTwitterUrl] = useState(initial?.twitter_url ?? '');
+  const [linkedinUrl, setLinkedinUrl] = useState(initial?.linkedin_url ?? '');
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -65,26 +82,6 @@ export default function SiteSettingsPage() {
       toast.error(e instanceof Error ? e.message : 'Failed to save settings');
     }
   };
-
-  if (isPending) {
-    return (
-      <div className="py-8 flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="w-10 h-10 animate-spin text-brand-dark" />
-        <p className="text-gray-500 mt-4 text-sm font-medium">Fetching site configurations...</p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="py-8 text-center max-w-md mx-auto">
-        <div className="bg-red-50 text-red-700 border border-red-200 rounded-lg p-6">
-          <h3 className="font-bold text-lg mb-2">Error Loading Settings</h3>
-          <p className="text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="py-4 max-w-4xl">
@@ -166,7 +163,7 @@ export default function SiteSettingsPage() {
         </div>
 
         {/* Section 2: Global Configuration */}
-        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
           <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
             <div className="p-2 bg-brand-lightest/30 text-brand-darkest rounded-lg">
               <Globe2 className="w-5 h-5" />
@@ -194,7 +191,7 @@ export default function SiteSettingsPage() {
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-brand-medium/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-medium"></div>
             </label>
           </div>
-        </div> */}
+        </div>
 
         {/* Section 3: Social Media settings */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">

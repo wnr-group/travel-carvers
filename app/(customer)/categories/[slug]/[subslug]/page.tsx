@@ -79,7 +79,7 @@ export default async function Page({ params }: { params: Params }) {
     <CategoryCollectionView
       breadcrumbs={[
         { label: 'Home', href: '/' },
-        { label: 'Categories', href: '/packages' },
+        { label: 'Categories', href: '/' },
         { label: category.name, href: `/categories/${category.slug}` },
         { label: subcategory.name },
       ]}

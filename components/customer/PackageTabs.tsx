@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Check, X, MapPin, Star, ChevronDown } from 'lucide-react';
 import ReviewPhotos from '@/components/customer/ReviewPhotos';
 import { ReviewForm } from '@/components/customer/ReviewForm';
@@ -251,14 +252,16 @@ export function PackageTabs({ pkg, onOpenLightbox }: PackageTabsProps) {
               <button
                 key={i}
                 onClick={() => onOpenLightbox(i)}
-                className={`group overflow-hidden rounded-xl bg-slate-100 cursor-pointer ${
+                className={`group relative overflow-hidden rounded-xl bg-slate-100 cursor-pointer ${
                   i === 1 || i === 4 ? 'row-span-2' : ''
                 }`}
               >
-                <img
+                <Image
                   src={g.src}
                   alt={g.alt}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 640px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </button>
             ))}

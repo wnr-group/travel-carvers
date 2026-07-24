@@ -2,10 +2,15 @@ import { z } from 'zod';
 
 /**
  * Optional text fields arrive from the form as '' rather than undefined. Store them as NULL.
+ *
+ * `null` is accepted as input too: this schema runs twice per save — once in the
+ * browser, then again on the API route over the payload the first parse already
+ * produced. Without it, every empty optional field round-trips as null and is
+ * rejected server-side.
  */
 const emptyToNull = <T extends z.ZodType<string>>(schema: T) =>
   z
-    .union([schema, z.literal('')])
+    .union([schema, z.literal(''), z.null()])
     .optional()
     .transform((value) => (value ? value : null));
 

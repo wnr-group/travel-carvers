@@ -5,6 +5,26 @@ import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ArrowRight, Compass, Sparkles, MapPin, ShieldCheck, Star } from 'lucide-react';
+import { useMapOverlay } from './MapOverlayContext';
+import type { HomepageSectionsContent } from '@/lib/api/public/homepageSections';
+
+/** Used until the admin saves copy in the Homepage Manager (and if that read fails). */
+const HERO_FALLBACK = {
+  title: 'Explore Your Next Adventure',
+  subtitle:
+    'Handcrafted itineraries, exclusive global destinations, and seamless planning tailored precisely to your soul.',
+  ctaText: 'Explore Packages',
+};
+
+/**
+ * The design accents the final word of the headline. The admin writes one plain string,
+ * so split the last word back out rather than losing the treatment or hardcoding it.
+ */
+function splitHeadline(title: string): { lead: string; accent: string } {
+  const words = title.trim().split(/\s+/);
+  if (words.length < 2) return { lead: '', accent: title.trim() };
+  return { lead: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
+}
 
 const RealWorldMap = dynamic(() => import('@/components/RealWorldMap'), {
   ssr: false,
@@ -33,19 +53,31 @@ const heroImages = [
   },
 ];
 
-export default function HeroSection() {
+export default function HeroSection({
+  sections,
+}: {
+  sections: HomepageSectionsContent | null;
+}) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [isMapHovered, setIsMapHovered] = useState(false);
+  // Shared with the navbar so it can go solid while the map covers the hero.
+  const { isMapExpanded, setMapExpanded: setIsMapExpanded } = useMapOverlay();
 
-  // Auto-advance carousel
+  // Copy from the admin's Homepage Manager, falling back to the built-in wording.
+  const heroTitle = sections?.hero_title?.trim() || HERO_FALLBACK.title;
+  const heroSubtitle = sections?.hero_subtitle?.trim() || HERO_FALLBACK.subtitle;
+  const heroCtaText = sections?.hero_cta_text?.trim() || HERO_FALLBACK.ctaText;
+  const { lead, accent } = splitHeadline(heroTitle);
+
+  // Auto-advance carousel only when the user is NOT hovering the map or expanding it
   useEffect(() => {
-    if (!isMapExpanded) {
+    if (!isMapExpanded && !isMapHovered) {
       const interval = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % heroImages.length);
       }, 5500);
       return () => clearInterval(interval);
     }
-  }, [isMapExpanded]);
+  }, [isMapExpanded, isMapHovered]);
 
   // Keyboard support for closing map
   useEffect(() => {
@@ -56,15 +88,10 @@ export default function HeroSection() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isMapExpanded]);
-
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroImages.length) % heroImages.length);
-  const goToSlide = (index: number) => setCurrentSlide(index);
+  }, [isMapExpanded, setIsMapExpanded]);
 
   return (
-    <section className="relative min-h-[85vh] lg:min-h-[90vh] w-full overflow-hidden bg-brand-paper z-0 flex items-center">
-      {/* Absolute Background Image Carousel Layer covering the whole section */}
+    <section className="relative min-h-[85vh] lg:min-h-[90vh] w-full overflow-hidden bg-brand-paper z-0 flex items-center pt-24 sm:pt-28 pb-12">
       <div className="absolute inset-0 z-0">
         {heroImages.map((image, index) => (
           <div
@@ -78,18 +105,25 @@ export default function HeroSection() {
               alt={image.title}
               fill
               sizes="100vw"
-              className="object-cover"
+              className={`object-cover transition-all duration-700 ${
+                isMapHovered ? 'scale-105 brightness-[0.75] blur-[1.5px]' : 'scale-100 brightness-[0.95] blur-0'
+              }`}
               priority={index === 0}
             />
           </div>
         ))}
-        {/* Elegant Dark Gradient Overlay for absolute contrast & readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/95 via-brand-forest/80 to-black/70 backdrop-blur-[1px]" />
+        <div 
+          className={`absolute inset-0 bg-gradient-to-r transition-all duration-700 ${
+            isMapHovered 
+              ? 'from-brand-forest/80 via-brand-forest/60 to-black/50 backdrop-blur-[1px]' 
+              : 'from-brand-forest/50 via-brand-forest/25 to-black/15 backdrop-blur-0'
+          }`} 
+        />
       </div>
 
       {/* Main Split-Screen Container */}
       <div
-        className={`relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 transition-all duration-700 ${
+        className={`relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ${
           isMapExpanded ? 'opacity-0 pointer-events-none scale-98' : 'opacity-100 scale-100'
         }`}
       >
@@ -99,18 +133,21 @@ export default function HeroSection() {
           <div className="lg:col-span-6 flex flex-col justify-center text-left z-10 space-y-6">
             
             {/* Top Eyebrow Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md shadow-sm w-fit">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md shadow-sm w-fit">
               <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
               <span>Crafting Unforgettable Journeys</span>
             </div>
 
             {/* Main Headline */}
             <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1] drop-shadow-md">
-                Explore Your Next <span className="text-amber-300 underline decoration-white/30 underline-offset-8">Adventure</span>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1] drop-shadow-lg">
+                {lead && `${lead} `}
+                <span className="text-amber-300 underline decoration-white/40 underline-offset-8">
+                  {accent}
+                </span>
               </h1>
-              <p className="text-base sm:text-lg text-white/90 font-medium max-w-xl leading-relaxed pt-2">
-                Handcrafted itineraries, exclusive global destinations, and seamless planning tailored precisely to your soul.
+              <p className="text-base sm:text-lg text-white/95 font-medium max-w-xl leading-relaxed pt-2 drop-shadow">
+                {heroSubtitle}
               </p>
             </div>
 
@@ -121,30 +158,30 @@ export default function HeroSection() {
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-white hover:bg-gray-100 px-8 py-4 text-sm font-bold text-brand-forest shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <Compass className="h-4 w-4 text-brand-forest" />
-                <span>Explore Packages</span>
+                <span>{heroCtaText}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
 
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/40 hover:border-white px-8 py-4 text-sm font-bold text-white transition-all duration-300 hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/45 hover:border-white px-8 py-4 text-sm font-bold text-white transition-all duration-300 hover:bg-white/15"
               >
                 <span>Request Custom Quote</span>
               </Link>
             </div>
 
             {/* Quick Stats Micro-bar */}
-            <div className="flex items-center gap-6 pt-4 border-t border-white/20 text-xs text-white/80 font-semibold">
+            <div className="flex items-center gap-6 pt-4 border-t border-white/25 text-xs text-white/90 font-semibold">
               <div className="flex items-center gap-1.5">
                 <Star className="w-4 h-4 text-amber-300 fill-current" />
                 <span className="text-white font-bold">4.85 / 5.0</span> Rating
               </div>
-              <div className="w-1 h-1 bg-white/40 rounded-full" />
+              <div className="w-1 h-1 bg-white/50 rounded-full" />
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-brand-sage" />
                 <span className="text-white font-bold">100%</span> Secure Booking
               </div>
-              <div className="hidden sm:block w-1 h-1 bg-white/40 rounded-full" />
+              <div className="hidden sm:block w-1 h-1 bg-white/50 rounded-full" />
               <div className="hidden sm:flex items-center gap-1.5">
                 <MapPin className="w-4 h-4 text-amber-300" />
                 <span className="text-white font-bold">200+</span> Destinations
@@ -153,16 +190,24 @@ export default function HeroSection() {
 
           </div>
 
-          {/* Right Column: Larger Map Card / Interactive Preview (6 Columns) */}
+          {/* Right Column: Larger Map Card / Interactive Preview with Gold Hover Accent (6 Columns) */}
           <div className="lg:col-span-6 relative">
-            <div className="relative w-full h-[420px] sm:h-[480px] lg:h-[540px] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/25 bg-black/30 backdrop-blur-md group/map">
+            <div 
+              onMouseEnter={() => setIsMapHovered(true)}
+              onMouseLeave={() => setIsMapHovered(false)}
+              className={`relative w-full h-[420px] sm:h-[480px] lg:h-[540px] rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 bg-black/40 backdrop-blur-md group/map ${
+                isMapHovered 
+                  ? 'border-4 border-amber-400 shadow-amber-500/30 scale-[1.01]' 
+                  : 'border-4 border-white/30 shadow-2xl scale-100'
+              }`}
+            >
               
               {/* Actual Map Preview Component */}
               <div className="absolute inset-0 z-0">
                 <RealWorldMap isPreview={true} />
               </div>
 
-              {/* Top-Right Glowing Live Atlas Pill */}
+              {/* Top-Right Live Atlas Pill */}
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/20">
                 <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
                 <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Atlas Active</span>
@@ -178,7 +223,7 @@ export default function HeroSection() {
 
                 <button 
                   onClick={() => setIsMapExpanded(true)}
-                  className="px-5 py-3 bg-white hover:bg-amber-300 text-brand-forest font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-xl transform hover:scale-105 shrink-0"
+                  className="px-5 py-3 bg-white hover:bg-amber-300 text-brand-forest font-bold text-xs uppercase tracking-widest rounded-full transition-all duration-300 shadow-xl transform hover:scale-105 shrink-0 cursor-pointer"
                 >
                   Open Map
                 </button>
@@ -198,15 +243,17 @@ export default function HeroSection() {
       >
         {isMapExpanded && (
           <>
-            <div className="w-full h-full relative">
-              <RealWorldMap isPreview={false} />
+            <div className="w-full h-full relative pt-20">
+              <div className="w-full h-full relative">
+                <RealWorldMap isPreview={false} />
+              </div>
             </div>
 
-            {/* Close Button */}
+            {/* Close Button — below the navbar for the same reason. */}
             <button
               onClick={() => setIsMapExpanded(false)}
               aria-label="Close expanded map"
-              className="absolute top-6 right-6 z-[2000] w-14 h-14 bg-brand-forest hover:bg-black text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all border-2 border-white/40 cursor-pointer"
+              className="absolute top-24 right-6 z-[2000] w-14 h-14 bg-brand-forest hover:bg-black text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all border-2 border-white/40 cursor-pointer"
             >
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />

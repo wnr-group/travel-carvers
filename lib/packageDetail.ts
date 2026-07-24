@@ -63,6 +63,11 @@ interface RawPlace {
   entry_fee?: string | null;
 }
 
+interface RawHighlight {
+  highlight_text: string;
+  display_order?: number | null;
+}
+
 interface RawTravelTip {
   tip_text: string;
   display_order?: number | null;
@@ -110,6 +115,7 @@ export interface RawPackageDetail {
   itinerary_days?: RawItineraryDay[] | null;
   package_inclusions?: RawInclusion[] | null;
   stay_details?: RawStay[] | null;
+  package_highlights?: RawHighlight[] | null;
   travel_tips?: RawTravelTip[] | null;
   best_time_to_visit?: RawBestTime[] | null;
   places_to_visit?: RawPlace[] | null;
@@ -202,6 +208,7 @@ export interface PackageDetail {
   rating: number | null;
   reviewCount: number;
   highlights: string[];
+  travelTips: string[];
   bestTime: string | null;
   itinerary: ItineraryDayVM[];
   inclusions: InclusionVM[];
@@ -311,8 +318,10 @@ export function toPackageDetail(
   const inclusions = inclusionRows.filter((row) => row.is_included).map(toInclusion);
   const exclusions = inclusionRows.filter((row) => !row.is_included).map(toInclusion);
 
-  // Highlights ← travel tips.
-  const highlights = byOrder(raw.travel_tips ?? []).map((tip) => tip.tip_text);
+  // Highlights are selling points; travel tips are practical advice. They are
+  // separate lists and render as separate sections.
+  const highlights = byOrder(raw.package_highlights ?? []).map((row) => row.highlight_text);
+  const travelTips = byOrder(raw.travel_tips ?? []).map((tip) => tip.tip_text);
 
   const cancellationRows = byOrder(raw.cancellation_policies ?? []);
   const cancellationPolicy: CancellationRule[] =
@@ -416,6 +425,7 @@ export function toPackageDetail(
     rating,
     reviewCount,
     highlights,
+    travelTips,
     bestTime,
     itinerary,
     inclusions,

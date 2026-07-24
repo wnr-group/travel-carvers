@@ -75,7 +75,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     <CategoryCollectionView
       breadcrumbs={[
         { label: 'Home', href: '/' },
-        { label: 'Categories', href: '/packages' },
+        { label: 'Categories', href: '/' },
         { label: category.name },
       ]}
       title={category.name}

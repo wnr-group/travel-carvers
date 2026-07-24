@@ -13,6 +13,7 @@ const ORDER_CONFIG = {
   itinerary_days: { key: 'day_number', startAt: 1 },
   inclusions: { key: 'display_order', startAt: 0 },
   exclusions: { key: 'display_order', startAt: 0 },
+  highlights: { key: 'display_order', startAt: 0 },
   travel_tips: { key: 'display_order', startAt: 0 },
   stay_details: { key: 'display_order', startAt: 0 },
   cancellation_policy: { key: 'display_order', startAt: 0 },

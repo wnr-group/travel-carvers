@@ -12,6 +12,7 @@ import type {
   PackageFormOutput,
 } from '@/lib/validations/package.schema';
 import CheckboxGroup from './CheckboxGroup';
+import DestinationPicker from './DestinationPicker';
 import FormSection from './FormSection';
 import { INPUT_CLASSES } from './fields';
 
@@ -169,13 +170,18 @@ export default function CategoriesTab() {
         <FieldError message={errors.subcategory_ids?.message} />
       </FormSection>
 
-      <FormSection title="Location" description="Where the trip is centred. All optional.">
-        <div>
+      <FormSection
+        title="Location"
+        description="Pick the destination this trip is centred on, or add a new one. Selecting a destination pins the package on the world map and lists it in the Destinations section."
+      >
+        <DestinationPicker />
+
+        <div className="mt-5 border-t border-gray-100 pt-4">
           <label
             htmlFor="destination_name"
             className="mb-1 block text-sm font-medium text-brand-darkest"
           >
-            Destination Name
+            Display label <span className="font-normal text-gray-400">(optional)</span>
           </label>
           <input
             id="destination_name"
@@ -184,6 +190,9 @@ export default function CategoriesTab() {
             {...register('destination_name')}
             className={INPUT_CLASSES}
           />
+          <p className="mt-1 text-xs text-gray-500">
+            Shown on package cards. Leave blank to use the destination’s own name.
+          </p>
           <FieldError message={errors.destination_name?.message} />
         </div>
       </FormSection>

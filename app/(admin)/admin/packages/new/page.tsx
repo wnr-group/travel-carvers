@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 import PackageForm from '@/components/admin/PackageForm/PackageForm';
 import { fetchJson } from '@/lib/api/fetchJson';
-import { ADMIN_PACKAGES_KEY } from '@/lib/queryKeys';
+import { ADMIN_DESTINATIONS_KEY, ADMIN_PACKAGES_KEY } from '@/lib/queryKeys';
 import { PACKAGE_STATUS_LABELS } from '@/lib/types/package';
 import type { PackageFormOutput } from '@/lib/validations/package.schema';
 
@@ -27,6 +27,9 @@ export default function NewPackagePage() {
       toast.success(`Package saved as ${PACKAGE_STATUS_LABELS[data.status]}`);
 
       queryClient.invalidateQueries({ queryKey: ADMIN_PACKAGES_KEY });
+      // Saving can create a destination, so the picker list and the map pins are stale.
+      queryClient.invalidateQueries({ queryKey: ADMIN_DESTINATIONS_KEY });
+      queryClient.invalidateQueries({ queryKey: ['destinations'] });
 
       router.push('/admin/packages');
     },

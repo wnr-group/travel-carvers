@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { Edit, Eye, ImageOff } from 'lucide-react'
 import StatusBadge from './StatusBadge'
@@ -28,9 +29,11 @@ export default function PackageTable({ packages }: { packages: AdminPackage[] })
               <tr key={pkg.id} className="border-b last:border-b-0 hover:bg-brand-lightest/20">
                 <td className="p-4">
                   {pkg.cover_image_url ? (
-                    <img
+                    <Image
                       src={pkg.cover_image_url}
                       alt={pkg.title}
+                      width={40}
+                      height={40}
                       className="h-10 w-10 rounded object-cover"
                     />
                   ) : (

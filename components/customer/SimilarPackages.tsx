@@ -26,7 +26,6 @@ function SectionHeader() {
   );
 }
 
-/** Shared shell so every state (loading/empty/error/list) renders under one heading. */
 function Section({ children }: { children: React.ReactNode }) {
   return (
     <section aria-label="Similar packages">
@@ -48,7 +47,7 @@ function Note({ children }: { children: React.ReactNode }) {
 
 function CardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)]">
+    <div className="h-full overflow-hidden rounded-2xl border border-brand-light bg-[var(--background)]">
       <div className="h-44 w-full animate-pulse bg-brand-lightest" />
       <div className="space-y-3 p-4">
         <div className="h-4 w-3/4 animate-pulse rounded bg-brand-lightest" />
@@ -65,14 +64,15 @@ function CardSkeleton() {
  */
 function CardRail({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3 xl:grid-cols-4">
       {children}
     </div>
   );
 }
 
 function RailItem({ children }: { children: React.ReactNode }) {
-  return <div className="w-[260px] shrink-0 snap-start sm:w-auto">{children}</div>;
+  // h-full lets the card stretch to the tallest in the row, so the grid stays even.
+  return <div className="h-full w-[260px] shrink-0 snap-start sm:w-auto">{children}</div>;
 }
 
 /* -------------------------------- Component -------------------------------- */

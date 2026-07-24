@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { PUBLIC_PACKAGE_STATUSES } from '@/lib/types/package';
+import { applyGlobalPricing } from './siteSettings';
 
 export interface PackageSearchResult {
   id: string;
@@ -89,7 +90,7 @@ export async function searchSite(query: string): Promise<GlobalSearchResults> {
   }
 
   return {
-    packages: packagesRes.data ?? [],
+    packages: await applyGlobalPricing(packagesRes.data ?? []),
     categories: categoriesRes.data ?? [],
     destinations,
   };

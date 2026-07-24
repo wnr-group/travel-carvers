@@ -13,6 +13,9 @@ import { ReviewForm } from "@/components/customer/ReviewForm";
 import ReviewPhotos from "@/components/customer/ReviewPhotos";
 import DynamicIcon from "@/components/ui/DynamicIcon";
 import { getApprovedReviews } from "@/lib/api/public/reviews";
+import { recordPackageView } from "@/lib/api/public/views";
+import { setWhatsAppMessage } from "@/components/customer/WhatsAppButton";
+import { WHATSAPP_MESSAGES } from "@/lib/config/contact";
 import { isIconName } from "@/lib/icons";
 import { youTubeEmbedUrl } from "@/lib/utils";
 import { toReviewVM } from "@/lib/packageDetail";
@@ -29,18 +32,6 @@ import type {
   RatingBucketVM,
 } from "@/lib/packageDetail";
 
-/* -------------------- Company-wide static content --------------------- */
-/* The cancellation policy and document list are per-package now (Admin → Additional),
-   falling back to lib/packageDefaults.ts. The FAQs below are still the same everywhere. */
-
-const FAQS = [
-  { q: "How do I book this package?", a: "Send an enquiry using the “Reserve Your Spot” button and our travel team will get back to you within 24 hours to confirm availability, customise the plan and share payment details." },
-  { q: "Can the itinerary be customised?", a: "Yes. Every package is a starting point — tell us your dates, group size and preferences and we’ll tailor the trip around them." },
-  { q: "What is the payment process?", a: "A deposit confirms your booking, with the balance due before departure. We’ll share the exact schedule and secure payment options when you enquire." },
-  { q: "Is travel insurance included?", a: "Travel insurance is not included in the package price. We strongly recommend arranging cover, and can point you to trusted providers." },
-  { q: "Who do I contact during the trip?", a: "You’ll have a dedicated point of contact and 24/7 support line for the duration of your journey." },
-];
-
 /* --------------------------- Tabs ----------------------------- */
 
 const tabs = [
@@ -51,7 +42,6 @@ const tabs = [
   { id: "gallery", label: "Gallery" },
   { id: "pricing", label: "Pricing" },
   { id: "info", label: "Additional Info" },
-  { id: "faqs", label: "FAQs" },
   { id: "reviews", label: "Reviews" },
   { id: "similar", label: "Similar Packages" },
 ] as const;
@@ -116,6 +106,12 @@ const Icon = {
       <path d="M5 5l14 14M19 5L5 19" strokeLinecap="round" />
     </svg>
   ),
+  bulb: (p: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...p}>
+      <path d="M9 18h6M10 21h4" strokeLinecap="round" />
+      <path d="M12 3a6 6 0 00-3.5 10.9c.3.3.5.7.5 1.1h6c0-.4.2-.8.5-1.1A6 6 0 0012 3z" />
+    </svg>
+  ),
 };
 
 const money = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -124,7 +120,6 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [isSticky, setIsSticky] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [guests, setGuests] = useState(2);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const navSentinel = useRef<HTMLDivElement>(null);
@@ -161,6 +156,16 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
+
+  useEffect(() => {
+    void recordPackageView(detail.slug);
+  }, [detail.slug]);
+
+
+  useEffect(() => {
+    setWhatsAppMessage(WHATSAPP_MESSAGES.package(detail.title));
+    return () => setWhatsAppMessage(null);
+  }, [detail.title]);
 
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -306,7 +311,12 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_340px]">
           <main className="min-w-0">
             {activeTab === "overview" && (
-              <Overview tagline={detail.description || detail.tagline} highlights={detail.highlights} bestTime={detail.bestTime} />
+              <Overview
+                tagline={detail.description || detail.tagline}
+                highlights={detail.highlights}
+                travelTips={detail.travelTips}
+                bestTime={detail.bestTime}
+              />
             )}
             {activeTab === "itinerary" && <Itinerary days={detail.itinerary} />}
             {activeTab === "inclusions" && <Inclusions inclusions={detail.inclusions} exclusions={detail.exclusions} />}
@@ -320,7 +330,6 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
                 requiredDocuments={detail.requiredDocuments}
               />
             )}
-            {activeTab === "faqs" && <FAQs open={openFaq} setOpen={setOpenFaq} />}
             {activeTab === "reviews" && (
               <Reviews packageId={detail.id} rating={rating} reviewCount={reviewCount} ratingBreakdown={ratingBreakdown} reviews={activeReviews} />
             )}
@@ -371,11 +380,15 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
           <button className="absolute right-6 top-6 text-white/80 hover:text-white" onClick={() => setLightbox(null)}>
             <Icon.close className="h-7 w-7" />
           </button>
-          <img
+          {/* width/height only establish the intrinsic ratio for the optimizer; the CSS
+              below is what actually sizes it, so any aspect renders correctly. */}
+          <Image
             src={detail.gallery[lightbox].src}
             alt={detail.gallery[lightbox].alt}
-            loading="lazy"
-            className="max-h-[85vh] max-w-full rounded-lg object-contain"
+            width={1600}
+            height={1067}
+            sizes="100vw"
+            className="h-auto max-h-[85vh] w-auto max-w-full rounded-lg object-contain"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
@@ -422,7 +435,17 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
 
 /* ------------------------------ Tabs -------------------------------- */
 
-function Overview({ tagline, highlights, bestTime }: { tagline: string; highlights: string[]; bestTime: string | null }) {
+function Overview({
+  tagline,
+  highlights,
+  travelTips,
+  bestTime,
+}: {
+  tagline: string;
+  highlights: string[];
+  travelTips: string[];
+  bestTime: string | null;
+}) {
   return (
     <div className="space-y-10">
       <div>
@@ -446,6 +469,22 @@ function Overview({ tagline, highlights, bestTime }: { tagline: string; highligh
         </div>
       )}
 
+      {travelTips.length > 0 && (
+        <div>
+          <h3 className="mb-4 font-display text-lg font-semibold text-brand-darkest">Travel Tips</h3>
+          <ul className="space-y-3">
+            {travelTips.map((tip, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+                  <Icon.bulb className="h-3 w-3" />
+                </span>
+                <span className="text-sm leading-relaxed text-slate-800">{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {bestTime && (
         <div className="rounded-xl border border-brand-light/70 bg-brand-tint-subtle p-5">
           <h3 className="font-display text-base font-semibold text-brand-darkest">Best time to go</h3>
@@ -455,6 +494,7 @@ function Overview({ tagline, highlights, bestTime }: { tagline: string; highligh
     </div>
   );
 }
+
 
 /* Day rows fade/slide in one after another when the itinerary tab opens. */
 const ITINERARY_LIST_VARIANTS: Variants = {
@@ -693,6 +733,8 @@ function VideoEmbed({ url, title }: { url: string; title: string }) {
 }
 
 function Gallery({ gallery, videos, onOpen }: { gallery: GalleryImageVM[]; videos: string[]; onOpen: (i: number) => void }) {
+  // Tiles hold `fill` images, which are absolutely positioned and contribute no
+  // height — the grid needs an explicit row height or every tile collapses to 0.
   const hasImages = gallery.length > 0;
   // A video may be an unparseable URL, so gate the section on something renderable.
   const playableVideos = videos.filter((url) => youTubeEmbedUrl(url) !== null);
@@ -706,18 +748,19 @@ function Gallery({ gallery, videos, onOpen }: { gallery: GalleryImageVM[]; video
       ) : (
         <div className="space-y-8">
           {hasImages && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid auto-rows-[120px] grid-cols-2 gap-3 sm:auto-rows-[150px] sm:grid-cols-3">
               {gallery.map((g, i) => (
                 <button
                   key={i}
                   onClick={() => onOpen(i)}
-                  className={`group overflow-hidden rounded-xl bg-slate-100 ${i === 1 || i === 4 ? "row-span-2" : ""}`}
+                  className={`group relative overflow-hidden rounded-xl bg-slate-100 ${i === 1 || i === 4 ? "row-span-2" : ""}`}
                 >
-                  <img
+                  <Image
                     src={g.src}
                     alt={g.alt}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 640px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </button>
               ))}
@@ -848,30 +891,6 @@ function AdditionalInfo({
   );
 }
 
-function FAQs({ open, setOpen }: { open: number | null; setOpen: (i: number | null) => void }) {
-  return (
-    <div>
-      <SectionHeading eyebrow="Good to Know" title="Frequently Asked Questions" />
-      <div className="divide-y divide-brand-light/60 rounded-xl border border-brand-light/70 bg-white">
-        {FAQS.map((f, i) => {
-          const isOpen = open === i;
-          return (
-            <div key={i}>
-              <button
-                onClick={() => setOpen(isOpen ? null : i)}
-                className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
-              >
-                <span className="text-sm font-medium text-brand-darkest">{f.q}</span>
-                <Icon.chevron className={`h-4 w-4 shrink-0 text-brand-medium transition-transform ${isOpen ? "rotate-90" : ""}`} />
-              </button>
-              {isOpen && <p className="px-5 pb-4 text-sm leading-relaxed text-slate-800">{f.a}</p>}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function Reviews({ packageId, rating, reviewCount, ratingBreakdown, reviews }: { packageId: string; rating: number | null; reviewCount: number; ratingBreakdown: RatingBucketVM[]; reviews: ReviewVM[] }) {
   const [showReviewForm, setShowReviewForm] = useState(false);

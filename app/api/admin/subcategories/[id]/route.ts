@@ -9,7 +9,7 @@ import { subcategoryUpdateSchema } from '@/lib/validations/category.schema';
 type RouteParams = { params: Promise<{ id: string }> };
 
 const notFound = () => NextResponse.json({ error: 'Subcategory not found' }, { status: 404 });
-const isUuid = (value: string) => z.uuid().safeParse(value).success;
+const isUuid = (value: string) => z.guid().safeParse(value).success;
 
 export async function PUT(req: Request, { params }: RouteParams) {
   const denied = await requireAdmin();

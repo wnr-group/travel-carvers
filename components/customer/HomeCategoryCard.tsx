@@ -16,18 +16,13 @@ export interface HomeCategory {
 
 interface HomeCategoryCardProps {
   category: HomeCategory;
-  index?: number;
 }
 
-export function HomeCategoryCard({ category, index = 0 }: HomeCategoryCardProps) {
-  const isLarge = index === 0 || index === 3;
-
+export function HomeCategoryCard({ category }: HomeCategoryCardProps) {
   return (
     <Link
       href={`/categories/${category.slug}`}
-      className={`group relative overflow-hidden rounded-xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md border border-white/80 bg-brand-forest flex flex-col justify-end ${
-        isLarge ? 'md:col-span-2 h-[150px] sm:h-[160px]' : 'h-[150px] sm:h-[160px]'
-      }`}
+      className="group relative flex aspect-[9/16] flex-col justify-end overflow-hidden rounded-2xl border border-white/80 bg-brand-forest shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
       {category.cover_image_url ? (
         <>
@@ -35,31 +30,30 @@ export function HomeCategoryCard({ category, index = 0 }: HomeCategoryCardProps)
             src={category.cover_image_url}
             alt={category.name}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105 filter brightness-100 contrast-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 220px"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {/* Lighter gradient overlay to ensure images are crystal clear and fully visible */}
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-forest/80 via-brand-forest/20 to-transparent transition-opacity duration-300 group-hover:opacity-75" />
+          <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-brand-forest via-brand-forest/55 to-transparent" />
         </>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-brand-primary">
-          <DynamicIcon name={category.icon_name} className="h-8 w-8 text-white/90" />
+          <DynamicIcon name={category.icon_name} className="h-10 w-10 text-white/90" />
         </div>
       )}
 
-      <div className="relative z-20 p-3.5 sm:p-4 flex flex-col justify-end">
-        <h3 className="mb-0.5 text-sm sm:text-base font-bold text-white drop-shadow-md">
+      <div className="relative z-20 flex flex-col justify-end p-3 sm:p-4">
+        <h3 className="mb-1 text-sm font-bold leading-tight text-white drop-shadow-md sm:text-base">
           {category.name}
         </h3>
         {category.description && (
-          <p className="line-clamp-1 text-[10px] text-white/90 font-medium mb-1.5 drop-shadow">
+          <p className="mb-2 line-clamp-2 text-[11px] font-medium leading-snug text-white/85 drop-shadow">
             {category.description}
           </p>
         )}
 
         <div className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-pastel-mint transition-all group-hover:text-white">
           <span>Explore</span>
-          <ArrowRight className="w-2.5 h-2.5 transition-transform group-hover:translate-x-1" />
+          <ArrowRight className="h-2.5 w-2.5 transition-transform group-hover:translate-x-1" />
         </div>
       </div>
     </Link>
@@ -67,5 +61,5 @@ export function HomeCategoryCard({ category, index = 0 }: HomeCategoryCardProps)
 }
 
 export function HomeCategoryCardSkeleton() {
-  return <div className="h-[150px] sm:h-[160px] animate-pulse rounded-xl bg-black/10" />;
+  return <div className="aspect-[9/16] animate-pulse rounded-2xl bg-black/10" />;
 }

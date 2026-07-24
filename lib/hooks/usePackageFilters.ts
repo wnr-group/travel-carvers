@@ -194,16 +194,22 @@ export function usePackageFilters() {
     window.scrollTo(0, 0);
   }, [searchParams]);
 
-  // ---- Push debounced search text into filters ----
-  useEffect(() => {
-    if (!hydrated) return;
-    setFilters((prev) => (prev.search === debouncedSearch ? prev : { ...prev, search: debouncedSearch }));
-  }, [debouncedSearch, hydrated]);
+  /**
+   * The active search term is the debounced input — derived, not copied into `filters`
+   * through an effect. Writing it back into state caused a render cascade (and tripped
+   * react-hooks/set-state-in-effect); everything downstream reads `activeFilters`.
+   *
+   * Before hydration the URL has not been read yet, so `filters` is still the source.
+   */
+  const activeFilters = useMemo<Filters>(
+    () => (hydrated ? { ...filters, search: debouncedSearch } : filters),
+    [filters, debouncedSearch, hydrated],
+  );
 
   // ---- Sync filters -> URL (replace, no history spam) ----
   useEffect(() => {
     if (!hydrated || typeof window === 'undefined') return;
-    const params = filtersToSearchParams(filters);
+    const params = filtersToSearchParams(activeFilters);
     const query = params.toString();
     const newUrl = `${window.location.pathname}${query ? `?${query}` : ''}`;
     // Only write when the URL actually changes — avoids redundant history churn
@@ -211,34 +217,34 @@ export function usePackageFilters() {
     if (newUrl !== `${window.location.pathname}${window.location.search}`) {
       window.history.replaceState(null, '', newUrl);
     }
-  }, [filters, hydrated]);
+  }, [activeFilters, hydrated]);
 
   /* ------------------------------ Derived ------------------------------ */
 
   const filteredPackages = useMemo(() => {
-    const range = DURATION_RANGES[filters.duration] ?? DURATION_RANGES.any;
-    const query = filters.search.trim().toLowerCase();
+    const range = DURATION_RANGES[activeFilters.duration] ?? DURATION_RANGES.any;
+    const query = activeFilters.search.trim().toLowerCase();
 
     return packages.filter((pkg) => {
       if (query) {
         const haystack = `${pkg.name} ${pkg.description} ${pkg.location}`.toLowerCase();
         if (!haystack.includes(query)) return false;
       }
-      if (filters.categories.length && !pkg.categories.some((c) => filters.categories.includes(c))) return false;
-      if (filters.difficulty.length && (!pkg.difficulty || !filters.difficulty.includes(pkg.difficulty))) return false;
+      if (activeFilters.categories.length && !pkg.categories.some((c) => activeFilters.categories.includes(c))) return false;
+      if (activeFilters.difficulty.length && (!pkg.difficulty || !activeFilters.difficulty.includes(pkg.difficulty))) return false;
       // "On request" packages (price 0) have no real price — don't drop them on a price filter.
-      if (pkg.price > 0 && (pkg.price < filters.priceMin || pkg.price > filters.priceMax)) return false;
+      if (pkg.price > 0 && (pkg.price < activeFilters.priceMin || pkg.price > activeFilters.priceMax)) return false;
       if (pkg.durationDays < range.min || pkg.durationDays > range.max) return false;
       return true;
     });
-  }, [packages, filters]);
+  }, [packages, activeFilters]);
 
   const sortedPackages = useMemo(() => {
-    const sorter = SORT_OPTIONS[filters.sort] ?? SORT_OPTIONS['best-match'];
+    const sorter = SORT_OPTIONS[activeFilters.sort] ?? SORT_OPTIONS['best-match'];
     return [...filteredPackages].sort(sorter.compare);
-  }, [filteredPackages, filters.sort]);
+  }, [filteredPackages, activeFilters.sort]);
 
-  const activeFilterCount = countActiveFilters(filters);
+  const activeFilterCount = countActiveFilters(activeFilters);
 
   /* ------------------------------ Handlers ------------------------------ */
 

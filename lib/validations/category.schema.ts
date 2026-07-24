@@ -2,11 +2,16 @@ import { z } from 'zod';
 import { slugify } from '@/lib/utils';
 
 /**
- * Optional text fields arrive from the form as '' rather than undefined. Store them as NULL 
+ * Optional text fields arrive from the form as '' rather than undefined. Store them as NULL.
+ *
+ * `null` is accepted as input too: this schema runs twice per save — once in the
+ * browser, then again on the API route over the payload the first parse already
+ * produced. Without it, every empty optional field round-trips as null and is
+ * rejected server-side.
  */
 const emptyToNull = <T extends z.ZodType<string>>(schema: T) =>
   z
-    .union([schema, z.literal('')])
+    .union([schema, z.literal(''), z.null()])
     .optional()
     .transform((value) => (value ? value : null));
 
@@ -22,7 +27,6 @@ export const categorySchema = z.object({
   icon_name: emptyToNull(z.string().max(50)),
   display_order: z.number().int().min(0, 'Order cannot be negative').default(0),
   is_active: z.boolean().default(true),
-  // Whether the category appears in the customer header/navigation menu.
   show_in_nav: z.boolean().default(false),
 });
 
@@ -40,7 +44,7 @@ export const subcategorySchema = z.object({
   is_active: z.boolean().default(true),
   // Categories ↔ subcategories are many-to-many. An unlinked subcategory is
   // invisible in the package form, so at least one parent is required.
-  category_ids: z.array(z.uuid()).min(1, 'Pick at least one parent category'),
+  category_ids: z.array(z.guid()).min(1, 'Pick at least one parent category'),
 });
 
 /**
