@@ -149,9 +149,12 @@ const SECTIONS = [
           If you have any questions or concerns regarding these Terms and Conditions, please contact us:
         </p>
         <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-          <p className="font-medium text-slate-800">Travel Carvers Legal Department</p>
-          <p className="text-slate-600 mt-1">Email: <a href="mailto:legal@travelcarvers.com" className="text-brand-medium hover:underline">legal@travelcarvers.com</a></p>
-          <p className="text-slate-600">Phone: +1 (800) 123-4567</p>
+          <p className="font-medium text-slate-800">Travel Carvers</p>
+          <p className="text-slate-600 mt-1">
+            Please reach us through our{' '}
+            <a href="/contact" className="text-brand-medium hover:underline">contact page</a>{' '}
+            for our current phone, email and address.
+          </p>
         </div>
       </>
     ),
