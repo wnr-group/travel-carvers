@@ -1,4 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { cleanupOrphanedImages, referencedUrlsFrom } from '@/lib/supabase/storageCleanup';
+import type { UploadBucket } from '@/lib/storage/buckets';
 import type { Destination } from '@/lib/types/destination';
 import type {
   DestinationFormOutput,
@@ -8,6 +10,32 @@ import type {
 /**
  * Admin destination reads and writes
  */
+
+/** A destination carries a hero image and a (usually pasted) social OG image. */
+const DESTINATION_IMAGE_BUCKETS: readonly UploadBucket[] = ['destination-images'];
+
+async function destinationImagesStillReferenced(urls: string[]): Promise<Set<string>> {
+  if (urls.length === 0) return new Set();
+
+  const [heroes, ogs] = await Promise.all([
+    supabaseAdmin.from('destinations').select('hero_image_url').in('hero_image_url', urls),
+    supabaseAdmin.from('destinations').select('og_image').in('og_image', urls),
+  ]);
+
+  return referencedUrlsFrom(urls, [
+    { ...heroes, column: 'hero_image_url' },
+    { ...ogs, column: 'og_image' },
+  ]);
+}
+
+/** Remove now-orphaned destination images. Call after the DB commit. */
+function cleanupDestinationImages(candidateUrls: (string | null | undefined)[]): Promise<void> {
+  return cleanupOrphanedImages(
+    candidateUrls,
+    DESTINATION_IMAGE_BUCKETS,
+    destinationImagesStillReferenced
+  );
+}
 
 interface DestinationRow {
   id: string;
@@ -222,6 +250,12 @@ export async function updateDestination(
     throw linkError;
   }
 
+  // Update committed — drop the previous hero / OG images if they changed.
+  await cleanupDestinationImages([
+    (existing as Record<string, unknown>).hero_image_url as string | null,
+    (existing as Record<string, unknown>).og_image as string | null,
+  ]);
+
   return { ...toDestination(data), package_ids, package_count: package_ids.length };
 }
 
@@ -229,6 +263,12 @@ export async function updateDestination(
  * Admin: delete a destination
  */
 export async function deleteDestination(id: string) {
+  const { data: prev } = await supabaseAdmin
+    .from('destinations')
+    .select('hero_image_url, og_image')
+    .eq('id', id)
+    .maybeSingle();
+
   const { data, error } = await supabaseAdmin
     .from('destinations')
     .delete()
@@ -237,6 +277,8 @@ export async function deleteDestination(id: string) {
     .maybeSingle();
 
   if (error) throw error;
+
+  await cleanupDestinationImages([prev?.hero_image_url, prev?.og_image]);
   return data;
 }
 

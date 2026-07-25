@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { cleanupTestimonialImages } from '@/lib/api/testimonialImages';
 import { toApiError } from '@/lib/api/errors';
 import { testimonialUpdateSchema } from '@/lib/validations/testimonial.schema';
 
@@ -32,6 +33,12 @@ export async function PUT(req: Request, { params }: RouteParams) {
       if (value !== undefined) updateFields[key] = value;
     }
 
+    const { data: prev } = await supabaseAdmin
+      .from('testimonials')
+      .select('photo_url')
+      .eq('id', id)
+      .maybeSingle();
+
     const { data, error } = await supabaseAdmin
       .from('testimonials')
       .update(updateFields)
@@ -40,6 +47,9 @@ export async function PUT(req: Request, { params }: RouteParams) {
       .single();
 
     if (error) throw error;
+
+    // Drop the previous photo if this update replaced or cleared it.
+    await cleanupTestimonialImages([prev?.photo_url]);
 
     return NextResponse.json({ data });
   } catch (error: unknown) {
@@ -55,12 +65,20 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
   const { id } = await params;
 
   try {
+    const { data: prev } = await supabaseAdmin
+      .from('testimonials')
+      .select('photo_url')
+      .eq('id', id)
+      .maybeSingle();
+
     const { error } = await supabaseAdmin
       .from('testimonials')
       .delete()
       .eq('id', id);
 
     if (error) throw error;
+
+    await cleanupTestimonialImages([prev?.photo_url]);
 
     return NextResponse.json({ data: { success: true } });
   } catch (error: unknown) {

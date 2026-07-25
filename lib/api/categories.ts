@@ -1,4 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { cleanupOrphanedImages, referencedUrlsFrom } from '@/lib/supabase/storageCleanup';
+import type { UploadBucket } from '@/lib/storage/buckets';
 import type { Subcategory } from '@/lib/types/category';
 import type {
   CategoryFormOutput,
@@ -6,6 +8,31 @@ import type {
   SubcategoryFormOutput,
   SubcategoryUpdateOutput,
 } from '@/lib/validations/category.schema';
+
+/**
+ * Categories and subcategories share the `category-images` bucket, so a file is
+ * only orphaned once *neither* table references it any more.
+ */
+const CATEGORY_IMAGE_BUCKETS: readonly UploadBucket[] = ['category-images'];
+
+async function categoryImagesStillReferenced(urls: string[]): Promise<Set<string>> {
+  if (urls.length === 0) return new Set();
+
+  const [cats, subs] = await Promise.all([
+    supabaseAdmin.from('categories').select('cover_image_url').in('cover_image_url', urls),
+    supabaseAdmin.from('subcategories').select('cover_image_url').in('cover_image_url', urls),
+  ]);
+
+  return referencedUrlsFrom(urls, [
+    { ...cats, column: 'cover_image_url' },
+    { ...subs, column: 'cover_image_url' },
+  ]);
+}
+
+/** Remove now-orphaned category/subcategory images. Call after the DB commit. */
+function cleanupCategoryImages(candidateUrls: (string | null | undefined)[]): Promise<void> {
+  return cleanupOrphanedImages(candidateUrls, CATEGORY_IMAGE_BUCKETS, categoryImagesStillReferenced);
+}
 
 
 /**
@@ -42,6 +69,12 @@ export async function createCategory(categoryData: CategoryFormOutput) {
  */
 export async function updateCategory(id: string, categoryData: CategoryUpdateOutput) {
 
+  const { data: prev } = await supabaseAdmin
+    .from('categories')
+    .select('cover_image_url')
+    .eq('id', id)
+    .maybeSingle();
+
   const { data, error } = await supabaseAdmin
     .from('categories')
     .update(categoryData)
@@ -50,6 +83,8 @@ export async function updateCategory(id: string, categoryData: CategoryUpdateOut
     .single();
 
   if (error) throw error;
+
+  await cleanupCategoryImages([prev?.cover_image_url]);
   return data;
 }
 
@@ -60,6 +95,12 @@ export async function updateCategory(id: string, categoryData: CategoryUpdateOut
  */
 export async function deleteCategory(id: string) {
 
+  const { data: prev } = await supabaseAdmin
+    .from('categories')
+    .select('cover_image_url')
+    .eq('id', id)
+    .maybeSingle();
+
   const { data, error } = await supabaseAdmin
     .from('categories')
     .delete()
@@ -68,6 +109,8 @@ export async function deleteCategory(id: string) {
     .maybeSingle();
 
   if (error) throw error;
+
+  await cleanupCategoryImages([prev?.cover_image_url]);
   return data;
 }
 
@@ -182,6 +225,12 @@ export async function updateSubcategory(
 
   if (linksError) throw linksError;
 
+  const { data: prev } = await supabaseAdmin
+    .from('subcategories')
+    .select('cover_image_url')
+    .eq('id', id)
+    .maybeSingle();
+
   const { data, error } = await supabaseAdmin
     .from('subcategories')
     .update(subcategoryData)
@@ -207,6 +256,7 @@ export async function updateSubcategory(
     throw linkError;
   }
 
+  await cleanupCategoryImages([prev?.cover_image_url]);
   return { ...data, category_ids };
 }
 
@@ -214,6 +264,12 @@ export async function updateSubcategory(
  * Admin: Delete subcategory (requires server-side)
  */
 export async function deleteSubcategory(id: string) {
+  const { data: prev } = await supabaseAdmin
+    .from('subcategories')
+    .select('cover_image_url')
+    .eq('id', id)
+    .maybeSingle();
+
   const { data, error } = await supabaseAdmin
     .from('subcategories')
     .delete()
@@ -222,5 +278,7 @@ export async function deleteSubcategory(id: string) {
     .maybeSingle();
 
   if (error) throw error;
+
+  await cleanupCategoryImages([prev?.cover_image_url]);
   return data;
 }
