@@ -2,12 +2,18 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Edit, Eye, ImageOff } from 'lucide-react'
+import { Edit, Eye, ImageOff, Trash2 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { formatDate, formatPrice, packagePath } from '@/lib/utils'
 import type { AdminPackage } from '@/lib/types/package'
 
-export default function PackageTable({ packages }: { packages: AdminPackage[] }) {
+export default function PackageTable({
+  packages,
+  onDelete,
+}: {
+  packages: AdminPackage[]
+  onDelete?: (pkg: AdminPackage) => void
+}) {
   return (
     <div className="overflow-hidden rounded-lg bg-white shadow">
       <div className="overflow-x-auto">
@@ -71,6 +77,16 @@ export default function PackageTable({ packages }: { packages: AdminPackage[] })
                     >
                       <Edit className="h-4 w-4" />
                     </Link>
+                    {onDelete && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(pkg)}
+                        aria-label={`Delete ${pkg.title}`}
+                        className="text-gray-400 transition-colors hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

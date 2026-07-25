@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
-import { getPackageForEdit, updatePackageWithRelations } from '@/lib/api/packages';
+import { getPackageForEdit, updatePackageWithRelations, deletePackage } from '@/lib/api/packages';
 import { toApiError } from '@/lib/api/errors';
 import { firstZodIssue } from '@/lib/utils';
 import { packageUpdateSchema } from '@/lib/validations/package.schema';
@@ -64,6 +64,26 @@ export async function PUT(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Package not found' }, { status: 404 });
     }
 
+    const { message, status } = toApiError(error, 'package');
+    return NextResponse.json({ error: message }, { status });
+  }
+}
+
+/**
+ * Delete a package. Its child rows (gallery, itinerary, inclusions, reviews, …)
+ * cascade automatically; leads that referenced it are preserved with their
+ * package link set to NULL, so no enquiry is lost.
+ */
+export async function DELETE(_req: Request, { params }: RouteParams) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  const { id } = await params;
+
+  try {
+    await deletePackage(id);
+    return NextResponse.json({ data: { id } });
+  } catch (error: unknown) {
     const { message, status } = toApiError(error, 'package');
     return NextResponse.json({ error: message }, { status });
   }
