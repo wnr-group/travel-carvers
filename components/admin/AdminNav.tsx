@@ -8,7 +8,7 @@ import {
   Award, BarChart3, MapPin, FileText
 } from 'lucide-react';
 import LogoutButton from '@/app/(admin)/admin/dashboard/LogoutButton';
-import { Quote } from 'lucide-react';
+import { UserStar } from 'lucide-react';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,7 +18,7 @@ const navItems = [
   { href: '/admin/visa', label: 'Visa', icon: FileText },
   { href: '/admin/leads', label: 'Leads', icon: Mail },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare },
-  { href: '/admin/testimonials', label: 'Testimonials', icon: Quote },
+  { href: '/admin/testimonials', label: 'Testimonials', icon: UserStar },
   { href: '/admin/trust-badges', label: 'Trust Badges', icon: Award },
   { href: '/admin/homepage', label: 'Homepage', icon: Home },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },

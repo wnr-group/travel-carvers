@@ -75,20 +75,20 @@ export default async function AdminDashboardPage() {
           <div className="overflow-x-auto w-full">
             <table className="w-full min-w-[600px]">
               <thead>
-                <tr className="border-b text-left text-brand-dark">
-                  <th className="py-2">Name</th>
-                  <th className="py-2">Email</th>
-                  <th className="py-2">Package</th>
+                <tr className="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="py-2 pr-4">Name</th>
+                  <th className="py-2 pr-4">Email</th>
+                  <th className="py-2 pr-4">Package</th>
                   <th className="py-2">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {recentLeads.map((lead) => (
-                  <tr key={lead.id} className="border-b">
-                    <td className="py-3">{lead.name}</td>
-                    <td className="py-3">{lead.email}</td>
-                    <td className="py-3">{lead.packages?.title || 'General Inquiry'}</td>
-                    <td className="py-3">{new Date(lead.created_at).toLocaleDateString()}</td>
+                  <tr key={lead.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
+                    <td className="py-3 pr-4 font-medium text-brand-darkest">{lead.name}</td>
+                    <td className="py-3 pr-4 text-gray-600">{lead.email}</td>
+                    <td className="py-3 pr-4 text-gray-600">{lead.packages?.title || 'General Inquiry'}</td>
+                    <td className="py-3 text-gray-600">{new Date(lead.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>

@@ -210,13 +210,13 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
       <FontLoader />
 
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="mx-auto max-w-7xl px-5 pt-5 text-xs text-slate-700 sm:px-8">
-        <ol className="flex items-center gap-1.5">
-          <li><Link href="/" className="hover:text-brand-dark">Home</Link></li>
-          <Icon.chevron className="h-3 w-3 text-slate-300" />
-          <li><Link href="/packages" className="hover:text-brand-dark">Packages</Link></li>
-          <Icon.chevron className="h-3 w-3 text-slate-300" />
-          <li className="font-medium text-brand-dark">{detail.title}</li>
+      <nav aria-label="Breadcrumb" className="mx-auto max-w-7xl px-5 pt-5 text-sm sm:px-8">
+        <ol className="flex flex-wrap items-center gap-2 text-slate-600">
+          <li><Link href="/" className="font-medium transition-colors hover:text-brand-dark">Home</Link></li>
+          <Icon.chevron className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <li><Link href="/packages" className="font-medium transition-colors hover:text-brand-dark">Packages</Link></li>
+          <Icon.chevron className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <li className="max-w-[220px] truncate font-semibold text-slate-900 sm:max-w-md" title={detail.title}>{detail.title}</li>
         </ol>
       </nav>
 
