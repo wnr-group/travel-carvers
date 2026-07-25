@@ -79,3 +79,61 @@ export async function deleteStorageObjects(urls: (string | null | undefined)[]):
 
   return removed;
 }
+
+/**
+ * Delete candidate files that nothing references any more, best-effort.
+ *
+ * Only files sitting in `allowedBuckets` are ever considered, so cleanup for one
+ * content type can never touch another's files. `stillReferenced` is called AFTER
+ * the DB change has committed, with the owned candidate URLs, and returns those
+ * still in use — it must fail closed (return every URL) on error so an in-use file
+ * is never deleted. Never throws: image cleanup must not fail the operation it
+ * follows.
+ */
+export async function cleanupOrphanedImages(
+  candidateUrls: (string | null | undefined)[],
+  allowedBuckets: readonly UploadBucket[],
+  stillReferenced: (ownedUrls: string[]) => Promise<Set<string>>
+): Promise<void> {
+  try {
+    const allowed = new Set<UploadBucket>(allowedBuckets);
+    const owned = new Set<string>();
+    for (const url of candidateUrls) {
+      const ref = parseStorageUrl(url);
+      if (ref && allowed.has(ref.bucket)) owned.add(url as string);
+    }
+    if (owned.size === 0) return;
+
+    const used = await stillReferenced([...owned]);
+    const orphaned = [...owned].filter((url) => !used.has(url));
+    if (orphaned.length === 0) return;
+
+    await deleteStorageObjects(orphaned);
+  } catch (err) {
+    console.error('[storage-cleanup] cleanup failed:', err);
+  }
+}
+
+/**
+ * Fold a set of "URL column" query results into the URLs that are still in use.
+ *
+ * Pass one entry per `.select(column).in(column, urls)` query. If any query
+ * errored, returns every candidate URL (fail closed) so those files are skipped
+ * rather than risk deleting one that's still referenced.
+ */
+export function referencedUrlsFrom(
+  candidateUrls: string[],
+  results: { data: unknown; error: unknown; column: string }[]
+): Set<string> {
+  if (results.some((r) => r.error)) return new Set(candidateUrls);
+
+  const referenced = new Set<string>();
+  for (const { data, column } of results) {
+    if (!Array.isArray(data)) continue;
+    for (const row of data) {
+      const value = (row as Record<string, unknown> | null)?.[column];
+      if (typeof value === 'string' && value) referenced.add(value);
+    }
+  }
+  return referenced;
+}

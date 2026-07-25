@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { deleteStorageObjects, parseStorageUrl } from '@/lib/supabase/storageCleanup';
+import { cleanupOrphanedImages, referencedUrlsFrom } from '@/lib/supabase/storageCleanup';
 import type { UploadBucket } from '@/lib/storage/buckets';
 import type { AdminPackage, PackageCategoryRef, PackageStatus } from '@/lib/types/package';
 import { slugify } from '@/lib/utils';
@@ -495,21 +495,11 @@ export async function updatePackage(id: string, packageData: Partial<PackageReco
  * never touch a file owned by another content type (categories, testimonials,
  * etc.) — even if such a URL was pasted into a package's free-text `og_image`.
  */
-const PACKAGE_IMAGE_BUCKETS = new Set<UploadBucket>([
+const PACKAGE_IMAGE_BUCKETS: readonly UploadBucket[] = [
   'package-images',
   'hotel-images',
   'itinerary-images',
-]);
-
-/** Keep only owned URLs that sit in one of the package image buckets. */
-function packageImageUrls(urls: (string | null | undefined)[]): string[] {
-  const kept = new Set<string>();
-  for (const url of urls) {
-    const ref = parseStorageUrl(url);
-    if (ref && PACKAGE_IMAGE_BUCKETS.has(ref.bucket)) kept.add(url as string);
-  }
-  return [...kept];
-}
+];
 
 /** Every image URL a package currently references across its tables. */
 async function collectPackageImageUrls(packageId: string): Promise<string[]> {
@@ -547,8 +537,7 @@ async function collectPackageImageUrls(packageId: string): Promise<string[]> {
  * transient failure can never cause an in-use file to be deleted.
  */
 async function stillReferencedByPackages(urls: string[]): Promise<Set<string>> {
-  const referenced = new Set<string>();
-  if (urls.length === 0) return referenced;
+  if (urls.length === 0) return new Set();
 
   const [gallery, stays, entries, ogs] = await Promise.all([
     supabaseAdmin.from('package_gallery').select('image_url').in('image_url', urls),
@@ -557,38 +546,20 @@ async function stillReferencedByPackages(urls: string[]): Promise<Set<string>> {
     supabaseAdmin.from('packages').select('og_image').in('og_image', urls),
   ]);
 
-  if (gallery.error || stays.error || entries.error || ogs.error) {
-    return new Set(urls); // conservative: don't delete anything on error
-  }
-
-  for (const row of gallery.data ?? []) if (row.image_url) referenced.add(row.image_url as string);
-  for (const row of stays.data ?? []) if (row.image_url) referenced.add(row.image_url as string);
-  for (const row of entries.data ?? []) if (row.image_url) referenced.add(row.image_url as string);
-  for (const row of ogs.data ?? []) if (row.og_image) referenced.add(row.og_image as string);
-
-  return referenced;
+  return referencedUrlsFrom(urls, [
+    { ...gallery, column: 'image_url' },
+    { ...stays, column: 'image_url' },
+    { ...entries, column: 'image_url' },
+    { ...ogs, column: 'og_image' },
+  ]);
 }
 
 /**
  * Delete the given candidate files that no package references any more.
- *
- * Best-effort and self-contained: it never throws, so image cleanup can't fail
- * the package delete/update it follows. Must be called *after* that DB change is
- * committed.
+ * Must be called *after* the package delete/update has committed.
  */
 async function cleanupOrphanedPackageImages(candidateUrls: string[]): Promise<void> {
-  try {
-    const owned = packageImageUrls(candidateUrls);
-    if (owned.length === 0) return;
-
-    const stillUsed = await stillReferencedByPackages(owned);
-    const orphaned = owned.filter((url) => !stillUsed.has(url));
-    if (orphaned.length === 0) return;
-
-    await deleteStorageObjects(orphaned);
-  } catch (err) {
-    console.error('[storage-cleanup] package image cleanup failed:', err);
-  }
+  await cleanupOrphanedImages(candidateUrls, PACKAGE_IMAGE_BUCKETS, stillReferencedByPackages);
 }
 
 /**
