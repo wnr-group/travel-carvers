@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { siteSettingsSchema } from '@/lib/validations/site-settings.schema';
 
 export default function SiteSettingsPage() {
   const { data, isPending, isError, error } = useSiteSettings();
@@ -62,26 +63,51 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
   const [twitterUrl, setTwitterUrl] = useState(initial?.twitter_url ?? '');
   const [linkedinUrl, setLinkedinUrl] = useState(initial?.linkedin_url ?? '');
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+
+    const payload = {
+      company_name: companyName,
+      contact_email: contactEmail,
+      contact_phone: contactPhone,
+      address,
+      show_prices_globally: showPricesGlobally,
+      facebook_url: facebookUrl,
+      instagram_url: instagramUrl,
+      twitter_url: twitterUrl,
+      linkedin_url: linkedinUrl,
+    };
+
+    // Validate client-side for inline errors; the API re-validates as a backstop.
+    const parsed = siteSettingsSchema.safeParse(payload);
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0] ?? '');
+        if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast.error('Please fix the highlighted fields.');
+      return;
+    }
+    setErrors({});
+
     try {
-      await updateMutation.mutateAsync({
-        id: id || undefined,
-        company_name: companyName,
-        contact_email: contactEmail,
-        contact_phone: contactPhone,
-        address,
-        show_prices_globally: showPricesGlobally,
-        facebook_url: facebookUrl,
-        instagram_url: instagramUrl,
-        twitter_url: twitterUrl,
-        linkedin_url: linkedinUrl,
-      });
+      await updateMutation.mutateAsync({ id: id || undefined, ...payload });
       toast.success('Site settings saved successfully!');
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Failed to save settings');
     }
   };
+
+  const fieldError = (key: string) =>
+    errors[key] ? (
+      <p className="mt-1 text-sm text-red-600" role="alert">
+        {errors[key]}
+      </p>
+    ) : null;
 
   return (
     <div className="py-4 max-w-4xl">
@@ -93,7 +119,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} noValidate className="space-y-8">
         
         {/* Section 1: Company details */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
@@ -119,6 +145,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
                 required
               />
+              {fieldError('company_name')}
             </div>
 
             <div>
@@ -132,6 +159,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
                 required
               />
+                {fieldError('contact_email')}
             </div>
 
             <div>
@@ -145,6 +173,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
                 required
               />
+                {fieldError('contact_phone')}
             </div>
 
             <div className="md:col-span-2">
@@ -158,6 +187,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
                 required
               />
+                {fieldError('address')}
             </div>
           </div>
         </div>
@@ -216,6 +246,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 placeholder="https://facebook.com/..."
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
               />
+                {fieldError('facebook_url')}
             </div>
 
             <div>
@@ -228,6 +259,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 placeholder="https://instagram.com/..."
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
               />
+                {fieldError('instagram_url')}
             </div>
 
             <div>
@@ -240,6 +272,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 placeholder="https://x.com/..."
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
               />
+                {fieldError('twitter_url')}
             </div>
 
             <div>
@@ -252,6 +285,7 @@ function SiteSettingsForm({ initial }: { initial: SiteSettings | null }) {
                 placeholder="https://linkedin.com/company/..."
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-brand-medium/50 text-gray-900 placeholder-gray-400"
               />
+                {fieldError('linkedin_url')}
             </div>
           </div>
         </div>
