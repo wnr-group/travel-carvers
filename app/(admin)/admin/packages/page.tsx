@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { LayoutGrid, List, Plus } from 'lucide-react';
 import PackageFilters, {
   EMPTY_PACKAGE_FILTERS,
@@ -9,11 +11,15 @@ import PackageFilters, {
 } from '@/components/admin/PackageFilters';
 import PackageTable from '@/components/admin/PackageTable';
 import PackageCard from '@/components/admin/PackageCard';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useAdminPackages } from '@/lib/hooks/useAdminPackages';
 import { useAdminCategories } from '@/lib/hooks/useAdminCategories';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
+import { fetchJson } from '@/lib/api/fetchJson';
+import { ADMIN_PACKAGES_KEY } from '@/lib/queryKeys';
 import { cn } from '@/lib/utils';
+import type { AdminPackage } from '@/lib/types/package';
 import type { PackageFilters as PackageFilterValues } from '@/lib/validations/package.schema';
 
 type ViewMode = 'table' | 'grid';
@@ -48,6 +54,30 @@ export default function PackagesPage() {
   const { data: categories, isPending: isLoadingCategories } = useAdminCategories();
 
   const hasActiveFilters = Object.keys(queryFilters).length > 0;
+
+  const queryClient = useQueryClient();
+  const [pendingDelete, setPendingDelete] = useState<AdminPackage | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      fetchJson<{ id: string }>(`/api/admin/packages/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Package deleted');
+      queryClient.invalidateQueries({ queryKey: ADMIN_PACKAGES_KEY });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      await deleteMutation.mutateAsync(pendingDelete.id);
+    } catch {
+      // error surfaced via the mutation's onError toast
+    } finally {
+      setPendingDelete(null);
+    }
+  };
 
   return (
     <div className="p-8">
@@ -118,14 +148,29 @@ export default function PackagesPage() {
           </p>
         </div>
       ) : viewMode === 'table' ? (
-        <PackageTable packages={packages} />
+        <PackageTable packages={packages} onDelete={setPendingDelete} />
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {packages.map((pkg) => (
-            <PackageCard key={pkg.id} pkg={pkg} />
+            <PackageCard key={pkg.id} pkg={pkg} onDelete={setPendingDelete} />
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Delete package"
+        message={
+          pendingDelete
+            ? `Delete “${pendingDelete.title}”? Its itinerary, gallery, reviews and other details are removed too. Any leads for it are kept, just unlinked. This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleteMutation.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

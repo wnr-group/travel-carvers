@@ -2,12 +2,18 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Edit, Eye, ImageOff } from 'lucide-react'
+import { Edit, Eye, ImageOff, Trash2 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import { formatPrice, packagePath } from '@/lib/utils'
 import type { AdminPackage } from '@/lib/types/package'
 
-export default function PackageCard({ pkg }: { pkg: AdminPackage }) {
+export default function PackageCard({
+  pkg,
+  onDelete,
+}: {
+  pkg: AdminPackage
+  onDelete?: (pkg: AdminPackage) => void
+}) {
   return (
     <article className="flex flex-col overflow-hidden rounded-xl bg-white shadow transition-shadow hover:shadow-lg">
       <div className="relative h-40 bg-gray-100">
@@ -68,6 +74,16 @@ export default function PackageCard({ pkg }: { pkg: AdminPackage }) {
               <Edit className="h-4 w-4" />
               Edit
             </Link>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(pkg)}
+                aria-label={`Delete ${pkg.title}`}
+                className="flex items-center justify-center rounded-lg border border-red-200 px-3 py-2 text-red-600 transition-colors hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>
