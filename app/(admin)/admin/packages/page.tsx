@@ -12,6 +12,7 @@ import PackageFilters, {
 import PackageTable from '@/components/admin/PackageTable';
 import PackageCard from '@/components/admin/PackageCard';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Pagination from '@/components/ui/Pagination';
 import { useAdminPackages } from '@/lib/hooks/useAdminPackages';
 import { useAdminCategories } from '@/lib/hooks/useAdminCategories';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
@@ -25,6 +26,8 @@ import type { PackageFilters as PackageFilterValues } from '@/lib/validations/pa
 type ViewMode = 'table' | 'grid';
 
 const VIEW_MODE_STORAGE_KEY = 'admin:packages:view';
+
+const ADMIN_PAGE_SIZE = 12;
 
 const isViewMode = (value: string): value is ViewMode =>
   value === 'table' || value === 'grid';
@@ -54,6 +57,30 @@ export default function PackagesPage() {
   const { data: categories, isPending: isLoadingCategories } = useAdminCategories();
 
   const hasActiveFilters = Object.keys(queryFilters).length > 0;
+
+  // Client-side pagination over the fetched list.
+  const [page, setPage] = useState(1);
+
+  // Snap back to page 1 when the active filters change (render-phase state sync).
+  const filterKey = JSON.stringify(queryFilters);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
+    setPage(1);
+  }
+
+  const totalItems = packages?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / ADMIN_PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedPackages = useMemo(
+    () => (packages ?? []).slice((currentPage - 1) * ADMIN_PAGE_SIZE, currentPage * ADMIN_PAGE_SIZE),
+    [packages, currentPage]
+  );
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const queryClient = useQueryClient();
   const [pendingDelete, setPendingDelete] = useState<AdminPackage | null>(null);
@@ -147,14 +174,33 @@ export default function PackagesPage() {
             )}
           </p>
         </div>
-      ) : viewMode === 'table' ? (
-        <PackageTable packages={packages} onDelete={setPendingDelete} />
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {packages.map((pkg) => (
-            <PackageCard key={pkg.id} pkg={pkg} onDelete={setPendingDelete} />
-          ))}
-        </div>
+        <>
+          <div className="mb-4 text-sm text-gray-500">
+            Showing{' '}
+            <span className="font-semibold text-brand-darkest">
+              {(currentPage - 1) * ADMIN_PAGE_SIZE + 1}–{Math.min(currentPage * ADMIN_PAGE_SIZE, totalItems)}
+            </span>{' '}
+            of <span className="font-semibold text-brand-darkest">{totalItems}</span> packages
+          </div>
+
+          {viewMode === 'table' ? (
+            <PackageTable packages={pagedPackages} onDelete={setPendingDelete} />
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {pagedPackages.map((pkg) => (
+                <PackageCard key={pkg.id} pkg={pkg} onDelete={setPendingDelete} />
+              ))}
+            </div>
+          )}
+
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="mt-8"
+          />
+        </>
       )}
 
       <ConfirmDialog

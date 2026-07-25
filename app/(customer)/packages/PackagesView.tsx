@@ -15,6 +15,7 @@ import {
   DURATION_RANGES,
   formatPrice,
 } from '@/lib/hooks/usePackageFilters';
+import Pagination from '@/components/ui/Pagination';
 import { PackageCard } from '@/components/customer/PackageCard';
 import { PackageFilters, Chip } from '@/components/customer/PackageFilters';
 import { PackageSorting } from '@/components/customer/PackageSorting';
@@ -31,7 +32,12 @@ export default function PackageSearchFilter() {
     error,
     refetch,
     sortedPackages,
-    totalCount,
+    pagedPackages,
+    resultCount,
+    page,
+    setPage,
+    totalPages,
+    pageSize,
     availableCategories,
     activeFilterCount,
     toggleCategory,
@@ -44,6 +50,14 @@ export default function PackageSearchFilter() {
   } = usePackageFilters();
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const handlePageChange = (next: number) => {
+    setPage(next);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const rangeStart = resultCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(page * pageSize, resultCount);
 
   return (
     <div className="min-h-screen bg-brand-tint-light">
@@ -112,8 +126,10 @@ export default function PackageSearchFilter() {
               ) : (
                 <>
                   Showing{' '}
-                  <span className="font-semibold text-brand-darkest">{sortedPackages.length}</span> of{' '}
-                  <span className="font-semibold text-brand-darkest">{totalCount}</span> packages
+                  <span className="font-semibold text-brand-darkest">
+                    {rangeStart}–{rangeEnd}
+                  </span>{' '}
+                  of <span className="font-semibold text-brand-darkest">{resultCount}</span> packages
                 </>
               )}
             </p>
@@ -174,11 +190,19 @@ export default function PackageSearchFilter() {
               onAction={clearFilters}
             />
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {sortedPackages.map((pkg) => (
-                <PackageCard key={pkg.id} pkg={pkg} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {pagedPackages.map((pkg) => (
+                  <PackageCard key={pkg.id} pkg={pkg} />
+                ))}
+              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                className="mt-10"
+              />
+            </>
           )}
         </main>
       </div>

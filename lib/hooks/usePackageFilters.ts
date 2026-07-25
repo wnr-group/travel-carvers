@@ -38,6 +38,9 @@ export interface Filters {
 export const PRICE_FLOOR = 0;
 export const PRICE_CEIL = 500000;
 
+/** How many package cards to show per page on the listing. */
+export const PACKAGES_PER_PAGE = 12;
+
 export const DIFFICULTIES: Difficulty[] = ['Easy', 'Moderate', 'Challenging'];
 
 export const DURATION_RANGES: Record<string, { label: string; min: number; max: number }> = {
@@ -244,6 +247,26 @@ export function usePackageFilters() {
     return [...filteredPackages].sort(sorter.compare);
   }, [filteredPackages, activeFilters.sort]);
 
+  /* ------------------------------ Pagination ------------------------------ */
+
+  const [page, setPage] = useState(1);
+
+  // Snap back to page 1 whenever the filters or sort change (render-phase state
+  // sync — the pattern React recommends over an effect).
+  const filterSignature = JSON.stringify(activeFilters);
+  const [prevFilterSignature, setPrevFilterSignature] = useState(filterSignature);
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature);
+    setPage(1);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(sortedPackages.length / PACKAGES_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedPackages = useMemo(
+    () => sortedPackages.slice((currentPage - 1) * PACKAGES_PER_PAGE, currentPage * PACKAGES_PER_PAGE),
+    [sortedPackages, currentPage]
+  );
+
   const activeFilterCount = countActiveFilters(activeFilters);
 
   /* ------------------------------ Handlers ------------------------------ */
@@ -298,6 +321,12 @@ export function usePackageFilters() {
     refetch,
     hydrated,
     sortedPackages,
+    pagedPackages,
+    resultCount: sortedPackages.length,
+    page: currentPage,
+    setPage,
+    totalPages,
+    pageSize: PACKAGES_PER_PAGE,
     totalCount: packages.length,
     availableCategories,
     activeFilterCount,
