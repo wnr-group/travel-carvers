@@ -203,7 +203,7 @@ export default function AdminReviewsPage() {
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           {/* Status Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-medium">Status:</span>
+            <span className="text-xs text-gray-700 font-medium">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => {
@@ -221,7 +221,7 @@ export default function AdminReviewsPage() {
 
           {/* Rating Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 font-medium">Rating:</span>
+            <span className="text-xs text-gray-700 font-medium">Rating:</span>
             <select
               value={ratingFilter}
               onChange={(e) => {
