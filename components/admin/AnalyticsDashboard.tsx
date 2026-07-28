@@ -71,7 +71,7 @@ export default function AnalyticsDashboard() {
           icon={Percent}
           isPending={isPending}
         />
-        <KpiCard label="Total Reviews" value={kpis?.totalReviews ?? 0} icon={MessageSquare} isPending={isPending} />
+        <KpiCard label="Total Approved Reviews" value={kpis?.totalReviews ?? 0} icon={MessageSquare} isPending={isPending} />
         <KpiCard
           label="Average Rating"
           value={kpis?.averageRating != null ? kpis.averageRating.toFixed(1) : '—'}
