@@ -8,6 +8,12 @@ import {
   PawPrint,
   Building2,
   Clock3,
+  Sparkles,
+  TrendingUp,
+  BadgePlus,
+  Sun,
+  Crown,
+  Users,
   X,
   type LucideIcon,
 } from 'lucide-react';
@@ -21,6 +27,7 @@ import {
   DURATION_RANGES,
   formatPrice,
 } from '@/lib/hooks/usePackageFilters';
+import { PACKAGE_FLAGS, type PackageFlagKey } from '@/lib/packageFlags';
 
 // Map categories to Lucide icons
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -30,6 +37,15 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Cultural: Landmark,
   Wildlife: PawPrint,
   City: Building2,
+};
+
+export const FLAG_ICONS: Record<PackageFlagKey, LucideIcon> = {
+  featured: Sparkles,
+  trending: TrendingUp,
+  new: BadgePlus,
+  seasonal: Sun,
+  'best-seller': Crown,
+  group: Users,
 };
 
 export interface ChipProps {
@@ -55,6 +71,7 @@ export interface PackageFiltersProps {
   categories: CategoryOption[];
   activeFilterCount: number;
   toggleCategory: (value: string) => void;
+  toggleFlag: (value: PackageFlagKey) => void;
   toggleDifficulty: (value: Difficulty) => void;
   setPriceMin: (value: number) => void;
   setPriceMax: (value: number) => void;
@@ -67,6 +84,7 @@ export function PackageFilters({
   categories,
   activeFilterCount,
   toggleCategory,
+  toggleFlag,
   toggleDifficulty,
   setPriceMin,
   setPriceMax,
@@ -87,6 +105,35 @@ export function PackageFilters({
           </button>
         )}
       </div>
+
+      <section>
+        <h3 className="mb-3 text-sm font-semibold text-brand-darkest">Package Flags</h3>
+        <div className="space-y-2">
+          {PACKAGE_FLAGS.map(({ key, label }) => {
+            const checked = filters.flags.includes(key);
+            const Icon = FLAG_ICONS[key];
+            return (
+              <label
+                key={key}
+                className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition ${
+                  checked
+                    ? 'border-brand-medium bg-brand-lightest text-brand-darkest'
+                    : 'border-transparent text-brand-darkest/80 hover:bg-brand-lightest/60'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleFlag(key)}
+                  className="h-4 w-4 rounded border-brand-light text-brand-dark accent-[var(--logo-forest)]"
+                />
+                <Icon aria-hidden="true" className="h-4 w-4 text-brand-medium" />
+                {label}
+              </label>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Category */}
       {categories.length > 0 && (

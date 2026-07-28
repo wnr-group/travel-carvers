@@ -5,16 +5,12 @@ import Link from 'next/link';
 import HeroSection from '@/components/customer/HeroSection';
 import TrustBadges from '@/components/customer/TrustBadges';
 import {
-  HomePackageCard,
-  HomePackageCardSkeleton,
-  type HomePackage,
-} from '@/components/customer/HomePackageCard';
-import {
   HomeCategoryCard,
   HomeCategoryCardSkeleton,
   type HomeCategory,
 } from '@/components/customer/HomeCategoryCard';
-import { useFeaturedPackages, useTrendingPackages } from '@/lib/hooks/usePackages';
+import PackageFlagSection, { SHOWCASE_LIMIT } from '@/components/customer/PackageFlagSection';
+import { useFlaggedPackages } from '@/lib/hooks/usePackages';
 import { useCategories } from '@/lib/hooks/useCategories';
 import type { HomepageSectionsContent } from '@/lib/api/public/homepageSections';
 import TestimonialsCarousel from '@/components/customer/TestimonialsCarousel';
@@ -90,49 +86,6 @@ function ShowcaseError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-/** Four across on desktop — matches the Trending and Featured rows. */
-const SHOWCASE_GRID = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6';
-const SHOWCASE_LIMIT = 4;
-
-function PackageShowcaseGrid({
-  isLoading,
-  isError,
-  data,
-  onRetry,
-  badge,
-  emptyText,
-}: {
-  isLoading: boolean;
-  isError: boolean;
-  data?: HomePackage[];
-  onRetry: () => void;
-  badge?: string;
-  emptyText: string;
-}) {
-  if (isLoading) {
-    return (
-      <div className={SHOWCASE_GRID}>
-        {Array.from({ length: SHOWCASE_LIMIT }).map((_, i) => (
-          <HomePackageCardSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
-
-  if (isError) return <ShowcaseError onRetry={onRetry} />;
-
-  const items = (data ?? []).slice(0, SHOWCASE_LIMIT);
-  if (items.length === 0) return <EmptyState variant="packages" description={emptyText} />;
-
-  return (
-    <div className={SHOWCASE_GRID}>
-      {items.map((pkg) => (
-        <HomePackageCard key={pkg.id} pkg={pkg} badge={badge} />
-      ))}
-    </div>
-  );
-}
-
 /** One full row on desktop. Anything beyond this lives behind "View more categories". */
 const CATEGORY_ROW_SIZE = 6;
 
@@ -180,8 +133,10 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
   const observerRef = useRef<IntersectionObserver | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
-  const featured = useFeaturedPackages();
-  const trending = useTrendingPackages();
+  const featured = useFlaggedPackages('featured', SHOWCASE_LIMIT);
+  const trending = useFlaggedPackages('trending', SHOWCASE_LIMIT);
+  const seasonal = useFlaggedPackages('seasonal', SHOWCASE_LIMIT);
+  const bestSellers = useFlaggedPackages('best-seller', SHOWCASE_LIMIT);
   const categories = useCategories();
 
   // Drives the header's "View more" button, which sits outside the grid component.
@@ -267,32 +222,14 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
       </section>
 
       {/* Trending Packages (Most Loved Around The World) */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-brand-forest">{trendingTitle}</h2>
-              <p className="text-sm text-gray-600 mt-1">{trendingDescription}</p>
-            </div>
-            <Link
-              href="/packages"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-brand-forest/25 bg-white px-6 py-3 text-sm font-bold text-brand-forest shadow-sm transition-all hover:gap-3 hover:border-brand-forest hover:shadow-md self-start sm:self-auto"
-            >
-              <span>View All Destinations</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          <PackageShowcaseGrid
-            isLoading={trending.isLoading}
-            isError={trending.isError}
-            data={trending.data}
-            onRetry={trending.refetch}
-            badge="TRENDING"
-            emptyText="No trending packages right now. Browse all our packages instead."
-          />
-        </div>
-      </section>
+      <PackageFlagSection
+        flag="trending"
+        title={trendingTitle}
+        description={trendingDescription}
+        className="bg-white"
+        query={trending}
+        emptyText="No trending packages right now. Browse all our packages instead."
+      />
 
       {/* Highlighted Visa Service Banner */}
       <section className="my-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -350,32 +287,36 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
       </section>
 
       {/* Featured Packages (Handpicked Experiences For You) */}
-      <section className="py-16 bg-brand-paper">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-brand-forest">{featuredTitle}</h2>
-              <p className="text-sm text-gray-600 mt-1">{featuredDescription}</p>
-            </div>
-            <Link
-              href="/packages"
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-brand-forest/25 bg-white px-6 py-3 text-sm font-bold text-brand-forest shadow-sm transition-all hover:gap-3 hover:border-brand-forest hover:shadow-md self-start sm:self-auto"
-            >
-              <span>View All Packages</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+      <PackageFlagSection
+        flag="featured"
+        title={featuredTitle}
+        description={featuredDescription}
+        className="bg-brand-paper"
+        query={featured}
+        emptyText="No featured packages yet. Browse all our packages instead."
+      />
 
-          <PackageShowcaseGrid
-            isLoading={featured.isLoading}
-            isError={featured.isError}
-            data={featured.data}
-            onRetry={featured.refetch}
-            badge="FEATURED"
-            emptyText="No featured packages yet. Browse all our packages instead."
-          />
-        </div>
-      </section>
+      {/* Seasonal Best */}
+      <PackageFlagSection
+        flag="seasonal"
+        title="Best Of This Season"
+        description="Trips at their finest right now — the weather, the festivals and the views all line up."
+        className="bg-white"
+        query={seasonal}
+        emptyText="No seasonal picks right now. Browse all our packages instead."
+        hideWhenEmpty
+      />
+
+      {/* Best Sellers */}
+      <PackageFlagSection
+        flag="best-seller"
+        title="Our Best Sellers"
+        description="The packages our travellers book again and again."
+        className="bg-brand-paper"
+        query={bestSellers}
+        emptyText="No best sellers yet. Browse all our packages instead."
+        hideWhenEmpty
+      />
 
       {/* Group packages */}
       <GroupPackagesSection />

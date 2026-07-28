@@ -11,6 +11,7 @@ import {
   type TravelPackage,
   type RawListPackage,
 } from '@/lib/packageList';
+import { isPackageFlagKey, type PackageFlagKey } from '@/lib/packageFlags';
 import { getActiveCategories } from '../api/public/categories';
 
 /* ============================== Types ============================== */
@@ -26,6 +27,7 @@ export interface CategoryOption {
 export interface Filters {
   search: string;
   categories: string[];
+  flags: PackageFlagKey[];
   difficulty: Difficulty[];
   priceMin: number;
   priceMax: number;
@@ -78,6 +80,7 @@ export const SORT_OPTIONS: Record<string, { label: string; compare: (a: TravelPa
 export const DEFAULT_FILTERS: Filters = {
   search: '',
   categories: [],
+  flags: [],
   difficulty: [],
   priceMin: PRICE_FLOOR,
   priceMax: PRICE_CEIL,
@@ -109,6 +112,7 @@ export function filtersToSearchParams(filters: Filters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.search) params.set('q', filters.search);
   if (filters.categories.length) params.set('category', filters.categories.join(','));
+  if (filters.flags.length) params.set('flag', filters.flags.join(','));
   if (filters.difficulty.length) params.set('difficulty', filters.difficulty.join(','));
   if (filters.priceMin !== PRICE_FLOOR) params.set('price_min', String(filters.priceMin));
   if (filters.priceMax !== PRICE_CEIL) params.set('price_max', String(filters.priceMax));
@@ -121,6 +125,9 @@ export function searchParamsToFilters(params: URLSearchParams): Filters {
   return {
     search: params.get('q') ?? '',
     categories: parseListParam(params.get('category')),
+    // Unknown flag values are dropped rather than kept — a bad `?flag=` must not
+    // filter the listing down to nothing.
+    flags: parseListParam(params.get('flag')).filter(isPackageFlagKey),
     difficulty: parseListParam(params.get('difficulty')) as Difficulty[],
     priceMin: clampParam(params.get('price_min'), PRICE_FLOOR, PRICE_FLOOR, PRICE_CEIL),
     priceMax: clampParam(params.get('price_max'), PRICE_CEIL, PRICE_FLOOR, PRICE_CEIL),
@@ -133,6 +140,7 @@ export function countActiveFilters(filters: Filters): number {
   let count = 0;
   if (filters.search) count += 1;
   count += filters.categories.length;
+  count += filters.flags.length;
   count += filters.difficulty.length;
   if (filters.priceMin !== PRICE_FLOOR || filters.priceMax !== PRICE_CEIL) count += 1;
   if (filters.duration !== 'any') count += 1;
@@ -197,13 +205,6 @@ export function usePackageFilters() {
     window.scrollTo(0, 0);
   }, [searchParams]);
 
-  /**
-   * The active search term is the debounced input — derived, not copied into `filters`
-   * through an effect. Writing it back into state caused a render cascade (and tripped
-   * react-hooks/set-state-in-effect); everything downstream reads `activeFilters`.
-   *
-   * Before hydration the URL has not been read yet, so `filters` is still the source.
-   */
   const activeFilters = useMemo<Filters>(
     () => (hydrated ? { ...filters, search: debouncedSearch } : filters),
     [filters, debouncedSearch, hydrated],
@@ -215,8 +216,6 @@ export function usePackageFilters() {
     const params = filtersToSearchParams(activeFilters);
     const query = params.toString();
     const newUrl = `${window.location.pathname}${query ? `?${query}` : ''}`;
-    // Only write when the URL actually changes — avoids redundant history churn
-    // (and any feedback into search-param-driven effects).
     if (newUrl !== `${window.location.pathname}${window.location.search}`) {
       window.history.replaceState(null, '', newUrl);
     }
@@ -234,6 +233,8 @@ export function usePackageFilters() {
         if (!haystack.includes(query)) return false;
       }
       if (activeFilters.categories.length && !pkg.categories.some((c) => activeFilters.categories.includes(c))) return false;
+      // Flags are an OR, like categories: "Trending + Best Seller" means either badge.
+      if (activeFilters.flags.length && !pkg.flags.some((f) => activeFilters.flags.includes(f))) return false;
       if (activeFilters.difficulty.length && (!pkg.difficulty || !activeFilters.difficulty.includes(pkg.difficulty))) return false;
       // "On request" packages (price 0) have no real price — don't drop them on a price filter.
       if (pkg.price > 0 && (pkg.price < activeFilters.priceMin || pkg.price > activeFilters.priceMax)) return false;
@@ -277,6 +278,15 @@ export function usePackageFilters() {
       categories: prev.categories.includes(value)
         ? prev.categories.filter((c) => c !== value)
         : [...prev.categories, value],
+    }));
+  }, []);
+
+  const toggleFlag = useCallback((value: PackageFlagKey) => {
+    setFilters((prev) => ({
+      ...prev,
+      flags: prev.flags.includes(value)
+        ? prev.flags.filter((f) => f !== value)
+        : [...prev.flags, value],
     }));
   }, []);
 
@@ -331,6 +341,7 @@ export function usePackageFilters() {
     availableCategories,
     activeFilterCount,
     toggleCategory,
+    toggleFlag,
     toggleDifficulty,
     setPriceMin,
     setPriceMax,

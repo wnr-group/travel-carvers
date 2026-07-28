@@ -4,12 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import {
   getPublishedPackages,
   getPackageBySlug,
-  getTrendingPackages,
-  getFeaturedPackages,
+  getPackagesByFlag,
   getPackagesByCategory,
   getPackagesByCategorySlug,
   getGroupPackages,
 } from '@/lib/api/public/packages';
+import type { PackageFlagKey } from '@/lib/packageFlags';
 
 /**
  * Get all published packages
@@ -35,23 +35,12 @@ export function usePackage(slug: string) {
 }
 
 /**
- * Get trending packages
+ * Packages carrying a showcase flag — one homepage row per flag.
  */
-export function useTrendingPackages() {
+export function useFlaggedPackages(flag: PackageFlagKey, limit?: number) {
   return useQuery({
-    queryKey: ['packages', 'trending'],
-    queryFn: getTrendingPackages,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
-
-/**
- * Get featured packages
- */
-export function useFeaturedPackages() {
-  return useQuery({
-    queryKey: ['packages', 'featured'],
-    queryFn: getFeaturedPackages,
+    queryKey: ['packages', 'flag', flag, limit ?? null],
+    queryFn: () => getPackagesByFlag(flag, limit),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
