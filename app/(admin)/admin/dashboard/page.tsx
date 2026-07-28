@@ -2,6 +2,7 @@ import { getAdminUser } from '@/lib/supabase/auth';
 import { redirect } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { Package, Mail, MessageSquare, FolderTree } from 'lucide-react';
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 
 async function getDashboardStats() {
   const [packages, leads, reviews, categories] = await Promise.all([
@@ -19,40 +20,11 @@ async function getDashboardStats() {
   };
 }
 
-interface RecentLead {
-  id: string;
-  name: string;
-  email: string;
-  created_at: string;
-  packages: { title: string } | null;
-}
-
-async function getRecentLeads(): Promise<RecentLead[]> {
-  const { data, error } = await supabaseAdmin
-    .from('leads')
-    .select(`
-      id,
-      name,
-      email,
-      created_at,
-      packages ( title )
-    `)
-    .order('created_at', { ascending: false })
-    .limit(5)
-    .overrideTypes<RecentLead[], { merge: false }>();
-
-  if (error) {
-    return [];
-  }
-
-  return data || [];
-}
-
 export default async function AdminDashboardPage() {
   const session = await getAdminUser();
   if (!session) redirect('/admin/login');
   
-  const [stats, recentLeads] = await Promise.all([getDashboardStats(), getRecentLeads()]);
+  const stats = await getDashboardStats();
   
   return (
     <div className="py-4">
@@ -66,36 +38,8 @@ export default async function AdminDashboardPage() {
         <StatCard title="Categories" value={stats.categories} icon={<FolderTree />} color="bg-brand-medium" />
       </div>
       
-      {/* Recent Leads Table */}
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-        <h2 className="text-xl font-bold text-brand-darkest mb-4">Recent Leads</h2>
-        {recentLeads.length === 0 ? (
-          <p className="text-gray-500">No leads yet</p>
-        ) : (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  <th className="py-2 pr-4">Name</th>
-                  <th className="py-2 pr-4">Email</th>
-                  <th className="py-2 pr-4">Package</th>
-                  <th className="py-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentLeads.map((lead) => (
-                  <tr key={lead.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
-                    <td className="py-3 pr-4 font-medium text-brand-darkest">{lead.name}</td>
-                    <td className="py-3 pr-4 text-gray-600">{lead.email}</td>
-                    <td className="py-3 pr-4 text-gray-600">{lead.packages?.title || 'General Inquiry'}</td>
-                    <td className="py-3 text-gray-600">{new Date(lead.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* Analytics dashboard content */}
+      <AnalyticsDashboard />
     </div>
   );
 }
