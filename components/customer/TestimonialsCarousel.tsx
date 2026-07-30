@@ -78,13 +78,10 @@ export default function TestimonialsCarousel() {
   const handlePrev = () => setActiveIndex((prev) => (prev - 1 + count) % count);
   const handleNext = () => setActiveIndex((prev) => (prev + 1) % count);
 
-  // No real testimonials yet → hide the whole section (no fabricated fallbacks).
-  if (count === 0) return null;
-
   return (
     <section
       ref={sectionRef}
-      className="w-full py-6 md:py-10 overflow-hidden relative bg-brand-paper"
+      className={`w-full py-6 md:py-10 overflow-hidden relative bg-brand-paper ${count === 0 ? 'hidden' : ''}`}
     >
       <div className="max-w-7xl mx-auto px-6">
         <motion.div

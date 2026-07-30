@@ -119,7 +119,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
       <div className="border-b border-brand-lightest pb-4">
-        <h2 className="text-brand-darkest text-3xl font-extrabold tracking-tight mb-1">
+        <h2 className="text-brand-darkest text-2xl font-bold uppercase tracking-wider mb-1">
           Craft Your Journey
         </h2>
         <p className="text-brand-medium text-sm">Fill in your preferences, and let our experts handle the rest.</p>
@@ -148,14 +148,10 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
       {/* Section 1: Contact Details */}
       <div className="space-y-4">
-        <h3 className="text-xs font-bold text-brand-medium uppercase tracking-widest border-l-2 border-brand-dark pl-2">
-          1. Contact Details
-        </h3>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label htmlFor="lead-name" className={labelClasses}>
-              <User aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Full Name *
+            <label htmlFor="lead-name" className="sr-only">
+              Full Name *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -178,8 +174,8 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
           </div>
 
           <div>
-            <label htmlFor="lead-email" className={labelClasses}>
-              <Mail aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Email Address *
+            <label htmlFor="lead-email" className="sr-only">
+              Email Address *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -191,7 +187,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className={inputClasses}
-                placeholder="name@domain.com"
+                placeholder="Enter your email address"
                 required
                 aria-required="true"
                 aria-invalid={errorFor('email') ? true : undefined}
@@ -202,8 +198,8 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
           </div>
 
           <div>
-            <label htmlFor="lead-phone" className={labelClasses}>
-              <Phone aria-hidden="true" className="w-4 h-4 text-brand-medium" /> Phone Number *
+            <label htmlFor="lead-phone" className="sr-only">
+              Phone Number *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -215,7 +211,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className={inputClasses}
-                placeholder="+91 XXXXX XXXXX"
+                placeholder="Enter your phone number"
                 required
                 aria-required="true"
                 aria-invalid={errorFor('phone') ? true : undefined}
@@ -229,10 +225,6 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
       {/* Section 2: Travel Details */}
       <div className="space-y-4">
-        <h3 className="text-xs font-bold text-brand-medium uppercase tracking-widest border-l-2 border-brand-dark pl-2">
-          2. Travel Plans
-        </h3>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="lead-start-date" className={labelClasses}>
@@ -292,10 +284,6 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
 
       {/* Section 3: Travel Party Size */}
       <div className="space-y-4">
-        <h3 className="text-xs font-bold text-brand-medium uppercase tracking-widest border-l-2 border-brand-dark pl-2">
-          3. Travel Party
-        </h3>
-
         <div className="bg-brand-tint-subtle border border-brand-lightest p-4 rounded-2xl">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {/* Adults */}
@@ -408,8 +396,8 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={!formData.name.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.travel_start_date.trim() || createLead.isPending}
-        className="w-full bg-gradient-brand-dark text-white py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex justify-center items-center gap-2 cursor-pointer shadow-lg"
+        disabled={createLead.isPending}
+        className="w-full bg-brand-forest text-white py-3.5 rounded-full font-bold text-base hover:bg-brand-dark hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex justify-center items-center gap-2 cursor-pointer shadow-md shadow-brand-forest/20"
       >
         {createLead.isPending ? (
           <>
@@ -426,7 +414,7 @@ export function LeadForm({ packageId, packageTitle, onSuccess }: LeadFormProps) 
         )}
       </button>
 
-      <p className="text-[10px] text-brand-medium text-center flex items-center justify-center gap-1.5 opacity-80">
+      <p className="text-xs text-brand-medium text-center flex items-center justify-center gap-1.5 opacity-90 font-medium">
         <svg className="w-4 h-4 text-brand-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
