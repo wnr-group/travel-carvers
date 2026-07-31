@@ -403,7 +403,7 @@ export default function AboutPage() {
                                             className="object-cover transition-transform duration-700 group-hover:scale-105 transform-gpu"
                                         />
                                         {/* Subtle overlay for depth */}
-                                        <div className="absolute inset-0 bg-brand-forest/0 transition-colors duration-500 group-hover:bg-brand-forest/10" />
+                                        <div className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/10" />
 
                                         {/* Elegant slide-up connect button */}
                                         <div className="absolute bottom-4 right-4 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">

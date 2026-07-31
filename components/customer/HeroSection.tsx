@@ -115,8 +115,8 @@ export default function HeroSection({
         <div 
           className={`absolute inset-0 bg-gradient-to-r transition-all duration-700 ${
             isMapHovered 
-              ? 'from-brand-forest/80 via-brand-forest/60 to-black/50 backdrop-blur-[1px]' 
-              : 'from-brand-forest/50 via-brand-forest/25 to-black/15 backdrop-blur-0'
+              ? 'from-black/70 via-black/50 to-black/50 backdrop-blur-[1px]' 
+              : 'from-black/45 via-black/20 to-black/15 backdrop-blur-0'
           }`} 
         />
       </div>

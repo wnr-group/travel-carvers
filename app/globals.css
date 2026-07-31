@@ -350,38 +350,32 @@ body {
 /* Gradient overlays for cards */
 .overlay-brand-dark {
   background: linear-gradient(to top,
-      rgba(107, 142, 107, 0.7) 0%,
-      rgba(107, 142, 107, 0.3) 50%,
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.2) 50%,
       transparent 100%);
 }
 
 .overlay-brand-dark-hover:hover {
   background: linear-gradient(to top,
-      rgba(107, 142, 107, 0.8) 0%,
-      rgba(107, 142, 107, 0.4) 50%,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(0, 0, 0, 0.3) 50%,
       transparent 100%);
 }
 
 .overlay-brand-primary {
   background: linear-gradient(to top,
-      rgba(27, 77, 27, 0.7) 0%,
-      rgba(95, 122, 95, 0.5) 50%,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.2) 50%,
       transparent 100%);
 }
 
 /* Subtle background tints */
 .bg-brand-tint-light {
-  background: linear-gradient(to bottom,
-      white 0%,
-      rgba(200, 230, 200, 0.2) 50%,
-      white 100%);
+  background: #ffffff;
 }
 
 .bg-brand-tint-subtle {
-  background: linear-gradient(to bottom,
-      white 0%,
-      rgba(184, 212, 184, 0.1) 50%,
-      white 100%);
+  background: #ffffff;
 }
 
 .admin-tooltip {

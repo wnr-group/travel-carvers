@@ -310,7 +310,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
                 className="object-cover filter brightness-[0.95]"
               />
               {/* Subtle aesthetic gradient tint */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-brand-forest/15 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/10 to-transparent pointer-events-none" />
             </div>
           </div>
 
@@ -412,7 +412,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
                 sizes="(max-width: 1280px) 100vw, 1280px"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/80 via-brand-dark/75 to-brand-forest/80 backdrop-blur-[1px]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/70 to-black/75 backdrop-blur-[1px]" />
             </div>
 
             <div className="relative z-10 mx-auto max-w-3xl text-center">
