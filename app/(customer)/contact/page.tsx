@@ -288,7 +288,7 @@ export default function ContactPage() {
                                 style={{ backgroundImage: `url("${slide.image}")` }}
                             />
                             {/* Vignette Overlay for Text Readability */}
-                            <div className="absolute inset-0 bg-black/45 bg-gradient-to-t from-brand-darkest/95 via-black/30 to-black/30 z-10" />
+                            <div className="absolute inset-0 bg-black/45 bg-gradient-to-t from-black/85 via-black/30 to-black/30 z-10" />
                         </div>
                     ))}
 

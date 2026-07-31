@@ -37,7 +37,7 @@ function DestinationCard({ destination }: { destination: DestinationWithCount })
       )}
 
       {/* Bottom scrim only, so any photo stays visible above the text. */}
-      <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-brand-darkest via-brand-darkest/45 to-transparent" />
+      <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
       {destination.package_count > 0 && (
         <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-brand-darkest shadow-sm backdrop-blur-sm">

@@ -46,7 +46,7 @@ export default function AllCategoriesModal({ open, categories, onClose }: AllCat
       aria-label="All travel categories"
     >
       <div
-        className="absolute inset-0 bg-brand-darkest/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />

@@ -53,7 +53,7 @@ export default async function DestinationsPage() {
           sizes="100vw"
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/80 via-brand-forest/45 to-brand-darkest/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/45 to-black/25" />
 
         <div className="relative mx-auto max-w-7xl px-5 pb-14 pt-10 sm:px-8 sm:pb-16 sm:pt-12">
           <Breadcrumb

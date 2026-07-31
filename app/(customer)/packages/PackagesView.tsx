@@ -210,7 +210,7 @@ export default function PackageSearchFilter() {
       {/* ---------------- Mobile drawer ---------------- */}
       <div className={`fixed inset-0 z-[150] lg:hidden transition-opacity duration-300 ${mobileFiltersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div
-          className="absolute inset-0 bg-brand-darkest/40 backdrop-blur-sm transition-opacity duration-300"
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setMobileFiltersOpen(false)}
         />
         <div className={`absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-in-out ${mobileFiltersOpen ? 'translate-x-0' : 'translate-x-full'}`}>
