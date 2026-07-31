@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/api/guard';
+import { revalidateCatalogPages } from '@/lib/api/revalidate';
 import {
   getDestinationPackages,
   linkPackageToDestination,
@@ -45,6 +46,7 @@ export async function POST(req: Request, { params }: RouteParams) {
 
     // Idempotent: re-linking an existing pair is a no-op, not a duplicate-key error.
     await linkPackageToDestination(id, validated.data.package_id);
+    revalidateCatalogPages();
     return NextResponse.json({ data: { destination_id: id, ...validated.data } }, { status: 201 });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'destination');
@@ -66,6 +68,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
     }
 
     await unlinkPackageFromDestination(id, validated.data.package_id);
+    revalidateCatalogPages();
     return NextResponse.json({ data: { destination_id: id, ...validated.data } });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'destination');
