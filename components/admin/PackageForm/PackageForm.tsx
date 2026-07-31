@@ -35,6 +35,8 @@ const EMPTY_PACKAGE: PackageFormInput = {
   is_featured: false,
   is_trending: false,
   is_new: false,
+  is_seasonal: false,
+  is_best_seller: false,
   is_group_package: false,
   show_price: true,
   duration_days: 1,

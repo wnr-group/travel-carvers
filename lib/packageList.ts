@@ -2,6 +2,8 @@
  * Shared list-card mapping for packages.
  */
 
+import { packageFlagsOf, type PackageFlagKey, type PackageFlagRow } from '@/lib/packageFlags';
+
 export type Difficulty = 'Easy' | 'Moderate' | 'Challenging';
 
 export interface TravelPackage {
@@ -21,6 +23,7 @@ export interface TravelPackage {
   isFeatured: boolean; // admin-flagged; floats to the top of "best match"
   isSoldOut: boolean;
   groupSize: string | null;
+  flags: PackageFlagKey[]; 
 }
 
 export const DIFFICULTY_MAP: Record<string, Difficulty> = {
@@ -30,7 +33,7 @@ export const DIFFICULTY_MAP: Record<string, Difficulty> = {
 };
 
 /** Loosely-typed shape of a published-package row (the Supabase client is untyped). */
-export interface RawListPackage {
+export interface RawListPackage extends PackageFlagRow {
   id: string;
   title: string;
   slug: string;
@@ -100,6 +103,7 @@ export function mapPackage(row: RawListPackage): TravelPackage {
     isFeatured: row.is_featured ?? false,
     isSoldOut: row.status === 'sold_out',
     groupSize: groupSizeLabel(row),
+    flags: packageFlagsOf(row),
   };
 }
 
