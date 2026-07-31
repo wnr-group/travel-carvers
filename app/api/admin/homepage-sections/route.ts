@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/api/guard';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { toApiError } from '@/lib/api/errors';
@@ -106,6 +107,11 @@ export async function PUT(req: Request) {
         result = data;
       }
     }
+
+    // The public homepage (app/(customer)/page.tsx) is ISR-cached
+    // (`revalidate = 3600`), so without this an edit wouldn't show up for up to
+    // an hour. Invalidate it so the next visit regenerates with the new content.
+    revalidatePath('/');
 
     return NextResponse.json({ data: result });
   } catch (error: unknown) {
