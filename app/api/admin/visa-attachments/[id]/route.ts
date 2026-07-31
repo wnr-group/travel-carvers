@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateVisaPages } from '@/lib/api/revalidate';
 import { requireAdmin } from '@/lib/api/guard';
 import { toApiError } from '@/lib/api/errors';
 import { firstZodIssue } from '@/lib/utils';
@@ -31,7 +31,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Visa attachment not found' }, { status: 404 });
     }
 
-    revalidatePath('/visa');
+    revalidateVisaPages();
     return NextResponse.json({ data });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'visa attachment');
@@ -54,7 +54,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Visa attachment not found' }, { status: 404 });
     }
 
-    revalidatePath('/visa');
+    revalidateVisaPages();
     return NextResponse.json({ data });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'visa attachment');
