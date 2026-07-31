@@ -20,7 +20,9 @@ export async function DELETE(
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true });
+    // Wrap in the { data } envelope that fetchJson expects — a bare
+    // { success: true } trips its "Malformed response from server" guard.
+    return NextResponse.json({ data: { success: true } });
   } catch (error: unknown) {
     const { message, status } = toApiError(error);
     return NextResponse.json({ error: message }, { status });
