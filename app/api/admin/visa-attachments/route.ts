@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/api/guard';
 import { toApiError } from '@/lib/api/errors';
 import { firstZodIssue } from '@/lib/utils';
@@ -31,6 +32,12 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await createVisaAttachment(validated.data);
+
+    // The public /visa page is ISR-cached (`revalidate = 3600`); refresh it so
+    // the new country/document appears on the next visit instead of up to an
+    // hour later.
+    revalidatePath('/visa');
+
     return NextResponse.json({ data }, { status: 201 });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'country');
