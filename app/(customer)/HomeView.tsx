@@ -24,6 +24,7 @@ import { ArrowRight, CheckCircle2, Compass } from 'lucide-react';
 import Image from 'next/image';
 import AllCategoriesModal from '@/components/customer/AllCategoriesModal';
 import GroupPackagesSection from '@/components/customer/GroupPackagesSection';
+import Reveal from '@/components/customer/Reveal';
 
 function SectionHeading({
   eyebrow,
@@ -126,8 +127,10 @@ function PackageShowcaseGrid({
 
   return (
     <div className={SHOWCASE_GRID}>
-      {items.map((pkg) => (
-        <HomePackageCard key={pkg.id} pkg={pkg} badge={badge} />
+      {items.map((pkg, i) => (
+        <Reveal key={pkg.id} delay={Math.min(i, 6) * 0.08} className="h-full">
+          <HomePackageCard pkg={pkg} badge={badge} />
+        </Reveal>
       ))}
     </div>
   );
@@ -165,9 +168,11 @@ function CategoryShowcaseGrid({
   if (items.length === 0) return <EmptyState variant="categories" />;
 
   return (
-    <div className={`scroll-animate opacity-0 translate-y-8 ${CATEGORY_GRID}`}>
-      {items.slice(0, CATEGORY_ROW_SIZE).map((category) => (
-        <HomeCategoryCard key={category.id} category={category} />
+    <div className={CATEGORY_GRID}>
+      {items.slice(0, CATEGORY_ROW_SIZE).map((category, i) => (
+        <Reveal key={category.id} delay={Math.min(i, 6) * 0.07}>
+          <HomeCategoryCard category={category} />
+        </Reveal>
       ))}
     </div>
   );

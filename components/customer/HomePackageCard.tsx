@@ -69,7 +69,7 @@ export function HomePackageCard({ pkg, badge }: HomePackageCardProps) {
   return (
     <Link
       href={`/packages/${pkg.slug}`}
-      className="group relative block overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl border border-brand-light/30 flex flex-col justify-between"
+      className="group relative block h-full overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl border border-brand-light/30 flex flex-col justify-between"
     >
       <div className="relative h-48 w-full overflow-hidden">
         <Image
