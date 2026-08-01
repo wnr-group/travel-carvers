@@ -149,17 +149,24 @@ export async function getSubcategoriesForCategory(
 }
 
 /**
- * Published-package counts per subcategory (Public). Missing ids mean zero.
+ * Published-package counts per subcategory, scoped to a category (Public).
+ *
+ * A subcategory (e.g. "Honeymoon") can live under several categories, so a count
+ * only makes sense within one category: India → Honeymoon counts only the
+ * honeymoon packages that are also tagged to India. This matches what
+ * `getPublishedPackagesBySubcategory` lists. Missing ids mean zero.
  */
 export async function getSubcategoryPackageCounts(
-  subcategoryIds: string[]
+  subcategoryIds: string[],
+  categoryId: string
 ): Promise<Record<string, number>> {
   if (subcategoryIds.length === 0) return {};
 
   const { data, error } = await supabase
     .from('package_subcategories')
-    .select('subcategory_id, packages!inner(id)')
+    .select('subcategory_id, packages!inner(id, package_categories!inner(category_id))')
     .in('packages.status', PUBLIC_PACKAGE_STATUSES)
+    .eq('packages.package_categories.category_id', categoryId)
     .in('subcategory_id', subcategoryIds);
 
   if (error) throw error;
@@ -197,9 +204,19 @@ export async function getPublishedPackagesByCategory(categoryId: string) {
 }
 
 /**
- * Published packages tagged with a subcategory (Public), newest first.
+ * Published packages tagged with a subcategory *within a category* (Public),
+ * newest first.
+ *
+ * A subcategory can be shared across categories (e.g. "Honeymoon" under both
+ * India and International), so the listing is the intersection: a package shows
+ * up only when it is tagged to both this subcategory and this category. That way
+ * India → Honeymoon shows India honeymoon trips and International → Honeymoon
+ * shows the international ones, never both.
  */
-export async function getPublishedPackagesBySubcategory(subcategoryId: string) {
+export async function getPublishedPackagesBySubcategory(
+  subcategoryId: string,
+  categoryId: string
+) {
   const { data, error } = await supabase
     .from('packages')
     .select(`
@@ -211,9 +228,13 @@ export async function getPublishedPackagesBySubcategory(subcategoryId: string) {
       ),
       package_subcategories!inner (
         subcategory_id
+      ),
+      package_categories!inner (
+        category_id
       )
     `)
     .eq('package_subcategories.subcategory_id', subcategoryId)
+    .eq('package_categories.category_id', categoryId)
     .in('status', PUBLIC_PACKAGE_STATUSES)
     .order('created_at', { ascending: false });
 
