@@ -8,6 +8,7 @@ import {
   type HomePackage,
 } from '@/components/customer/HomePackageCard';
 import { useGroupPackages } from '@/lib/hooks/usePackages';
+import Reveal from '@/components/customer/Reveal';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
 export const GROUP_TOURS_SLUG = 'group-tours';
@@ -62,8 +63,10 @@ export default function GroupPackagesSection() {
               ? Array.from({ length: SHOWCASE_LIMIT }).map((_, index) => (
                   <HomePackageCardSkeleton key={index} />
                 ))
-              : packages.map((pkg) => (
-                  <HomePackageCard key={pkg.id} pkg={pkg} badge="GROUP TOUR" />
+              : packages.map((pkg, i) => (
+                  <Reveal key={pkg.id} delay={Math.min(i, 6) * 0.08} className="h-full">
+                    <HomePackageCard pkg={pkg} badge="GROUP TOUR" />
+                  </Reveal>
                 ))}
           </div>
         )}
