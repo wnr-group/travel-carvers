@@ -2,20 +2,10 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from './server'
+import { isAdminId, verifyAccessToken } from './adminAuth'
 
 export async function isAdminUser(userId: string): Promise<boolean> {
-  const { data, error } = await supabaseAdmin
-    .from('admin_users')
-    .select('user_id')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (error) {
-    console.error('[auth] admin lookup failed', error)
-    return false
-  }
-
-  return Boolean(data)
+  return isAdminId(supabaseAdmin, userId)
 }
 
 export async function signIn(email: string, password: string) {
@@ -70,7 +60,7 @@ export async function signOut() {
   redirect('/admin/login')
 }
 
-export async function getSession() {
+export async function getSession(): Promise<{ id: string } | null> {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('supabase-auth-token')
@@ -79,13 +69,9 @@ export async function getSession() {
       return null
     }
 
-    const { data, error } = await supabaseAdmin.auth.getUser(token.value)
-
-    if (error || !data.user) {
-      return null
-    }
-
-    return data.user
+    // Verify the JWT locally (signature + expiry) — no auth-server round-trip.
+    const userId = await verifyAccessToken(supabaseAdmin, token.value)
+    return userId ? { id: userId } : null
   } catch {
     return null
   }
