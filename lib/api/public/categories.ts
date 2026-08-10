@@ -148,18 +148,17 @@ export async function getSubcategoriesForCategory(
   }));
 }
 
-/**
- * Published-package counts per subcategory (Public). Missing ids mean zero.
- */
 export async function getSubcategoryPackageCounts(
-  subcategoryIds: string[]
+  subcategoryIds: string[],
+  categoryId: string
 ): Promise<Record<string, number>> {
   if (subcategoryIds.length === 0) return {};
 
   const { data, error } = await supabase
     .from('package_subcategories')
-    .select('subcategory_id, packages!inner(id)')
+    .select('subcategory_id, packages!inner(id, package_categories!inner(category_id))')
     .in('packages.status', PUBLIC_PACKAGE_STATUSES)
+    .eq('packages.package_categories.category_id', categoryId)
     .in('subcategory_id', subcategoryIds);
 
   if (error) throw error;
@@ -196,10 +195,10 @@ export async function getPublishedPackagesByCategory(categoryId: string) {
   return applyGlobalPricing(data);
 }
 
-/**
- * Published packages tagged with a subcategory (Public), newest first.
- */
-export async function getPublishedPackagesBySubcategory(subcategoryId: string) {
+export async function getPublishedPackagesBySubcategory(
+  subcategoryId: string,
+  categoryId: string
+) {
   const { data, error } = await supabase
     .from('packages')
     .select(`
@@ -211,9 +210,13 @@ export async function getPublishedPackagesBySubcategory(subcategoryId: string) {
       ),
       package_subcategories!inner (
         subcategory_id
+      ),
+      package_categories!inner (
+        category_id
       )
     `)
     .eq('package_subcategories.subcategory_id', subcategoryId)
+    .eq('package_categories.category_id', categoryId)
     .in('status', PUBLIC_PACKAGE_STATUSES)
     .order('created_at', { ascending: false });
 

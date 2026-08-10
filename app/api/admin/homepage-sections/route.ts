@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateHomepage } from '@/lib/api/revalidate';
 import { requireAdmin } from '@/lib/api/guard';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { toApiError } from '@/lib/api/errors';
@@ -106,6 +107,8 @@ export async function PUT(req: Request) {
         result = data;
       }
     }
+
+    revalidateHomepage();
 
     return NextResponse.json({ data: result });
   } catch (error: unknown) {

@@ -20,7 +20,7 @@ export default async function VisaPage() {
   const countries = await getVisaCountries().catch(() => []);
 
   return (
-    <div className="min-h-screen bg-brand-tint-light pb-20">
+    <div className="min-h-screen pb-20">
       <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Visa' }]} />
 
       {/* Hero — aligned with the main hero section style: crystal clear background image with a dynamic gradient overlay */}
@@ -36,7 +36,7 @@ export default async function VisaPage() {
             priority
           />
           {/* Elegant Gradient Overlay matching the homepage hero for perfect text contrast and visible background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/75 via-brand-forest/50 to-black/40 backdrop-blur-[0.5px]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/45 to-black/40 backdrop-blur-[0.5px]" />
         </div>
 
         {/* Decorative passport ring watermarks */}

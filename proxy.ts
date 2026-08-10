@@ -1,9 +1,24 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { isAdminId, verifyAccessToken } from '@/lib/supabase/adminAuth'
 
 const AUTH_COOKIE = 'supabase-auth-token'
 const REFRESH_COOKIE = 'supabase-refresh-token'
 const LOGIN_PATH = '/admin/login'
+
+// Created once per runtime instance so the JWKS cache (used for local token
+// verification) and connections persist across requests instead of being
+// rebuilt every time.
+const authClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: false, autoRefreshToken: false } }
+)
+const serviceClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false, autoRefreshToken: false } }
+)
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -27,33 +42,26 @@ export async function proxy(request: NextRequest) {
     return deny(request)
   }
 
-  // Anon key: refreshing a session is exactly what an unprivileged client does.
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } }
-  )
-
+  // Fast path: verify the access token locally (no auth-server round-trip).
   if (accessToken) {
-    const { data } = await supabase.auth.getUser(accessToken)
-
-    if (data.user) {
-      return (await isAdmin(data.user.id)) ? NextResponse.next() : forbid(request)
+    const userId = await verifyAccessToken(authClient, accessToken)
+    if (userId) {
+      return (await isAdminId(serviceClient, userId)) ? NextResponse.next() : forbid(request)
     }
   }
 
+  // Slow path: access token missing/expired — refresh it (needs the auth server).
   if (!refreshToken) {
     return deny(request)
   }
 
-  const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken })
+  const { data, error } = await authClient.auth.refreshSession({ refresh_token: refreshToken })
 
   if (error || !data.session) {
     return deny(request)
   }
 
-
-  if (!(await isAdmin(data.session.user.id))) {
+  if (!(await isAdminId(serviceClient, data.session.user.id))) {
     return forbid(request)
   }
 
@@ -71,28 +79,6 @@ export async function proxy(request: NextRequest) {
   })
 
   return response
-}
-
-async function isAdmin(userId: string): Promise<boolean> {
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } }
-  )
-
-  const { data, error } = await admin
-    .from('admin_users')
-    .select('user_id')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  // Fail closed: a broken lookup denies access rather than granting it.
-  if (error) {
-    console.error('[proxy] admin lookup failed', error)
-    return false
-  }
-
-  return Boolean(data)
 }
 
 /** Not signed in. */

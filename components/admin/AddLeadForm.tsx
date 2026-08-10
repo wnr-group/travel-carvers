@@ -110,30 +110,37 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
   const packages = packagesQuery.data ?? [];
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-start justify-center overflow-y-auto p-4 sm:p-6">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" onClick={onClose} />
-
+    <>
+      {/* Full-screen backdrop — fixed so it always covers the whole viewport when scrolled */}
       <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-lead-title"
-        className="relative my-8 w-full max-w-2xl rounded-2xl border border-gray-100 bg-white shadow-2xl"
-      >
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-          <div>
-            <h2 id="add-lead-title" className="text-lg font-bold text-gray-900">
-              Add a lead
-            </h2>
-            <p className="mt-0.5 text-sm text-gray-500">
-              For enquiries that came in by phone or email.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-          >
+        className="fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm"
+        aria-hidden="true"
+        onClick={onClose}
+      />
+
+      {/* Scrollable layer sits above the backdrop */}
+      <div className="fixed inset-0 z-[151] flex items-start justify-center overflow-y-auto p-4 sm:p-6">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-lead-title"
+          className="relative my-8 w-full max-w-2xl rounded-2xl border border-gray-100 bg-white shadow-2xl"
+        >
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div>
+              <h2 id="add-lead-title" className="text-lg font-bold text-gray-900">
+                Add a lead
+              </h2>
+              <p className="mt-0.5 text-sm text-gray-500">
+                For enquiries that came in by phone or email.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            >
             <X aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
@@ -325,9 +332,10 @@ export default function AddLeadForm({ open, onClose }: AddLeadFormProps) {
               )}
               {createMutation.isPending ? 'Saving…' : 'Add lead'}
             </button>
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

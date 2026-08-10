@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Reveal from '@/components/customer/Reveal';
 import { ArrowRight } from 'lucide-react';
 import {
   HomePackageCard,
@@ -13,6 +14,10 @@ import { getPackageFlag, packagesHrefForFlag, type PackageFlagKey } from '@/lib/
 
 export const SHOWCASE_GRID = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6';
 export const SHOWCASE_LIMIT = 4;
+
+/** Seconds between neighbouring cards as the row reveals. */
+const STAGGER_STEP = 0.12;
+
 
 export function PackageShowcaseGrid({
   isLoading,
@@ -51,10 +56,17 @@ export function PackageShowcaseGrid({
   const items = (data ?? []).slice(0, SHOWCASE_LIMIT);
   if (items.length === 0) return <EmptyState variant="packages" description={emptyText} />;
 
+  return <RevealGrid items={items} badge={badge} />;
+}
+
+function RevealGrid({ items, badge }: { items: HomePackage[]; badge?: string }) {
   return (
     <div className={SHOWCASE_GRID}>
-      {items.map((pkg) => (
-        <HomePackageCard key={pkg.id} pkg={pkg} badge={badge} />
+      {items.map((pkg, index) => (
+        // h-full so the wrapper doesn't break the row's equal-height stretch
+        <Reveal key={pkg.id} delay={index * STAGGER_STEP} className="h-full">
+          <HomePackageCard pkg={pkg} badge={badge} />
+        </Reveal>
       ))}
     </div>
   );
@@ -97,7 +109,7 @@ export default function PackageFlagSection({
   return (
     <section className={`py-16 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <Reveal className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-brand-forest">{title}</h2>
             <p className="mt-1 text-sm text-gray-600">{description}</p>
@@ -110,7 +122,7 @@ export default function PackageFlagSection({
             <span>View More {plural}</span>
             <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </Link>
-        </div>
+        </Reveal>
 
         <PackageShowcaseGrid
           isLoading={query.isLoading}

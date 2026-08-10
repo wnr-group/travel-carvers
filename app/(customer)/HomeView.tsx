@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import HeroSection from '@/components/customer/HeroSection';
+import WorldMapSection from '@/components/customer/WorldMapSection';
 import TrustBadges from '@/components/customer/TrustBadges';
 import {
   HomeCategoryCard,
@@ -20,6 +21,7 @@ import { ArrowRight, CheckCircle2, Compass } from 'lucide-react';
 import Image from 'next/image';
 import AllCategoriesModal from '@/components/customer/AllCategoriesModal';
 import GroupPackagesSection from '@/components/customer/GroupPackagesSection';
+import Reveal from '@/components/customer/Reveal';
 
 function SectionHeading({
   eyebrow,
@@ -36,8 +38,8 @@ function SectionHeading({
 }) {
   const centered = align === 'center';
   return (
-    <div
-      className={`scroll-animate opacity-0 translate-y-8 mb-12 flex flex-col gap-6 sm:flex-row sm:items-end ${
+    <Reveal
+      className={`mb-12 flex flex-col gap-6 sm:flex-row sm:items-end ${
         centered ? 'sm:flex-col sm:items-center text-center' : 'sm:justify-between'
       }`}
     >
@@ -69,7 +71,7 @@ function SectionHeading({
           <ArrowRight className="h-4 w-4" />
         </Link>
       )}
-    </div>
+    </Reveal>
   );
 }
 
@@ -88,6 +90,9 @@ function ShowcaseError({ onRetry }: { onRetry: () => void }) {
 
 /** One full row on desktop. Anything beyond this lives behind "View more categories". */
 const CATEGORY_ROW_SIZE = 6;
+
+/** Seconds between neighbouring cards in a revealing row. */
+const STAGGER_STEP = 0.12;
 
 const CATEGORY_GRID = 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6';
 
@@ -118,9 +123,11 @@ function CategoryShowcaseGrid({
   if (items.length === 0) return <EmptyState variant="categories" />;
 
   return (
-    <div className={`scroll-animate opacity-0 translate-y-8 ${CATEGORY_GRID}`}>
-      {items.slice(0, CATEGORY_ROW_SIZE).map((category) => (
-        <HomeCategoryCard key={category.id} category={category} />
+    <div className={CATEGORY_GRID}>
+      {items.slice(0, CATEGORY_ROW_SIZE).map((category, index) => (
+        <Reveal key={category.id} delay={index * STAGGER_STEP}>
+          <HomeCategoryCard category={category} />
+        </Reveal>
       ))}
     </div>
   );
@@ -178,10 +185,14 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
     <div className="w-full">
       {/* Hero */}
       <HeroSection sections={sections} />
+
+      {/* Interactive world map — sits directly below the hero */}
+      <WorldMapSection />
+
       {/* Categories Section */}
-      <section className="py-20 bg-brand-paper">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-10 flex flex-col gap-5 scroll-animate opacity-0 translate-y-10 sm:flex-row sm:items-end sm:justify-between">
+          <Reveal className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-4xl md:text-5xl font-bold text-brand-forest mb-3">
                 Travel Categories
@@ -204,7 +215,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
-          </div>
+          </Reveal>
 
           <CategoryShowcaseGrid
             isLoading={categories.isLoading}
@@ -226,7 +237,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
         flag="trending"
         title={trendingTitle}
         description={trendingDescription}
-        className="bg-white"
+        className="bg-transparent"
         query={trending}
         emptyText="No trending packages right now. Browse all our packages instead."
       />
@@ -237,7 +248,12 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
         <div className="relative rounded-3xl bg-gradient-to-r from-brand-shell via-brand-linen to-brand-sand border border-brand-sage/30 shadow-xl px-6 py-10 sm:p-12 overflow-visible flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
 
           {/* Left Side: Real Uploaded Image Container with Realistic Frame Style */}
-          <div className="relative lg:w-1/3 flex justify-center lg:justify-start -mt-16 sm:-mt-20 lg:-mt-12 lg:-ml-16 mb-4 lg:mb-0 shrink-0">
+          {/* Two-column band: halves arrive from opposite sides, as the old site does. */}
+          <Reveal
+            animation="fade-right"
+            delay={0.1}
+            className="relative lg:w-1/3 flex justify-center lg:justify-start -mt-16 sm:-mt-20 lg:-mt-12 lg:-ml-16 mb-4 lg:mb-0 shrink-0"
+          >
             <div className="relative w-[280px] sm:w-[340px] h-[190px] sm:h-[220px] rounded-2xl overflow-hidden shadow-2xl border-4 border-white transform -rotate-3 hover:rotate-0 transition-transform duration-500 bg-black">
               <Image
                 src="/passport-img.jpg"
@@ -247,12 +263,12 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
                 className="object-cover filter brightness-[0.95]"
               />
               {/* Subtle aesthetic gradient tint */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-brand-forest/15 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/10 to-transparent pointer-events-none" />
             </div>
-          </div>
+          </Reveal>
 
           {/* Center/Right Side: Content, Checklist & CTA */}
-          <div className="flex-1 text-center lg:text-left">
+          <Reveal animation="fade-left" delay={0.2} className="flex-1 text-center lg:text-left">
             <span className="inline-block px-3 py-1 bg-brand-forest/10 text-brand-forest text-[11px] font-bold uppercase tracking-[0.2em] rounded-full mb-3">
               Visa Services
             </span>
@@ -281,7 +297,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-          </div>
+          </Reveal>
 
         </div>
       </section>
@@ -291,7 +307,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
         flag="featured"
         title={featuredTitle}
         description={featuredDescription}
-        className="bg-brand-paper"
+        className="bg-transparent"
         query={featured}
         emptyText="No featured packages yet. Browse all our packages instead."
       />
@@ -301,7 +317,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
         flag="seasonal"
         title="Best Of This Season"
         description="Trips at their finest right now — the weather, the festivals and the views all line up."
-        className="bg-white"
+        className="bg-transparent"
         query={seasonal}
         emptyText="No seasonal picks right now. Browse all our packages instead."
         hideWhenEmpty
@@ -312,7 +328,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
         flag="best-seller"
         title="Our Best Sellers"
         description="The packages our travellers book again and again."
-        className="bg-brand-paper"
+        className="bg-transparent"
         query={bestSellers}
         emptyText="No best sellers yet. Browse all our packages instead."
         hideWhenEmpty
@@ -322,7 +338,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
       <GroupPackagesSection />
 
       {/* Why choose us — trust badges from the DB (numeric → stat cards, text → pills) */}
-      <section className="bg-brand-tint-subtle py-20 md:py-24">
+      <section className="py-20 md:py-24">
         <div className="mx-auto max-w-7xl px-6">
           <SectionHeading
             eyebrow="Why Travel Carvers"
@@ -335,14 +351,14 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
       </section>
 
       {/* Testimonials */}
-      <section className="overflow-hidden bg-white py-20 md:py-24">
+      <section className="overflow-hidden py-20 md:py-24">
         <div className="mx-auto max-w-7xl px-6">
           <TestimonialsCarousel />
         </div>
       </section>
 
       {/* Closing CTA — uses the header/navbar brand gradient (the app's main color) */}
-      <section className="w-full py-16 bg-brand-paper">
+      <section className="w-full py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl py-16 md:py-20 px-6 sm:px-12 text-white shadow-2xl">
             <div className="absolute inset-0 z-0">
@@ -353,10 +369,10 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
                 sizes="(max-width: 1280px) 100vw, 1280px"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/80 via-brand-dark/75 to-brand-forest/80 backdrop-blur-[1px]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/70 to-black/75 backdrop-blur-[1px]" />
             </div>
 
-            <div className="relative z-10 mx-auto max-w-3xl text-center">
+            <Reveal className="relative z-10 mx-auto max-w-3xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md mb-6 shadow-sm">
                 <Compass className="h-3.5 w-3.5 text-yellow-300 animate-spin" style={{ animationDuration: '12s' }} />
                 <span>Start Exploring Today</span>
@@ -387,7 +403,7 @@ export default function Home({ sections }: { sections: HomepageSectionsContent |
                   <span>Plan a custom trip</span>
                 </Link>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>

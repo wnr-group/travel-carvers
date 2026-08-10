@@ -269,7 +269,7 @@ export default function ContactPage() {
     }
 
     return (
-        <main className="bg-background">
+        <main>
             {/* INTERACTIVE HERO SLIDER - BOXED BANNER LAYOUT */}
             <section className="mx-auto max-w-6xl px-6 pt-8 pb-8 animate-in fade-in slide-in-from-top-6 duration-1000">
                 <div className="relative overflow-hidden rounded-[2rem] text-white shadow-2xl border border-brand-light/10 h-[400px] sm:h-[460px] group">
@@ -288,7 +288,7 @@ export default function ContactPage() {
                                 style={{ backgroundImage: `url("${slide.image}")` }}
                             />
                             {/* Vignette Overlay for Text Readability */}
-                            <div className="absolute inset-0 bg-black/45 bg-gradient-to-t from-brand-darkest/95 via-black/30 to-black/30 z-10" />
+                            <div className="absolute inset-0 bg-black/45 bg-gradient-to-t from-black/85 via-black/30 to-black/30 z-10" />
                         </div>
                     ))}
 

@@ -2,6 +2,8 @@
 
 import PackageFlagSection, { SHOWCASE_LIMIT } from '@/components/customer/PackageFlagSection';
 import { useGroupPackages } from '@/lib/hooks/usePackages';
+import Reveal from '@/components/customer/Reveal';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 export const GROUP_TOURS_SLUG = 'group-tours';
 
@@ -13,7 +15,7 @@ export default function GroupPackagesSection() {
       flag="group"
       title="Travel Together, Save Together"
       description="Fixed-departure group journeys with shared costs, expert guides and ready-made company."
-      className="bg-white"
+      className="bg-transparent"
       query={query}
       emptyText="No group departures right now. Browse all our packages instead."
       href={`/categories/${GROUP_TOURS_SLUG}`}

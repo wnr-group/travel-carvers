@@ -206,7 +206,7 @@ export default function PackageDetailView({ detail }: { detail: PackageDetail })
       : "New package";
 
   return (
-    <div className="min-h-screen bg-brand-linen font-body text-[15px] text-[--foreground]">
+    <div className="min-h-screen font-body text-[15px] text-[--foreground]">
       <FontLoader />
 
       {/* Breadcrumb */}

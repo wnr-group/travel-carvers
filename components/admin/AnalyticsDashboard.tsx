@@ -18,7 +18,7 @@ import TrendLineChart from '@/components/admin/charts/TrendLineChart';
 import { CHART_MUTED, STATUS_COLORS, STATUS_LABELS } from '@/components/admin/charts/theme';
 import { useAdminAnalytics } from '@/lib/hooks/useAdminAnalytics';
 
-export default function AnalyticsPage() {
+export default function AnalyticsDashboard() {
   const { data, isPending, isError, error } = useAdminAnalytics();
 
   const kpis = data?.kpis;
@@ -40,23 +40,20 @@ export default function AnalyticsPage() {
 
   if (isError) {
     return (
-      <div className="py-4">
-        <h1 className="text-3xl font-bold text-brand-darkest mb-8">Analytics</h1>
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="font-semibold text-red-600">Could not load analytics</p>
-          <p className="mt-1 text-sm text-gray-500">
-            {error instanceof Error ? error.message : 'Unknown error'}
-          </p>
-        </div>
+      <div className="bg-white rounded-lg shadow p-12 text-center">
+        <p className="font-semibold text-red-600">Could not load analytics</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {error instanceof Error ? error.message : 'Unknown error'}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="py-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-brand-darkest">Analytics</h1>
-        <p className="mt-1 text-sm text-gray-500">
+    <div>
+      <div className="mb-6 border-t border-gray-200 pt-6">
+        <h2 className="text-2xl font-bold text-brand-darkest mb-1">Analytics Overview</h2>
+        <p className="text-sm text-gray-500">
           Lead and review performance. Daily windows use UTC days; the trend covers the last 30 days.
         </p>
       </div>
@@ -74,7 +71,7 @@ export default function AnalyticsPage() {
           icon={Percent}
           isPending={isPending}
         />
-        <KpiCard label="Total Reviews" value={kpis?.totalReviews ?? 0} icon={MessageSquare} isPending={isPending} />
+        <KpiCard label="Total Approved Reviews" value={kpis?.totalReviews ?? 0} icon={MessageSquare} isPending={isPending} />
         <KpiCard
           label="Average Rating"
           value={kpis?.averageRating != null ? kpis.averageRating.toFixed(1) : '—'}

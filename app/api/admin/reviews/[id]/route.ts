@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
+import { revalidatePackagePages } from '@/lib/api/revalidate';
 import { approveReview, rejectReview, deleteReview } from '@/lib/api/admin/reviews';
 import { toApiError } from '@/lib/api/errors';
 
@@ -24,6 +25,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid action. Must be approve or reject.' }, { status: 400 });
     }
 
+    revalidatePackagePages();
     return NextResponse.json({ data });
   } catch (error: unknown) {
     const { message, status } = toApiError(error);
@@ -39,6 +41,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
 
   try {
     await deleteReview(id);
+    revalidatePackagePages();
     return NextResponse.json({ data: { id } });
   } catch (error: unknown) {
     const { message, status } = toApiError(error);

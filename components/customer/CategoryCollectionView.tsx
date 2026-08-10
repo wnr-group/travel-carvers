@@ -58,7 +58,7 @@ export default function CategoryCollectionView({
   const initial = shouldReduce ? false : 'hidden';
 
   return (
-    <div className="min-h-screen bg-brand-tint-light pb-16">
+    <div className="min-h-screen pb-16">
       <Breadcrumb items={breadcrumbs} />
 
       {/* Hero */}

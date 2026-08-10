@@ -69,7 +69,7 @@ export default async function Page({ params }: { params: Params }) {
 
   const { category, subcategory } = pair;
 
-  const rows = await getPublishedPackagesBySubcategory(subcategory.id).catch(() => []);
+  const rows = await getPublishedPackagesBySubcategory(subcategory.id, category.id).catch(() => []);
   const packages = ((rows ?? []) as RawListPackage[]).map((row) => ({
     ...mapPackage(row),
     categories: [subcategory.name],

@@ -62,7 +62,7 @@ export default function PackageSearchFilter() {
   const rangeEnd = Math.min(page * pageSize, resultCount);
 
   return (
-    <div className="min-h-screen bg-brand-tint-light">
+    <div className="min-h-screen">
       <h1 className="sr-only">Tour Packages</h1>
       {/* Header / search bar — offset below the ~80px sticky navbar so it doesn't hide behind it. */}
       <div className="sticky top-20 z-30 bg-[var(--background)]/90 backdrop-blur">
@@ -216,7 +216,7 @@ export default function PackageSearchFilter() {
       {/* ---------------- Mobile drawer ---------------- */}
       <div className={`fixed inset-0 z-[150] lg:hidden transition-opacity duration-300 ${mobileFiltersOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div
-          className="absolute inset-0 bg-brand-darkest/40 backdrop-blur-sm transition-opacity duration-300"
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setMobileFiltersOpen(false)}
         />
         <div className={`absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-[var(--background)] shadow-2xl transition-transform duration-300 ease-in-out ${mobileFiltersOpen ? 'translate-x-0' : 'translate-x-full'}`}>

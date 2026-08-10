@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/api/guard';
+import { revalidateCatalogPages } from '@/lib/api/revalidate';
 import { updateSubcategory, deleteSubcategory } from '@/lib/api/categories';
 import { toApiError } from '@/lib/api/errors';
 import { firstZodIssue } from '@/lib/utils';
@@ -27,6 +28,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
 
     const data = await updateSubcategory(id, validated.data);
     if (!data) return notFound();
+    revalidateCatalogPages();
     return NextResponse.json({ data });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'subcategory');
@@ -44,6 +46,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
   try {
     const deleted = await deleteSubcategory(id);
     if (!deleted) return notFound();
+    revalidateCatalogPages();
     return NextResponse.json({ data: deleted });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'subcategory');

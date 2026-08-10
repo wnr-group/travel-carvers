@@ -2,24 +2,33 @@
 
 import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, useMotionValue, animate, useInView, Variants } from 'framer-motion';
+import { motion, useMotionValue, animate, Variants } from 'framer-motion';
 import { Star, ChevronRight, ChevronLeft } from 'lucide-react';
 import { usePublicTestimonials } from '@/lib/hooks/useTestimonials';
 
 const AUTOPLAY_INTERVAL = 4500;
 const CARD_GAP = 20;
 
+/**
+ * Reveal-on-scroll settings. These live on `whileInView` rather than a `useInView`
+ * hook on the section: the section only mounts once the query resolves, and
+ * `useInView`'s observer is attached in an effect with static deps — it reads a null
+ * ref on the first (empty) render and never re-attaches, leaving the whole carousel
+ * stuck at opacity 0. `whileInView` observes each element as it mounts instead.
+ */
+const REVEAL_VIEWPORT = { once: true, margin: '-50px' } as const;
+
 const sectionVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.12, delayChildren: 0.1 }
+    transition: { staggerChildren: 0.16, delayChildren: 0.15 }
   }
 };
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
 };
 
 export default function TestimonialsCarousel() {
@@ -27,14 +36,12 @@ export default function TestimonialsCarousel() {
 
   const [step, setStep] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
-  const sectionRef = useRef<HTMLElement>(null);
 
   const [isPaused, setIsPaused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [prevCount, setPrevCount] = useState(0);
 
   const x = useMotionValue(0);
-  const isInView = useInView(sectionRef, { once: true, margin: "-50px" });
 
   const dbTestimonials = testimonialsQuery.data || [];
   const featuredTestimonials = dbTestimonials.filter((t) => t.is_featured);
@@ -78,19 +85,14 @@ export default function TestimonialsCarousel() {
   const handlePrev = () => setActiveIndex((prev) => (prev - 1 + count) % count);
   const handleNext = () => setActiveIndex((prev) => (prev + 1) % count);
 
-  // No real testimonials yet → hide the whole section (no fabricated fallbacks).
-  if (count === 0) return null;
-
   return (
-    <section
-      ref={sectionRef}
-      className="w-full py-6 md:py-10 overflow-hidden relative bg-brand-paper"
-    >
+    <section className="w-full py-6 md:py-10 overflow-hidden relative">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           variants={sectionVariants}
           initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
+          whileInView="visible"
+          viewport={REVEAL_VIEWPORT}
           className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4"
         >
           <div className="flex flex-col gap-2">
@@ -136,8 +138,9 @@ export default function TestimonialsCarousel() {
 
         <motion.div
           initial={{ opacity: 0, y: 15 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
-          transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={REVEAL_VIEWPORT}
+          transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
           className="overflow-hidden select-none py-2"
         >
           <motion.div
@@ -211,8 +214,9 @@ export default function TestimonialsCarousel() {
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
+        whileInView={{ opacity: 1 }}
+        viewport={REVEAL_VIEWPORT}
+        transition={{ duration: 0.7, delay: 0.5 }}
         className="mt-6 flex items-center justify-center gap-2"
       >
         {activeTestimonials.map((_, idx) => (

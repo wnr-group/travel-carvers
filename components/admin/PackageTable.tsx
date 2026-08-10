@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Edit, Eye, ImageOff, Trash2 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
+import DownloadPackageButton from './DownloadPackageButton'
 import { formatDate, formatPrice, packagePath } from '@/lib/utils'
 import type { AdminPackage } from '@/lib/types/package'
 
@@ -77,6 +78,7 @@ export default function PackageTable({
                     >
                       <Edit className="h-4 w-4" />
                     </Link>
+                    <DownloadPackageButton packageId={pkg.id} title={pkg.title} />
                     {onDelete && (
                       <button
                         type="button"

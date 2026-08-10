@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Reveal from '@/components/customer/Reveal';
 import { usePublicTrustBadges, type TrustBadge } from '@/lib/hooks/useTrustBadges';
 import {
   Shield,
@@ -18,6 +19,9 @@ import {
 
 const MAX_STAT_CARDS = 4;
 const MAX_TEXT_BADGES = 6;
+
+/** Seconds between neighbouring cards as the row reveals. */
+const STAGGER_STEP = 0.12;
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Shield,
@@ -66,7 +70,8 @@ function CountUp({ value, suffix, active }: { value: number; suffix: string; act
     if (!active || reduce) return;
     let raf = 0;
     const start = performance.now();
-    const duration = 1200;
+    // 2s, matching the counters on the previous travelcarvers.in build.
+    const duration = 2000;
     const tick = (now: number) => {
       const p = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - p, 3);
@@ -153,51 +158,52 @@ export default function TrustBadges() {
   if (statBadges.length === 0 && textBadges.length === 0) return null;
 
   return (
-    <div
-      ref={containerRef}
-      className={`my-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-      }`}
-    >
+    // The observer stays for the counters; the cards handle their own reveal.
+    <div ref={containerRef} className="my-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Stat badges: icon cards, all identical in size and treatment. */}
       {statBadges.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {statBadges.map((stat) => (
-            <div
+          {statBadges.map((stat, index) => (
+            // The card keeps its own hover lift, so it sits *inside* the reveal
+            // wrapper: motion writes an inline transform that would shadow it.
+            <Reveal
               key={stat.id}
-              className="group flex flex-col items-center rounded-2xl border border-brand-sage/30 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+              animation="zoom-in"
+              delay={index * STAGGER_STEP}
+              className="h-full"
             >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-forest/5 text-brand-forest transition-colors group-hover:bg-brand-forest group-hover:text-white">
-                {renderIcon(stat.icon, 'h-6 w-6')}
+              <div className="group flex h-full flex-col items-center rounded-2xl border border-brand-sage/30 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-forest/5 text-brand-forest transition-colors group-hover:bg-brand-forest group-hover:text-white">
+                  {renderIcon(stat.icon, 'h-6 w-6')}
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-brand-forest tabular-nums">
+                  {stat.numeric ? (
+                    <CountUp
+                      value={stat.numeric.value}
+                      suffix={stat.numeric.suffix}
+                      active={isVisible}
+                    />
+                  ) : (
+                    stat.number || stat.text
+                  )}
+                </h3>
+                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-gray-500">
+                  {stat.description}
+                </p>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-brand-forest tabular-nums">
-                {stat.numeric ? (
-                  <CountUp
-                    value={stat.numeric.value}
-                    suffix={stat.numeric.suffix}
-                    active={isVisible}
-                  />
-                ) : (
-                  stat.number || stat.text
-                )}
-              </h3>
-              <p className="mt-1 text-xs font-bold uppercase tracking-wider text-gray-500">
-                {stat.description}
-              </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       )}
 
       {textBadges.length > 0 && (
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          {textBadges.map((badge) => (
-            <span
-              key={badge.id}
-              className="inline-flex items-center justify-center rounded-full border border-brand-forest/20 bg-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-brand-forest shadow-sm transition-colors hover:border-brand-forest hover:bg-brand-forest hover:text-white"
-            >
-              {badge.text}
-            </span>
+          {textBadges.map((badge, index) => (
+            <Reveal key={badge.id} delay={index * STAGGER_STEP}>
+              <span className="inline-flex items-center justify-center rounded-full border border-brand-forest/20 bg-white px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-brand-forest shadow-sm transition-colors hover:border-brand-forest hover:bg-brand-forest hover:text-white">
+                {badge.text}
+              </span>
+            </Reveal>
           ))}
         </div>
       )}

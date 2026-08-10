@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
+import { revalidateCatalogPages } from '@/lib/api/revalidate';
 import { getPackageForEdit, updatePackageWithRelations, deletePackage } from '@/lib/api/packages';
 import { toApiError } from '@/lib/api/errors';
 import { firstZodIssue } from '@/lib/utils';
@@ -56,6 +57,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
     }
 
     const data = await updatePackageWithRelations(id, validated.data);
+    revalidateCatalogPages();
     return NextResponse.json({ data });
   } catch (error: unknown) {
     // `updatePackageWithRelations` throws a plain Error when the package is gone, which
@@ -82,6 +84,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
 
   try {
     await deletePackage(id);
+    revalidateCatalogPages();
     return NextResponse.json({ data: { id } });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'package');

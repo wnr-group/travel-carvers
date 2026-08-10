@@ -63,7 +63,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   ]);
 
   const packageCounts = await getSubcategoryPackageCounts(
-    subcategories.map((subcategory) => subcategory.id)
+    subcategories.map((subcategory) => subcategory.id),
+    category.id
   ).catch(() => ({}) as Record<string, number>);
 
   const packages = ((rows ?? []) as RawListPackage[]).map((row) => ({

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/api/guard';
+import { revalidateCatalogPages } from '@/lib/api/revalidate';
 import { updateDestination, deleteDestination } from '@/lib/api/destinations';
 import { toApiError } from '@/lib/api/errors';
 import { firstZodIssue } from '@/lib/utils';
@@ -25,6 +26,7 @@ export async function PUT(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Destination not found' }, { status: 404 });
     }
 
+    revalidateCatalogPages();
     return NextResponse.json({ data });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'destination');
@@ -43,6 +45,7 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
     if (!deleted) {
       return NextResponse.json({ error: 'Destination not found' }, { status: 404 });
     }
+    revalidateCatalogPages();
     return NextResponse.json({ data: deleted });
   } catch (error: unknown) {
     const { message, status } = toApiError(error, 'destination');

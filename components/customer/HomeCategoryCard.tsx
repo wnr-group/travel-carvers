@@ -33,7 +33,7 @@ export function HomeCategoryCard({ category }: HomeCategoryCardProps) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 220px"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-brand-forest via-brand-forest/55 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black/80 via-black/45 to-transparent" />
         </>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-gradient-brand-primary">
