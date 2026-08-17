@@ -3,21 +3,46 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
+
+export type RevealAnimation = 'fade-up' | 'fade-down' | 'fade-left' | 'fade-right' | 'zoom-in';
+
+const DURATION = 1.05;
+const EASE = [0.25, 0.1, 0.25, 1] as const;
+const SHIFT_X = 60;
+const ZOOM_FROM = 0.9;
+
 interface RevealProps {
   children: ReactNode;
-  /** Stagger offset in seconds, e.g. index * 0.08 for a cascading grid. */
   delay?: number;
-  /** Distance (px) the element travels up as it fades in. */
   y?: number;
+  animation?: RevealAnimation;
   className?: string;
 }
 
-/**
- * Fades + slides its child in the first time it scrolls into view. Self-contained
- * (each instance observes itself), so it works for content that mounts after an
- * async fetch. Honors `prefers-reduced-motion` by rendering statically.
- */
-export default function Reveal({ children, delay = 0, y = 28, className }: RevealProps) {
+/** `fade-left` travels leftward, so it starts to the right — AOS's convention. */
+function hiddenState(animation: RevealAnimation, y: number) {
+  switch (animation) {
+    case 'fade-down':
+      return { opacity: 0, y: -y };
+    case 'fade-left':
+      return { opacity: 0, x: SHIFT_X };
+    case 'fade-right':
+      return { opacity: 0, x: -SHIFT_X };
+    case 'zoom-in':
+      return { opacity: 0, scale: ZOOM_FROM };
+    default:
+      return { opacity: 0, y };
+  }
+}
+
+
+export default function Reveal({
+  children,
+  delay = 0,
+  y = 28,
+  animation = 'fade-up',
+  className,
+}: RevealProps) {
   const reduceMotion = useReducedMotion();
 
   if (reduceMotion) {
@@ -27,10 +52,10 @@ export default function Reveal({ children, delay = 0, y = 28, className }: Revea
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={hiddenState(animation, y)}
+      whileInView={{ opacity: 1, x: 0, y: 0, scale: 1 }}
       viewport={{ once: true, margin: '0px 0px -60px 0px' }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay }}
+      transition={{ duration: DURATION, ease: EASE, delay }}
     >
       {children}
     </motion.div>

@@ -41,6 +41,8 @@ export const PACKAGE_FORM_TABS: readonly PackageFormTab[] = [
       'is_featured',
       'is_trending',
       'is_new',
+      'is_seasonal',
+      'is_best_seller',
       'is_group_package',
     ],
     Component: BasicInfoTab,

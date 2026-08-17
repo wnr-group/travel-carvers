@@ -42,7 +42,7 @@ export default async function DestinationsPage() {
   const totalPackages = destinations.reduce((sum, item) => sum + item.package_count, 0);
 
   return (
-    <div className="min-h-screen bg-brand-tint-light pb-20">
+    <div className="min-h-screen pb-20">
       {/* ------------------------------- Banner ------------------------------- */}
       <header className="relative isolate overflow-hidden">
         <Image

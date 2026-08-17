@@ -18,6 +18,16 @@ const FLAGS = [
   { name: 'is_trending', label: 'Trending', hint: 'Show in the trending section' },
   { name: 'is_new', label: 'New', hint: 'Badge this package as newly added' },
   {
+    name: 'is_seasonal',
+    label: 'Seasonal Best',
+    hint: 'Tags the package “In Season” and shows it in the Best Of This Season row',
+  },
+  {
+    name: 'is_best_seller',
+    label: 'Best Seller',
+    hint: 'Show in the best sellers section',
+  },
+  {
     name: 'is_group_package',
     label: 'Group Package',
     hint: 'Shows the group size on the package card, set it under Pricing',
@@ -52,9 +62,6 @@ export default function BasicInfoTab() {
           {...titleField}
           onChange={(e) => {
             titleField.onChange(e);
-            // Mirror the title into the slug while creating, and only until the admin edits the
-            // slug by hand. Never while editing: the package already has a public URL, and
-            // retitling it must not silently rewrite that.
             if (!isEditing && !dirtyFields.slug) {
               setValue('slug', slugify(e.target.value));
             }
@@ -72,9 +79,6 @@ export default function BasicInfoTab() {
         <input
           id="slug"
           {...register('slug')}
-          // Read-only once the package exists: the slug is its public URL, so changing it would
-          // break every existing link and anything Google has indexed. The server enforces this
-          // too — packageUpdateSchema omits the field entirely.
           readOnly={isEditing}
           placeholder="7-day-kerala-backwaters-escape"
           className={cn(INPUT_CLASSES, isEditing && 'bg-gray-50 text-gray-600')}

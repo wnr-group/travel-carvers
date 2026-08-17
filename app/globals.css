@@ -197,8 +197,10 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* `clip`, not `hidden`: overflow-x:hidden makes <body> a scroll container, and a
+     scroll-container ancestor silently kills `position: sticky` on the navbar.
+     `clip` contains horizontal overflow the same way without that side effect. */
+  overflow-x: clip;
   min-height: 100vh;
 }
 

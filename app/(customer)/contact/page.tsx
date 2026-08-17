@@ -269,7 +269,7 @@ export default function ContactPage() {
     }
 
     return (
-        <main className="bg-background">
+        <main>
             {/* INTERACTIVE HERO SLIDER - BOXED BANNER LAYOUT */}
             <section className="mx-auto max-w-6xl px-6 pt-8 pb-8 animate-in fade-in slide-in-from-top-6 duration-1000">
                 <div className="relative overflow-hidden rounded-[2rem] text-white shadow-2xl border border-brand-light/10 h-[400px] sm:h-[460px] group">

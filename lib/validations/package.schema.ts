@@ -104,6 +104,8 @@ export const basicInfoSchema = z.object({
   is_featured: z.boolean().default(false),
   is_trending: z.boolean().default(false),
   is_new: z.boolean().default(false),
+  is_seasonal: z.boolean().default(false),
+  is_best_seller: z.boolean().default(false),
   is_group_package: z.boolean().default(false),
 });
 

@@ -18,6 +18,7 @@ import {
 import Pagination from '@/components/ui/Pagination';
 import { PackageCard } from '@/components/customer/PackageCard';
 import { PackageFilters, Chip } from '@/components/customer/PackageFilters';
+import { getPackageFlag } from '@/lib/packageFlags';
 import { PackageSorting } from '@/components/customer/PackageSorting';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
@@ -41,6 +42,7 @@ export default function PackageSearchFilter() {
     availableCategories,
     activeFilterCount,
     toggleCategory,
+    toggleFlag,
     toggleDifficulty,
     setPriceMin,
     setPriceMax,
@@ -60,7 +62,7 @@ export default function PackageSearchFilter() {
   const rangeEnd = Math.min(page * pageSize, resultCount);
 
   return (
-    <div className="min-h-screen bg-brand-tint-light">
+    <div className="min-h-screen">
       <h1 className="sr-only">Tour Packages</h1>
       {/* Header / search bar — offset below the ~80px sticky navbar so it doesn't hide behind it. */}
       <div className="sticky top-20 z-30 bg-[var(--background)]/90 backdrop-blur">
@@ -106,6 +108,7 @@ export default function PackageSearchFilter() {
               categories={availableCategories}
               activeFilterCount={activeFilterCount}
               toggleCategory={toggleCategory}
+              toggleFlag={toggleFlag}
               toggleDifficulty={toggleDifficulty}
               setPriceMin={setPriceMin}
               setPriceMax={setPriceMax}
@@ -145,6 +148,9 @@ export default function PackageSearchFilter() {
               )}
               {filters.categories.map((c) => (
                 <Chip key={c} label={c} onRemove={() => toggleCategory(c)} />
+              ))}
+              {filters.flags.map((f) => (
+                <Chip key={f} label={getPackageFlag(f).label} onRemove={() => toggleFlag(f)} />
               ))}
               {filters.difficulty.map((d) => (
                 <Chip key={d} label={d} onRemove={() => toggleDifficulty(d)} />
@@ -231,6 +237,7 @@ export default function PackageSearchFilter() {
               categories={availableCategories}
               activeFilterCount={activeFilterCount}
               toggleCategory={toggleCategory}
+              toggleFlag={toggleFlag}
               toggleDifficulty={toggleDifficulty}
               setPriceMin={setPriceMin}
               setPriceMax={setPriceMax}

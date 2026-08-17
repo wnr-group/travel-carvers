@@ -3,11 +3,13 @@ import Navbar from '@/components/customer/Navbar';
 import Footer from '@/components/customer/Footer';
 
 /**
- * Friendly 404 for unmatched routes.
+ * Friendly 404 for URLs that match no route at all.
  *
- * This file sits at the app root, so it renders under `app/layout.tsx` rather than the
- * `(customer)` layout — the site chrome has to be included by hand or the page arrives
- * with no navigation at all.
+ * Those render under `app/layout.tsx` alone, so the site chrome has to be included by hand
+ * or the page arrives with no navigation. Note this is *not* what a `notFound()` thrown
+ * inside a route group falls back to — that resolves to the nearest boundary, and the
+ * customer group has its own chrome-free `app/(customer)/not-found.tsx`. Adding chrome to a
+ * group-level not-found would double it up with the group layout's.
  */
 export default function NotFound() {
   return (

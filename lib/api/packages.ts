@@ -684,6 +684,8 @@ export async function getPackageForEdit(id: string): Promise<PackageFormInput | 
     is_featured: pkg.is_featured ?? false,
     is_trending: pkg.is_trending ?? false,
     is_new: pkg.is_new ?? false,
+    is_seasonal: pkg.is_seasonal ?? false,
+    is_best_seller: pkg.is_best_seller ?? false,
     is_group_package: pkg.is_group_package ?? false,
 
     // Postgres `numeric` can arrive as a string; the form's number inputs need real numbers.

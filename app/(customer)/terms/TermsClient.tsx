@@ -196,7 +196,7 @@ export default function TermsAndConditionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-tint-subtle text-slate-800">
+    <div className="min-h-screen text-slate-800">
 
       {/* Hero Header */}
       <header className="bg-brand-darkest relative overflow-hidden">

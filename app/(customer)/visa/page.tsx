@@ -20,7 +20,7 @@ export default async function VisaPage() {
   const countries = await getVisaCountries().catch(() => []);
 
   return (
-    <div className="min-h-screen bg-brand-tint-light pb-20">
+    <div className="min-h-screen pb-20">
       <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Visa' }]} />
 
       {/* Hero — aligned with the main hero section style: crystal clear background image with a dynamic gradient overlay */}

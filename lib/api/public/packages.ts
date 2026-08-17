@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { PUBLIC_PACKAGE_STATUSES } from '@/lib/types/package';
+import { getPackageFlag, type PackageFlagKey } from '@/lib/packageFlags';
 import { applyGlobalPricing } from './siteSettings';
 
 /**
@@ -106,11 +107,8 @@ export async function getPackageBySlug(slug: string) {
   return applyGlobalPricing(data);
 }
 
-/**
- * Get featured packages (Public)
- */
-export async function getFeaturedPackages() {
-  const { data, error } = await supabase
+export async function getPackagesByFlag(flag: PackageFlagKey, limit?: number) {
+  let query = supabase
     .from('packages')
     .select(`
       *,
@@ -124,35 +122,12 @@ export async function getFeaturedPackages() {
       )
     `)
     .in('status', PUBLIC_PACKAGE_STATUSES)
-    .eq('is_featured', true)
-    .order('created_at', { ascending: false })
-    .limit(6);
+    .eq(getPackageFlag(flag).column, true)
+    .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return applyGlobalPricing(data);
-}
+  if (limit) query = query.limit(limit);
 
-/**
- * Get trending packages (Public)
- */
-export async function getTrendingPackages() {
-  const { data, error } = await supabase
-    .from('packages')
-    .select(`
-      *,
-      package_gallery (
-        image_url,
-        is_cover
-      ),
-      reviews (
-        rating,
-        is_approved
-      )
-    `)
-    .in('status', PUBLIC_PACKAGE_STATUSES)
-    .eq('is_trending', true)
-    .order('created_at', { ascending: false })
-    .limit(6);
+  const { data, error } = await query;
 
   if (error) throw error;
   return applyGlobalPricing(data);
@@ -236,42 +211,13 @@ interface GroupPackageRow {
   [key: string]: unknown;
 }
 
-/**
- * Published packages carrying the `is_group_package` flag (Public).
- */
-export async function getFlaggedGroupPackages(limit?: number) {
-  let query = supabase
-    .from('packages')
-    .select(`
-      *,
-      package_gallery (
-        image_url,
-        is_cover
-      ),
-      reviews (
-        rating,
-        is_approved
-      )
-    `)
-    .in('status', PUBLIC_PACKAGE_STATUSES)
-    .eq('is_group_package', true)
-    .order('created_at', { ascending: false });
-
-  if (limit) query = query.limit(limit);
-
-  const { data, error } = await query;
-
-  if (error) throw error;
-  return applyGlobalPricing(data);
-}
-
 export async function getGroupPackages(
   categorySlug: string,
   limit?: number
 ): Promise<GroupPackageRow[]> {
   const [byCategory, byFlag] = await Promise.all([
     getPackagesByCategorySlug(categorySlug, limit).catch(() => []),
-    getFlaggedGroupPackages(limit).catch(() => []),
+    getPackagesByFlag('group', limit).catch(() => []),
   ]);
 
   const merged = new Map<string, GroupPackageRow>();

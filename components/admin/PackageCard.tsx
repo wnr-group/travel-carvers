@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Edit, Eye, ImageOff, Trash2 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
+import DownloadPackageButton from './DownloadPackageButton'
 import { formatPrice, packagePath } from '@/lib/utils'
 import type { AdminPackage } from '@/lib/types/package'
 
@@ -74,6 +75,11 @@ export default function PackageCard({
               <Edit className="h-4 w-4" />
               Edit
             </Link>
+            <DownloadPackageButton
+              packageId={pkg.id}
+              title={pkg.title}
+              className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            />
             {onDelete && (
               <button
                 type="button"

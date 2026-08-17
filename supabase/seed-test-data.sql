@@ -105,6 +105,13 @@ INSERT INTO packages (
   'Bhutan', 27.47120000, 89.63390000, true, false, true,
   'Luxury Bhutan Retreat', 'An 8-day bespoke luxury Bhutan retreat — Tigers Nest, Punakha and Thimphu.', 'bhutan, luxury, tigers nest, bespoke', 'https://picsum.photos/seed/bhutan-og/1200/630' );
 
+-- The two newer showcase flags, so the homepage rows they drive have something in them.
+UPDATE packages SET is_seasonal = true
+WHERE slug IN ('manali-solang-snow-adventure', 'kerala-backwater-serenade');
+
+UPDATE packages SET is_best_seller = true
+WHERE slug IN ('goa-beach-bliss-getaway', 'royal-rajasthan-heritage-tour');
+
 -- =====================================================================
 --  CATEGORY / SUBCATEGORY LINKS  (resolved by slug)
 -- =====================================================================

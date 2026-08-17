@@ -177,7 +177,7 @@ export default function AboutPage() {
     const containerRef = useScrollReveal();
 
     return (
-        <div ref={containerRef} className="bg-background text-foreground">
+        <div ref={containerRef} className="text-foreground">
             {/* ============ HERO ============ */}
             <section className="relative overflow-hidden bg-brand-darkest text-white">
                 <div
@@ -228,7 +228,7 @@ export default function AboutPage() {
             </section>
 
             {/* ============ OUR STORY ============ */}
-            <section id="our-story" className="relative bg-white pt-28 pb-16">
+            <section id="our-story" className="relative pt-28 pb-16">
                 <div className="mx-auto max-w-6xl px-6 sm:px-10">
                     <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
                         <div className="scroll-animate lg:col-span-5 opacity-0 translate-y-6">
@@ -312,7 +312,7 @@ export default function AboutPage() {
             </section>
 
             {/* ============ WHY CHOOSE US ============ */}
-            <section className="bg-white pt-16 pb-28">
+            <section className="pt-16 pb-28">
                 <div className="mx-auto max-w-6xl px-6 sm:px-10">
                     <div className="scroll-animate max-w-2xl opacity-0 translate-y-6">
                         <span className="font-[family-name:var(--font-mono)] text-xs tracking-[0.35em] text-brand-medium uppercase">
@@ -373,7 +373,7 @@ export default function AboutPage() {
             </section>
 
             {/* ============ TEAM ============ */}
-            <section className="bg-white py-28">
+            <section className="py-28">
                 <div className="mx-auto max-w-6xl px-6 sm:px-10">
                     <div className="scroll-animate max-w-2xl opacity-0 translate-y-6">
                         <span className="font-[family-name:var(--font-mono)] text-xs tracking-[0.35em] text-brand-medium uppercase">

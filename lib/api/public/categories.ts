@@ -148,14 +148,6 @@ export async function getSubcategoriesForCategory(
   }));
 }
 
-/**
- * Published-package counts per subcategory, scoped to a category (Public).
- *
- * A subcategory (e.g. "Honeymoon") can live under several categories, so a count
- * only makes sense within one category: India → Honeymoon counts only the
- * honeymoon packages that are also tagged to India. This matches what
- * `getPublishedPackagesBySubcategory` lists. Missing ids mean zero.
- */
 export async function getSubcategoryPackageCounts(
   subcategoryIds: string[],
   categoryId: string
@@ -203,16 +195,6 @@ export async function getPublishedPackagesByCategory(categoryId: string) {
   return applyGlobalPricing(data);
 }
 
-/**
- * Published packages tagged with a subcategory *within a category* (Public),
- * newest first.
- *
- * A subcategory can be shared across categories (e.g. "Honeymoon" under both
- * India and International), so the listing is the intersection: a package shows
- * up only when it is tagged to both this subcategory and this category. That way
- * India → Honeymoon shows India honeymoon trips and International → Honeymoon
- * shows the international ones, never both.
- */
 export async function getPublishedPackagesBySubcategory(
   subcategoryId: string,
   categoryId: string
