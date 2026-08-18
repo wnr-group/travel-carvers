@@ -115,7 +115,7 @@ export default function HeroSection({
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-forest/50 via-brand-forest/25 to-black/15" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/45 via-black/20 to-black/15" />
       </div>
 
       {/* Main Content Container */}

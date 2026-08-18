@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -51,14 +52,27 @@ export default function AdminNav({ isCollapsed, isMobileOpen, onCloseMobile }: A
         
         {/* Logo Area */}
         <div className={`mb-4 px-3 flex items-center justify-between ${isCollapsed ? 'lg:px-0 lg:justify-center' : ''}`}>
-          <div className={isCollapsed ? 'lg:hidden' : 'block'}>
-            <h1 className="text-white text-base font-bold leading-tight">Travel Carvers</h1>
-            <p className="text-white/60 text-[11px] leading-tight">Admin Panel</p>
+          <div className={`items-center gap-2.5 ${isCollapsed ? 'lg:hidden flex' : 'flex'}`}>
+            <Image
+              src="/logo.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8 flex-shrink-0 rounded-full bg-white object-cover"
+            />
+            <div>
+              <h1 className="text-white text-base font-bold leading-tight">Travel Carvers</h1>
+              <p className="text-white/60 text-[11px] leading-tight">Admin Panel</p>
+            </div>
           </div>
           {isCollapsed && (
-            <div className="hidden lg:block text-white text-lg font-black text-center w-full">
-              TC
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Travel Carvers"
+              width={32}
+              height={32}
+              className="mx-auto hidden h-8 w-8 rounded-full bg-white object-cover lg:block"
+            />
           )}
 
           {/* Close button for Mobile Drawer */}

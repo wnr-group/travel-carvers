@@ -261,7 +261,7 @@ export default function RealWorldMap({ isPreview = false, onExpand }: RealWorldM
 
     return () => {
       cancelled = true;
-      if (autoPanRef.current) clearInterval(autoPanRef.current);
+      if (autoPanRef.current) clearTimeout(autoPanRef.current);
       map.remove();
       mapRef.current = null;
     };

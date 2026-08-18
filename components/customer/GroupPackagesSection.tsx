@@ -2,8 +2,6 @@
 
 import PackageFlagSection, { SHOWCASE_LIMIT } from '@/components/customer/PackageFlagSection';
 import { useGroupPackages } from '@/lib/hooks/usePackages';
-import Reveal from '@/components/customer/Reveal';
-import ErrorMessage from '@/components/ui/ErrorMessage';
 
 export const GROUP_TOURS_SLUG = 'group-tours';
 

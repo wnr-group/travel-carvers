@@ -86,7 +86,10 @@ export default function TestimonialsCarousel() {
   const handleNext = () => setActiveIndex((prev) => (prev + 1) % count);
 
   return (
-    <section className="w-full py-6 md:py-10 overflow-hidden relative">
+    // No real testimonials yet → hide the whole section (no fabricated fallbacks).
+    // Kept mounted and CSS-hidden rather than unmounted, so the scroll-reveal
+    // stays reliable when testimonials load in after the initial render.
+    <section className={`w-full py-6 md:py-10 overflow-hidden relative ${count === 0 ? 'hidden' : ''}`}>
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           variants={sectionVariants}

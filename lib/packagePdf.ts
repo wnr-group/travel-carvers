@@ -123,16 +123,23 @@ function bullet(doc: Doc, cursor: Cursor, text: string) {
 }
 
 function labelledLine(doc: Doc, cursor: Cursor, label: string, value: string) {
-  ensureSpace(doc, cursor, 14);
   doc.setFontSize(10);
+  const valueX = MARGIN + 96;
+  const valueWidth = Math.max(60, PAGE.width - MARGIN - valueX);
+  // Wrap the value so long fields (destination, age restriction, …) don't run
+  // off the right edge of the page.
+  const lines: string[] = doc.splitTextToSize(value, valueWidth);
+  const blockHeight = 3 + lines.length * 12;
+  ensureSpace(doc, cursor, blockHeight);
+
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(BRAND.r, BRAND.g, BRAND.b);
   doc.text(`${label}:`, MARGIN, cursor.y);
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(40);
-  doc.text(value, MARGIN + 96, cursor.y);
-  cursor.y += 15;
+  doc.text(lines, valueX, cursor.y);
+  cursor.y += blockHeight;
 }
 
 /* --------------------------------- Sections -------------------------------- */
@@ -207,13 +214,18 @@ function itineraryBlock(doc: Doc, cursor: Cursor, pkg: PackageFormInput) {
   heading(doc, cursor, 'Itinerary');
 
   for (const day of days) {
-    ensureSpace(doc, cursor, 40);
-
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
+    // Wrap the day title so a long one wraps instead of clipping off the page.
+    const titleLines: string[] = doc.splitTextToSize(
+      `Day ${day.day_number} — ${day.title ?? ''}`,
+      CONTENT_WIDTH
+    );
+    ensureSpace(doc, cursor, 26 + (titleLines.length - 1) * 13);
+
     doc.setTextColor(BRAND.r, BRAND.g, BRAND.b);
-    doc.text(`Day ${day.day_number} — ${day.title}`, MARGIN, cursor.y);
-    cursor.y += 14;
+    doc.text(titleLines, MARGIN, cursor.y);
+    cursor.y += 14 + (titleLines.length - 1) * 13;
 
     const meals = [
       day.breakfast ? 'Breakfast' : null,
