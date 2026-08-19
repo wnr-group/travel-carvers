@@ -336,6 +336,17 @@ export default function Footer() {
           <p>
             &copy; {currentYear} Travel Carvers. All Rights Reserved. Crafted with care for global explorers.
           </p>
+          <p className="text-white/60">
+            Powered by{' '}
+            <a
+              href="https://www.wnradvisory.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-white/85 transition-colors hover:text-white"
+            >
+              WnR Groups
+            </a>
+          </p>
           <nav aria-label="Legal" className="flex items-center gap-6">
             <Link
               href="/privacy"

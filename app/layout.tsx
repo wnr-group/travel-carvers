@@ -16,9 +16,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   // Sensible site-wide defaults (OpenGraph, Twitter, canonical, robots); each page overrides.
   ...createMetadata({ path: "/" }),
-  icons: {
-    icon: [{ url: "/logo.png", sizes: "any", type: "image/png" }],
-  },
 };
 
 export const viewport: Viewport = {
